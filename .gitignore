@@ -15,4 +15,7 @@ figures/*
 *.html
 output/Rout/*
 output/velocyto/*
+output/*
 ARMOR/*
+*.h5Seurat
+*.h5ad
