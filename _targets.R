@@ -92,7 +92,7 @@ tar_plan(
       "SRR17960484",
       "SRR27187899",
       "SRR27187900",
-      "SRR27187901",
+      # "SRR27187901",
       "SRR27187902"
     )
   ),
@@ -332,6 +332,7 @@ tar_plan(
   # total metadata ------------------------------
   tar_target(study_cell_stats, collect_study_metadata()),
   tar_target(fig_s15, plot_study_metadata(study_cell_stats)),
+  tar_target(table_s01, make_table_s01(study_cell_stats)),
   tar_target(total_metadata, read_tsv("data/metadata.tsv")),
   tar_target(
     excluded_samples,
@@ -341,16 +342,16 @@ tar_plan(
   ),
   tar_target(
     interesting_genes,
-    unlist(list(
+    list(
       "1q" = c("ANP32E", "ASH1L", "ASPM", "CENPF", "CKS1B", "CNIH4", "CRABP2", "ENAH", "ENO1", "IPO9", "KIF14", "NEK2", "NENF", "NUF2", "PSMD4", "RXRG", "UBE2T"),
       "2p" = c("CEP68", "MEIS1", "MDH1", "OST4", "PDIA6", "POLE4", "RAB1A", "SNRPG", "SOX11"),
       "6p" = c("ARID1B", "CASP8AP2", "CLIC1", "CUTA", "DDX39B", "DEK", "DST", "GLO1", "HDAC2", "HDDC2", "HMGA1", "LIN28B", "MCM3", "MNDA", "PRDM1", "SOX4"),
       "16q" = c("CHD9", "CNGB1", "CYBA", "MT1E", "MT1X", "MT2A"),
-      "S1" = c("ARR3", "GUCA1C", "CRX", "PDC"),
-      "S2" = c("EBF3", "DCX", "ROBO1", "SOX11", "GAP43", "PCDHB10", "STMN2", "NEFM", "POU4F2", "EBF1"),
-      "interesting" = c("SETD6", "RBL2", "DDX19A", "EZH2", "RB1", "TFF1", "MDM4", "CD24", "ESRRG"),
+      "S1" = c("ARR3", "CRX", "PDC"),
+      "S2" = c("EBF3", "DCX", "ROBO1", "SOX11", "GAP43", "PCDHB10", "STMN2", "NEFM", "POU4F2", "TFF1", "CD24"),
+      "interesting" = c("SETD6", "RBL2", "DDX19A", "EZH2", "RB1", "MDM4", "ESRRG"),
       "cell_cycle" = c("CCNA2", "CCNB1")
-    ))
+    )
   ),
 
   # plot subtype scores
@@ -396,16 +397,83 @@ tar_plan(
 
   tar_target(
     marker_gene_vlnplots_by_clone,
-    plot_putative_marker_across_samples(interesting_genes, unlist(regressed_seus), plot_type = VlnPlot, group_by = "clone_opt", cluster_dictionary, extension = "filtered")
+    plot_putative_marker_across_samples(unlist(interesting_genes), scna_seus, plot_type = VlnPlot, group_by = "scna")
   ),
+  
   tar_target(
-    marker_gene_vlnplots_by_cluster,
-    plot_putative_marker_across_samples(interesting_genes, unlist(regressed_seus), plot_type = VlnPlot, group_by = "SCT_snn_res.0.4", cluster_dictionary, extension = "regressed")
+  	cluster_vlns_all,
+    plot_putative_marker_across_samples(unlist(interesting_genes), scna_seus, plot_type = VlnPlot, group_by = "clusters")
   ),
+  
+  tar_target(
+  	cluster_vlns_1q,
+  	plot_putative_marker_across_samples(interesting_genes[["1q"]], debranched_seus_1q, plot_type = VlnPlot, group_by = "clusters", extension = "1q")
+  ),
+  
+  tar_target(
+  	cluster_vlns_2p,
+  	plot_putative_marker_across_samples(interesting_genes[["2p"]], debranched_seus_2p, plot_type = VlnPlot, group_by = "clusters", extension = "2p")
+  ),
+  
+  tar_target(
+  	cluster_vlns_6p,
+  	plot_putative_marker_across_samples(interesting_genes[["6p"]], debranched_seus_6p, plot_type = VlnPlot, group_by = "clusters", extension = "6p")
+  ),
+  
+  tar_target(
+  	cluster_vlns_16q,
+  	plot_putative_marker_across_samples(interesting_genes[["16q"]], debranched_seus_16q, plot_type = VlnPlot, group_by = "clusters", extension = "16q")
+  ),
+  
+  tar_target(
+  	cluster_vlns_s2,
+  	plot_putative_marker_across_samples(interesting_genes[["S2"]], scna_seus, plot_type = VlnPlot, group_by = "clusters", extension = "s2")
+  ),
+  
+  tar_target(
+  	cluster_vlns_s1,
+  	plot_putative_marker_across_samples(interesting_genes[["S1"]], scna_seus, plot_type = VlnPlot, group_by = "clusters", extension = "s1")
+  ),
+  
+  # asdf
+  tar_target(factor_heatmaps_1q,
+  					 plot_seu_gene_heatmap(debranched_seus_1q, large_clone_comparisons, scna_of_interest = "1q", w = 8, h = 12),
+  					 pattern = map(debranched_seus_1q),
+  					 iteration = "list"
+  ),
+  
+  tar_target(factor_heatmaps_1q_combined, qpdf::pdf_combine(factor_heatmaps_1q, "results/factor_heatmaps_1q.pdf")),
+  
+  tar_target(factor_heatmaps_2p,
+  					 plot_seu_gene_heatmap(debranched_seus_2p, large_clone_comparisons, scna_of_interest = "2p", w = 8, h = 12),
+  					 pattern = map(debranched_seus_2p),
+  					 iteration = "list"
+  ),
+  
+  tar_target(factor_heatmaps_2p_combined, qpdf::pdf_combine(factor_heatmaps_2p, "results/factor_heatmaps_2p.pdf")),
+  
+  tar_target(factor_heatmaps_6p,
+  					 plot_seu_gene_heatmap(debranched_seus_6p, large_clone_comparisons, scna_of_interest = "6p", w = 8, h = 12),
+  					 pattern = map(debranched_seus_6p),
+  					 iteration = "list"
+  ),
+  
+  tar_target(factor_heatmaps_6p_combined, qpdf::pdf_combine(factor_heatmaps_6p, "results/factor_heatmaps_6p.pdf")),
+  
+  tar_target(factor_heatmaps_16q,
+  					 plot_seu_gene_heatmap(debranched_seus_16q, large_clone_comparisons, scna_of_interest = "16q", w = 8, h = 12),
+  					 pattern = map(debranched_seus_16q),
+  					 iteration = "list"
+  ),
+  
+  tar_target(factor_heatmaps_16q_combined, qpdf::pdf_combine(factor_heatmaps_16q, "results/factor_heatmaps_16q.pdf")),
+  
+  
   tar_target(
     marker_gene_featureplots_by_cluster,
-    plot_putative_marker_across_samples(interesting_genes, unlist(regressed_seus), plot_type = FeaturePlot, group_by = "SCT_snn_res.0.4", cluster_dictionary, extension = "regressed")
+    plot_putative_marker_across_samples(unlist(interesting_genes), scna_seus, plot_type = FeaturePlot, group_by = "clusters")
   ),
+  
   tar_target(
     cluster_markers,
     collect_all_markers(numbat_rds_files, "results/clusters.xlsx")
@@ -439,7 +507,7 @@ tar_plan(
   # 	"data/raw_cluster_ids.csv"
   # ),
   tar_target(cluster_file,
-  					 "data/raw_cluster_ids.csv", 
+  					 "data/scna_cluster_order.csv", 
   					 format = "file_fast"),
   
   tar_target(cluster_orders,
@@ -451,7 +519,6 @@ tar_plan(
   					 						 final_seus)
   ),
   
-  # asdf
   tarchetypes::tar_file(
   	cluster_comparisons_file,
   	"data/cluster_comparisons_by_phase_for_disctinct_clones.csv"
@@ -675,7 +742,7 @@ tar_plan(
   ),
   tar_target(
     expr_heatmap_pdfs,
-    make_expression_heatmap_comparison(large_numbat_pdfs, large_heatmaps)
+    make_expression_heatmap_comparison(large_numbat_pdfs, filtered_numbat_heatmaps)
   ),
 
   # all ------------------------------
@@ -761,6 +828,8 @@ tar_plan(
     pattern = map(debranched_seus),
     iteration = "list"
   ),
+  
+  
   tar_target(
     volcano_thresholds_in_segment,
     list(
@@ -915,20 +984,40 @@ tar_plan(
   ),
   
   tar_target(paired_clone_distribution_plots,
-    calculate_clone_distribution(debranched_seus, cluster_orders, pairwise = TRUE),
-    pattern = map(debranched_seus, cluster_orders),
+    calculate_clone_distribution(scna_seus, cluster_orders, pairwise = TRUE),
+    pattern = map(scna_seus, cluster_orders),
     iteration = "list"
   ),
   
-  tar_target(debranched_clone_pearls,
-  					 plot_clone_pearls(debranched_seus, cluster_orders),
-  					 pattern = map(debranched_seus),
+  tar_target(clone_pearls_1q,
+  					 plot_clone_pearls(debranched_seus_1q, var_y = "phase_level"),
+  					 pattern = map(debranched_seus_1q),
   					 iteration = "list"
   ),
   
-  tar_target(clone_pearls,
-  					 plot_clone_pearls(final_seus, cluster_orders),
-  					 pattern = map(final_seus),
+  tar_target(clone_pearls_2p,
+  					 plot_clone_pearls(debranched_seus_2p, var_y = "clusters"),
+  					 pattern = map(debranched_seus_2p),
+  					 iteration = "list"
+  ),
+  
+  tar_target(cluster_terms,
+  					 enrich_by_cluster(scna_seus),
+  					 pattern = map(scna_seus),
+  					 iteration = "list"
+  ),
+  
+  # enrich_by_cluster
+  
+  tar_target(clone_pearls_6p,
+  					 plot_clone_pearls(debranched_seus_6p, var_y = "clusters"),
+  					 pattern = map(debranched_seus_6p),
+  					 iteration = "list"
+  ),
+  
+  tar_target(clone_pearls_16q,
+  					 plot_clone_pearls(debranched_seus_16q, var_y = "phase_level"),
+  					 pattern = map(debranched_seus_16q),
   					 iteration = "list"
   ),
   
@@ -1010,41 +1099,51 @@ tar_plan(
   
   tar_target(debranched_seus_1q,
   	c(
-  		"SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu.rds", 
-  		"SRR13884249" = "output/seurat/SRR13884249_filtered_seu.rds", 
-  		"SRR14800534" = "output/seurat/SRR14800534_filtered_seu.rds", 
-  		"SRR14800535" = "output/seurat/SRR14800535_filtered_seu.rds", 
-  		"SRR14800536" = "output/seurat/SRR14800536_filtered_seu.rds"
+  		"SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu_1q.rds", 
+  		"SRR13884249" = "output/seurat/SRR13884249_filtered_seu_1q.rds", 
+  		"SRR14800534" = "output/seurat/SRR14800534_filtered_seu_1q.rds", 
+  		"SRR14800535" = "output/seurat/SRR14800535_filtered_seu_1q.rds", 
+  		"SRR14800536" = "output/seurat/SRR14800536_filtered_seu_1q.rds"
   		)
   	),
   
   tar_target(debranched_seus_2p,
   		c(
-  			"SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu.rds", 
+  			# "SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds", 
   			"SRR13884247" = "output/seurat/SRR13884247_branch_6_filtered_seu.rds", 
-  			"SRR13884248" = "output/seurat/SRR13884248_filtered_seu.rds", 
-  			"SRR13884249" = "output/seurat/SRR13884249_filtered_seu.rds", 
+  			"SRR13884248" = "output/seurat/SRR13884248_filtered_seu_2p.rds", 
+  			"SRR13884249" = "output/seurat/SRR13884249_filtered_seu_2p.rds", 
   			"SRR17960481" = "output/seurat/SRR17960481_filtered_seu.rds", 
-  			"SRR17960484" = "output/seurat/SRR17960484_filtered_seu.rds" # too many changes at once to conclude anything
+  			"SRR17960484" = "output/seurat/SRR17960484_filtered_seu_2p.rds" # too many changes at once to conclude anything
   		)
   		),
   
   tar_target(debranched_seus_6p,  
   		c(
   			"SRR13884247" = "output/seurat/SRR13884247_filtered_seu.rds",  
-  			"SRR13884248" = "output/seurat/SRR13884248_filtered_seu.rds", 
-  			"SRR17960484" = "output/seurat/SRR17960484_filtered_seu.rds",
+  			"SRR13884248" = "output/seurat/SRR13884248_filtered_seu_6p.rds", 
+  			"SRR17960484" = "output/seurat/SRR17960484_filtered_seu_6p.rds",
   			"SRR27187899"= "output/seurat/SRR27187899_filtered_seu.rds"
   		)
   		),
   
   tar_target(debranched_seus_16q,  
   		c(
-  			"SRR14800534" = "output/seurat/SRR14800534_filtered_seu.rds", 
-  			"SRR14800535" = "output/seurat/SRR14800535_filtered_seu.rds", 
-  			"SRR14800536" = "output/seurat/SRR14800536_filtered_seu.rds"
+  			"SRR14800534" = "output/seurat/SRR14800534_filtered_seu_16q.rds", 
+  			"SRR14800535" = "output/seurat/SRR14800535_filtered_seu_16q.rds", 
+  			"SRR14800536" = "output/seurat/SRR14800536_filtered_seu_16q.rds"
   		)
   ),
+  
+  tar_target(scna_seus,  
+  					 unlist(list(
+  					 	"1q" = debranched_seus_1q, 
+  					 	"2p" = debranched_seus_2p, 
+  					 	"6p" = debranched_seus_6p,
+  					 	"16q" = debranched_seus_16q
+  					 ))
+  ),
+  
   
 # medium resolution ------------------------------
   
@@ -1060,11 +1159,40 @@ tar_plan(
   					 iteration = "list"
   ),
 
+	tar_target(fig_02,
+						 plot_fig_02(cluster_orders),
+						 ),
+
+tar_target(fig_03,
+					 plot_fig_03(cluster_orders),
+),
+
+tar_target(fig_04,
+					 plot_fig_04(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds"), cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 16, height = 12)
+),
+
+tar_target(fig_05,
+					 plot_fig_04(debranched_seus_6p, cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, nb_paths = numbat_rds_files, scna_of_interest = "2p", width = 16, height = 12)
+),
+
+	tar_target(fig_04_collages,
+						 plot_figure_collage(unlist(debranched_seus_2p), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p"),
+						 pattern = map(debranched_seus_2p),
+						 iteration = "list"
+	),
+
   tar_target(collages_6p,
   					 plot_seu_marker_heatmap_by_scna(unlist(debranched_seus_6p), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "6p"),
   					 pattern = map(debranched_seus_6p),
   					 iteration = "list"
   ),
+
+	tar_target(fig_05_collages,
+						 plot_figure_collage(unlist(debranched_seus_6p), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "6p"),
+						 pattern = map(debranched_seus_6p),
+						 iteration = "list"
+	),
+
 
   tar_target(collages_16q,
   					 plot_seu_marker_heatmap_by_scna(unlist(debranched_seus_16q), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q"),
@@ -1072,7 +1200,6 @@ tar_plan(
   					 iteration = "list"
   ),
 
-  # asdf
   tar_target(collected_scna_collages,
   					 list(
   					 	"1q" = qpdf::pdf_combine(collages_1q, "results/1q_heatmap_phase_scatter_patchwork.pdf"),
@@ -1080,18 +1207,71 @@ tar_plan(
   					 	"6p" = qpdf::pdf_combine(collages_6p, "results/6p_heatmap_phase_scatter_patchwork.pdf"),
   					 	"16q" = qpdf::pdf_combine(collages_16q, "results/16q_heatmap_phase_scatter_patchwork.pdf")
   					 )),
+
+	tar_target(
+		corresponding_seus,
+		list(
+			# "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds", 
+			"output/seurat/SRR13884247_branch_6_filtered_seu.rds", 
+			"output/seurat/SRR13884248_filtered_seu_2p.rds", 
+			"output/seurat/SRR17960484_filtered_seu_2p.rds", 
+			"output/seurat/SRR13884247_filtered_seu.rds", 
+			"output/seurat/SRR17960484_filtered_seu_6p.rds"
+		)
+	),
+
+	tar_target(corresponding_clusters_diffex,
+						 find_diffex_clusters_between_corresponding_states(unlist(corresponding_seus), corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all"),
+						 pattern = map(corresponding_seus),
+						 iteration = "list"
+	),
+
+tar_target(corresponding_clusters_volcanos,
+					 plot_corresponding_clusters_diffex_volcanos(corresponding_clusters_diffex, unlist(corresponding_seus)),
+					 pattern = map(corresponding_clusters_diffex, corresponding_seus),
+					 iteration = "list"
+),
+
+tar_target(corresponding_clusters_heatmaps,
+					 plot_corresponding_clusters_diffex_heatmaps(corresponding_clusters_diffex, unlist(corresponding_seus), corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all"),
+					 pattern = map(corresponding_clusters_diffex, corresponding_seus),
+					 iteration = "list"
+),
+
+tar_target(corresponding_clusters_enrichments,
+					 plot_corresponding_enrichment(corresponding_clusters_diffex, unlist(corresponding_seus)),
+					 pattern = map(corresponding_clusters_diffex, corresponding_seus),
+					 iteration = "list"
+),
+
+tar_target(clone_cc_plots_by_scna_1q,
+					 clone_cc_plots_by_scna(debranched_seus_1q, scna_of_interest = "1q", large_clone_comparisons = large_clone_comparisons),
+),
+
+tar_target(clone_cc_plots_by_scna_16q,
+					 clone_cc_plots_by_scna(debranched_seus_16q, scna_of_interest = "16q", large_clone_comparisons = large_clone_comparisons),
+),
+
   
-  tar_target(enrichment_2p_g1,
+  tar_target(diffex_2p_g1,
   					 find_diffex_clones_in_phase(debranched_seus_2p, phase = "g1", scna_of_interest = "2p", numbat_rds_files, large_clone_comparisons, location = "all"),
   					 pattern = map(debranched_seus_2p),
   					 iteration = "list"
   ),
+
+tar_target(enrichment_2p_g1,
+					 compare_enrichment(diffex_2p_g1)
+),
   
-  tar_target(enrichment_6p_g1,
+  tar_target(diffex_6p_g1,
   					 find_diffex_clones_in_phase(debranched_seus_6p, phase = "g1", scna_of_interest = "6p", numbat_rds_files, large_clone_comparisons, location = "all"),
   					 pattern = map(debranched_seus_6p),
   					 iteration = "list"
   ),
+
+tar_target(enrichment_6p_g1,
+					 compare_enrichment(diffex_6p_g1)
+),
   
   tar_target(integrated_seus,
   					 list(
@@ -1360,6 +1540,64 @@ tar_plan(
   tar_target(oncoprint_input_by_region,
     inspect_oncoprints(oncoprint_input_by_scna$cis, oncoprint_input_by_scna$trans, oncoprint_input_by_scna$all)
   ),
+
+	tar_target(corresponding_states_dictionary,
+						 tibble::tribble(
+						 	~file_name, ~w_scna, ~wo_scna, ~scna_of_interest,
+						 	# "SRR13884246_branch_5_filtered_seu_2p.rds", "g1_1-g1_0-g1_3-g1_11", "g1_2-g1_5", "2p",
+						 	# "SRR13884246_branch_5_filtered_seu_2p.rds",     "s_g2_7-s_9",      "s_g2_8", "2p",
+						 	
+						 	"SRR13884247_branch_6_filtered_seu.rds", "g1_3-g1_6", "g1_5", "2p",
+						 	"SRR13884247_branch_6_filtered_seu.rds", "g1_3", "g1_5", "2p",
+						 	"SRR13884247_branch_6_filtered_seu.rds", "g1_6", "g1_5", "2p",
+						 	
+						 	"SRR13884248_filtered_seu_2p.rds",   "g1_1",    "g1_6-g1_7", "2p",
+						 	"SRR13884248_filtered_seu_2p.rds",   "g1_1",    "g1_6", "2p",
+						 	"SRR13884248_filtered_seu_2p.rds",   "g1_1",    "g1_7", "2p",
+						 	
+						 	"SRR17960484_filtered_seu_2p.rds",     "g1_3",    "g1_1-g1_5", "2p",
+						 	"SRR17960484_filtered_seu_2p.rds",     "g1_3",    "g1_1", "2p",
+						 	"SRR17960484_filtered_seu_2p.rds",     "g1_3",    "g1_5", "2p",
+						 	"SRR17960484_filtered_seu_2p.rds",     "s_6",      "s_7", "2p",
+						 	
+						 	"SRR13884247_filtered_seu.rds",   "g1_5-g1_7",    "g1_4-g1_0", "6p",
+						 	
+						 	"SRR17960484_filtered_seu_6p.rds",     "g1_0",      "g1_1", "6p",
+						 	"SRR17960484_filtered_seu_6p.rds",     "s_4",      "s_6", "6p",
+						 	
+						 	"seurat_2p_integrated_duo.rds",     "g1_2-g1_1-g1_4",      "g1_9", "2p"
+						 )
+					 ),
+
+	tar_target(resolution_dictionary,
+						 list("SRR13884246_branch_5_filtered_seu_1q.rds"= "0",
+						 		 "SRR13884249_filtered_seu_1q.rds"= "0",
+						 		 "SRR14800534_filtered_seu_1q.rds"= "0",
+						 		 "SRR14800535_filtered_seu_1q.rds"= "0",
+						 		 "SRR14800536_filtered_seu_1q.rds"= "0",
+						 		 "SRR13884246_branch_5_filtered_seu_2p.rds"= "0",
+						 		 "SRR13884247_branch_6_filtered_seu.rds"= "-1",
+						 		 "SRR13884248_filtered_seu_2p.rds"= "-1",
+						 		 "SRR13884249_filtered_seu_2p.rds"= "-1",
+						 		 "SRR17960481_filtered_seu.rds"= "0",
+						 		 "SRR17960484_filtered_seu_2p.rds"= "-1",
+						 		 "SRR13884247_filtered_seu.rds"= "-1",
+						 		 "SRR13884248_filtered_seu_6p.rds"= "-1",
+						 		 "SRR17960484_filtered_seu_6p.rds"= "0",
+						 		 "SRR27187899_filtered_seu.rds"= "0",
+						 		 "SRR14800534_filtered_seu_16q.rds"= "-1",
+						 		 "SRR14800535_filtered_seu_16q.rds"= "0",
+						 		 "SRR14800536_filtered_seu_16q.rds"= "0"
+						 )
+						 ),
+
+# asdf
+
+	tar_target(chosen_resolution_seus,
+						 assign_designated_phase_clusters(scna_seus, cluster_orders, resolution_dictionary),
+						 pattern = map(scna_seus),
+						 iteration = "list"
+	),
   
   tar_target(oncoprint_plots,
     make_oncoprint_plots(oncoprint_input_by_scna, debranched_clone_trees, oncoprint_settings, label = "_by_clone")
