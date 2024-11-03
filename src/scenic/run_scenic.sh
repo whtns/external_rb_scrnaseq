@@ -12,7 +12,7 @@ echo $output_dir
 
 dataset=`basename $seu_path .rds`
 
-input_loom_path=`realpath $output_dir/scenic/$dataset.loom`
+input_loom_path=`realpath $output_dir/velocyto/$dataset.loom`
 
 output_loom=`echo $dataset-final.loom`
 output_loom_path=`realpath $output_dir/scenic/$output_loom`
@@ -33,13 +33,13 @@ echo "$output_loom_path"
 #         --thr_min_genes 1
 
 # for testing file paths and script
-nextflow run aertslab/SCENICprotocol \
+NXF_VER=22.10.6 nextflow run aertslab/SCENICprotocol \
     -profile docker \
-    --loom_input src/scenic_src/example/expr_mat_tiny.loom \
+    --loom_input src/scenic/example/expr_mat_tiny.loom \
     --loom_output "$output_loom" \
-    --TFs src/scenic_src/example/test_TFs_tiny.txt \
-    --motifs src/scenic_src/example/motifs.tbl \
-    --db src/scenic_src/example/*feather \
+    --TFs src/scenic/example/test_TFs_tiny.txt \
+    --motifs src/scenic/example/motifs.tbl \
+    --db src/scenic/example/*feather \
     --thr_min_genes 1
 
 tmux_session=`tmux display-message -p "#S"`
