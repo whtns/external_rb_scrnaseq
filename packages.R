@@ -4,6 +4,7 @@ library(conflicted)
 conflicts_prefer(dplyr::desc)
 conflicts_prefer(dplyr::n_distinct)
 conflicts_prefer(dplyr::n)
+conflicts_prefer(base::c)
 library(dotenv)
 library(targets)
 library(tarchetypes)
@@ -42,6 +43,9 @@ library(speckle)
 library(ggraph)
 library(org.Hs.eg.db)
 library(plyranges)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(AnnotationHub)
+# library(plotgardener)
 
 msig_h <- msigdbr(species = "Homo sapiens", category = "H") %>%
   dplyr::select(gs_name, entrez_gene) %>%

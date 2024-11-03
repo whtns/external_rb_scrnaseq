@@ -1,0 +1,123 @@
+---
+title: "logistic_mixed_model_kstachelek"
+format: html
+editor: visual
+---
+
+```{r}
+library(lme4)
+library(readr)
+library(Seurat)
+
+```
+
+```{r}
+seu_1q_integrated <- readRDS("../output/seurat/integrated_1q/integrated_seu_1q_complete.rds")
+
+mydata<- FetchData(seu_1q_integrated, c("scna", "clusters")) |> 
+	dplyr::mutate(genotype = ifelse(scna == "w_scna", 1, 0)) |> 
+	dplyr::select(genotype, clusters) |> 
+	tibble::rownames_to_column("cell")
+
+```
+
+## 1q integrated
+
+```{r}
+model <- glm(genotype ~ clusters - 1, 
+							 data = mydata, 
+							 family = binomial)
+
+summary(model)
+
+exp(coef(model))
+
+```
+
+## SRR13884249
+
+```{r}
+data_SRR13884249 <- readRDS("../output/seurat/integrated_1q/SRR13884249_integrated_1q_filtered_seu.rds") |> 
+	FetchData(c("scna", "clusters")) |> 
+	dplyr::mutate(genotype = ifelse(scna == "w_scna", 1, 0)) |> 
+	dplyr::select(genotype, clusters) |> 
+	tibble::rownames_to_column("cell")
+
+```
+
+```{r}
+model <- glm(genotype ~ clusters - 1, 
+							 data = data_SRR13884249, 
+							 family = binomial)
+
+summary(model)
+
+exp(coef(model))
+
+```
+
+## SRR14800534
+
+```{r}
+data_SRR14800534 <- readRDS("../output/seurat/integrated_1q/SRR14800534_integrated_1q_filtered_seu.rds") |> 
+	FetchData(c("scna", "clusters")) |> 
+	dplyr::mutate(genotype = ifelse(scna == "w_scna", 1, 0)) |> 
+	dplyr::select(genotype, clusters) |> 
+	tibble::rownames_to_column("cell")
+
+```
+
+```{r}
+model <- glm(genotype ~ clusters - 1, 
+							 data = data_SRR14800534, 
+							 family = binomial)
+
+summary(model)
+
+exp(coef(model))
+
+```
+
+## SRR14800535
+
+```{r}
+data_SRR14800535 <- readRDS("../output/seurat/integrated_1q/SRR14800535_integrated_1q_filtered_seu.rds") |> 
+	FetchData(c("scna", "clusters")) |> 
+	dplyr::mutate(genotype = ifelse(scna == "w_scna", 1, 0)) |> 
+	dplyr::select(genotype, clusters) |> 
+	tibble::rownames_to_column("cell")
+
+```
+
+```{r}
+model <- glm(genotype ~ clusters - 1, 
+							 data = data_SRR14800535, 
+							 family = binomial)
+
+summary(model)
+
+exp(coef(model))
+
+```
+
+## SRR14800536
+
+```{r}
+data_SRR14800536 <- readRDS("../output/seurat/integrated_1q/SRR14800536_integrated_1q_filtered_seu.rds") |> 
+	FetchData(c("scna", "clusters")) |> 
+	dplyr::mutate(genotype = ifelse(scna == "w_scna", 1, 0)) |> 
+	dplyr::select(genotype, clusters) |> 
+	tibble::rownames_to_column("cell")
+
+```
+
+```{r}
+model <- glm(genotype ~ clusters - 1, 
+							 data = data_SRR14800536, 
+							 family = binomial)
+
+summary(model)
+
+exp(coef(model))
+
+```

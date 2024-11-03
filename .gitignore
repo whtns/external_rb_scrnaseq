@@ -19,3 +19,10 @@ output/*
 ARMOR/*
 *.h5Seurat
 *.h5ad
+.nextflow
+.nextflow.log
+.nextflow.log.1
+.nextflow.log.2
+.nextflow.log.3
+.snakemake
+work

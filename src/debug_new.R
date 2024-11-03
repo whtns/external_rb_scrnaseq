@@ -1,12 +1,298 @@
 library(targets)
 source("packages.R")
 source("functions.R")
+library(plotgardener)
+
+make_filtered_numbat_plots(output_file, sample_id, myseus, mynbs, merged_metadata, myexpressions)
+
+# make_numbat_heatmaps ------------------------------
+
+tar_load(c("original_seus", "numbat_rds_files"))
+
+# debug(make_numbat_heatmaps)
+debug(plot_numbat)
+# debug(plot_phylo_heatmap)
+debug(plot_variability_at_SCNA)
+
+make_numbat_heatmaps(original_seus[[1]], numbat_rds_files, p_min = 0.5, line_width = 0.1, extension = "_filtered") |> 
+	map(browseURL)
+
+
+# plot_fig_09_10 ------------------------------
+
+tar_load(c("corresponding_seus_2p", "corresponding_seus", "corresponding_clusters_diffex", "corresponding_clusters_enrichments"))
+
+debug(plot_fig_09_10)
+debug(compare_corresponding_enrichments)
+
+plot_fig_09_10(corresponding_seus_2p, corresponding_seus, corresponding_clusters_diffex, corresponding_clusters_enrichments, recurrence_threshold = 2, plot_path = "results/fig_09.pdf", widths = rep(4, 3), heights = c(8,4,8), common_seus = c("SRR13884248_filtered_seu_2p.rds", "SRR17960484_filtered_seu_2p.rds"))
+
+
+debug(plot_fig_s20)
+
+test3 <- plot_fig_s20()
+
+# make_table_s03 ------------------------------
+
+make_table_s03()
+
+# debug(plot_fig_s20)
+
+fig_s20 <- plot_fig_s20()
+
+# debug(plot_fig_s09)
+
+fig_s09 <- plot_fig_s09()
+
+# make_table_s07_s09 ------------------------------
+
+# debug(make_table_s07_s09)
+
+test2 <- make_table_s10(seu_path = "output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", table_path = "results/table_s10.csv")
+
+test0 <- make_table_s07(seu_path = "output/seurat/integrated_1q/integrated_seu_1q_complete.rds", table_path = "results/table_s07.csv")
+
+test1 <- make_table_s09(seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", table_path = "results/table_s09.csv")
+
+# plot fig_s06 ------------------------------
+
+# debug(plot_fig_s06)
+
+fig_s06 <- plot_fig_s06()
+
+# plot_fig_07c ------------------------------
+
+# debug(plot_fig_07c)
+plot_fig_07c()
+
+# find_diffex_bw_clones_for_each_cluster_integrated ------------------------------
+
+tar_load(c("debranched_seus_1q", "integrated_seus_1q", "integrated_seus_16q", "numbat_rds_files",  "large_clone_comparisons", "debranched_cluster_orders"))
+
+# debug(find_diffex_bw_clones_for_each_cluster_integrated)
+# debug(make_clone_comparison)
+# debug(clone_diff_per_cluster)
+
+test0 <- find_diffex_bw_clones_for_each_cluster_integrated("output/seurat/integrated_1q/integrated_seu_1q_complete.rds", numbat_rds_files, large_clone_comparisons, location = "all", scna_of_interest = "1q+")
+
+# fig_s0x------------------------------
+
+# debug(plot_fig_s0x)
+# debug(make_rb_scna_ideograms)
+# debug(make_annoHighlight_from_consensus)
+
+nb_paths <- dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> 
+	sort()
+
+make_rb_scna_ideograms(nb_paths[[3]]) |>
+	browseURL()
+
+plot_fig_s03c()
+
+# find_diffex_bw_clones_for_each_cluster ------------------------------
+
+tar_load(c("debranched_seus_1q", "integrated_seus_1q", "integrated_seus_16q", "numbat_rds_files",  "large_clone_comparisons", "debranched_cluster_orders"))
+
+debug(find_diffex_bw_clones_for_each_cluster)
+debug(make_clone_comparison)
+debug(clone_diff_per_cluster)
+
+test0 <- find_diffex_bw_clones_for_each_cluster(integrated_seus_16q[[1]], numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "16q-")
+
+# plot_fig_07_08 ------------------------------
+
+tar_load('fig_07b_input')
+
+debug(plot_fig_07_08)
+
+plot_fig_07_08(fig_07b_input, plot_path = "results/fig_07.pdf", height = 5, width = 4)
+
+# effect of regression ------------------------------
+
+# debug(plot_effect_of_regression)
+
+plot_effect_of_regression("output/seurat/SRR14800540_filtered_seu.rds",
+													"output/seurat/SRR14800540_regressed_seu.rds")
+
+
+
+
+# plot_fig_07_08 ------------------------------
+
+tar_load(c("fig_07a_input", "fig_08_input"))
+
+# debug(plot_fig_07_08)
+
+test0 <- map(c(0.99, 0.5, 0.1, 0.05), ~plot_fig_07_08(fig_07a_input, plot_title = .x, p_adj_threshold = .x, plot_path = glue("results/fig_07_{.x}.pdf"), w = 8, h = 8)) |> 
+	map(browseURL)
+
+test0 <- map(c(0.99, 0.5, 0.1, 0.05), ~plot_fig_07_08(fig_08_input, plot_title = .x, p_adj_threshold = .x, plot_path = glue("results/fig_08_{.x}.pdf"), w = 8, h = 8)) |> 
+	map(browseURL)
+
+
+
+# plot_study_metadata ------------------------------
+
+tar_load("study_cell_stats")
+
+# debug(plot_study_metadata)
+# debug(plot_mt_v_nUMI)
+
+test0 <- plot_study_metadata(study_cell_stats)
+
+# find_diffex_bw_clones_for_each_cluster ------------------------------
+
+# debug(find_diffex_bw_clones_for_each_cluster)
+# debug(clone_diff_per_cluster)
+
+tar_load(c("integrated_seus_1q", "numbat_rds_files",  "large_clone_comparisons", "debranched_cluster_orders"))
+
+debug(find_diffex_bw_clones_for_each_cluster)
+debug(make_clone_comparison)
+debug(clone_diff_per_cluster)
+
+find_diffex_bw_clones_for_each_cluster(integrated_seus_1q[[1]], numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all")
+
+
+
+
+# plot_seu_marker_heatmap_all_resolutions ------------------------------
+
+debug(plot_seu_marker_heatmap_all_resolutions)
+debug(plot_seu_marker_heatmap)
+# debug(plot_clone_tree)
+
+tar_load(c("debranched_seus_6p", "debranched_cluster_orders", "large_clone_simplifications", "numbat_rds_files"))
+
+test0 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[10]], numbat_rds_files, large_clone_simplifications)
+
+test1 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[11]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
+
+test2 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[12]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
+
+# filter_cluster_save_seu ------------------------------
+
+tar_load(c("numbat_rds_files", "cluster_dictionary", "large_clone_simplifications", "cells_to_remove"))
+
+debug(filter_cluster_save_seu)
+
+filter_cluster_save_seu("output/numbat_sridhar/SRR14800534_numbat.rds", cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv")
+
+
+# find_diffex_clusters_between_corresponding_states ------------------------------
+
+tar_load(c("corresponding_seus", "corresponding_states_dictionary", "large_clone_comparisons", "numbat_rds_files"))
+
+# debug(find_diffex_clusters_between_corresponding_states)
+
+find_diffex_clusters_between_corresponding_states(corresponding_seus[[8]], corresponding_states_dictionary[8], large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all")
+
+
+# plot_fig_09_10 ------------------------------
+
+debug(plot_fig_09_10)
+# debug(dotplot_recurrent_genes)
+# debug(compare_corresponding_enrichments)
+
+tar_load(c("corresponding_seus_2p", "corresponding_seus_6p", "corresponding_seus", "corresponding_clusters_diffex", "corresponding_clusters_enrichments"))
+
+fig_10 <- plot_fig_09_10(corresponding_seus_6p, corresponding_seus, corresponding_clusters_diffex, corresponding_clusters_enrichments, recurrence_threshold = 2, plot_path = "results/fig_10.pdf", widths = rep(4,3), heights = c(12, 4, 12), common_seus = c("SRR13884248_filtered_seu_6p.rds", "SRR17960484_filtered_seu_6p.rds"))
+
+
+
+
+# fig_02 ------------------------------
+
+debug(plot_fig_02)
+# debug(plot_clone_cc_plots)
+# debug(make_clone_distribution_figure)
+# debug(plot_distribution_of_clones_across_clusters)
+
+tar_load("cluster_orders")
+
+fig_02 <- plot_fig_02(cluster_orders)
+
+fig_03 <- plot_fig_03(cluster_orders)
+
+# debug(make_clone_distribution_figure)
+
+tar_load("cluster_orders")
+
+make_clone_distribution_figure("output/seurat/integrated_1q/integrated_seu_1q_complete.rds", cluster_order = cluster_orders)
+
+make_clone_distribution_figure("output/seurat/integrated_1q/integrated_seu_1q_trio.rds", cluster_order = cluster_orders)
+
+debug(find_diffex_clones)
+
+tar_load(c("integrated_seus_1q", "numbat_rds_files", "large_clone_comparisons"))
+
+diffex_clones_1q <- function(seu_path){
+	seu <- readRDS(seu_path)
+	
+	diffex <- FindMarkers(seu, group.by = "scna", ident.1 = "w_scna", ident.2 = "wo_scna")
+	
+	excluded_genes <- 
+		c(
+			unlist(Seurat::cc.genes.updated.2019),
+			str_subset(rownames(diffex), "^RP")
+		)
+	
+	diffex_no_cc_no_rp <- diffex[!rownames(diffex) %in% excluded_genes,]
+	
+}
+
+find_diffex_clones("output/seurat/integrated_1q/SRR13884249_integrated_1q_filtered_seu.rds", numbat_rds_files, large_clone_comparisons, location = "in_segment")
+
+
+
+# plot_fig_04_05 ------------------------------
+
+tar_load(c("corresponding_seus_2p", "corresponding_seus", "corresponding_clusters_diffex", "corresponding_clusters_enrichments", "cluster_orders", "integrated_seus_2p", "integrated_seus_6p"))
+
+# debug(plot_fig_04_05)
+
+fig_04 <- plot_fig_04_05(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", "output/seurat/SRR13884247_branch_6_filtered_seu.rds"), corresponding_clusters_enrichments[[6]], integrated_seu_paths = integrated_seus_2p, cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 18, height = 10)
+
+
+fig_05 <- plot_fig_04_05("output/seurat/integrated_6p/integrated_seu_6p_complete.rds", corresponding_clusters_enrichments[[7]], integrated_seu_paths = integrated_seus_6p, plot_path = "results/fig_05.pdf", cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "6p", width = 18, height = 10)
+
+# compare_corresponding_enrichments ------------------------------
+
+debug(compare_corresponding_enrichments)
+
+tar_load(c("corresponding_states_dictionary", "corresponding_seus", "large_clone_comparisons", "numbat_rds_files", "corresponding_clusters_diffex"))
+
+test2 <- map2(corresponding_clusters_diffex, corresponding_seus, compare_corresponding_enrichments)
+
+
 
 tar_load(c("cluster_orders", "debranched_seus_2p", "debranched_seus_6p", "numbat_rds_files", "large_clone_comparisons"))
 
+
+
+# find_diffex_clones_between_corresponding_states ------------------------------
+
+tar_load(c("corresponding_states_dictionary", "corresponding_seus", "large_clone_comparisons", "numbat_rds_files", "corresponding_clusters_diffex"))
+
+# debug(find_diffex_clusters_between_corresponding_states)
+# debug(make_cluster_comparison)
+
+test0 <- find_diffex_clusters_between_corresponding_states(corresponding_seus[[6]], corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all")
+
+test5 <- find_diffex_clusters_between_corresponding_states(corresponding_seus[[5]], corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all")
+
+
+
+
+
+fig_03 <- plot_fig_03(cluster_orders)
+
+fig_04 <- plot_fig_04(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", "output/seurat/SRR13884247_branch_6_filtered_seu.rds"), cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 18, height = 10) |> 
+	map(browseURL)
+
 # debug(plot_fig_04_panels)
 
-plot_fig_04(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", "output/seurat/SRR13884247_branch_6_filtered_seu.rds"), cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 18, height = 10) |> 
+plot_fig_04(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", "output/seurat/SRR13884247_branch_6_filtered_seu.rds"), cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 18, height = 18) |> 
 	map(browseURL)
 
 # plot_fig_04 ------------------------------
@@ -49,12 +335,6 @@ debug(plot_corresponding_enrichment)
 
 test0 <- plot_corresponding_enrichment(corresponding_clusters_diffex[[1]], unlist(corresponding_seus)[[1]])
 
-
-
-debug(make_numbat_heatmaps)
-
-make_numbat_heatmaps(final_seus[[1]], numbat_rds_files[[1]], p_min = 0.5, line_width = 0.1, extension = "_filtered")
-
 # plot_corresponding_clusters_diffex ------------------------------
 
 tar_load(c("corresponding_clusters_diffex", "corresponding_seus", "corresponding_states_dictionary", "large_clone_comparisons", "numbat_rds_files"))
@@ -66,17 +346,6 @@ test1 <- plot_corresponding_enrichment(corresponding_clusters_diffex[[1]], corre
 test0 <- map2(corresponding_clusters_diffex, corresponding_seus, plot_corresponding_clusters_diffex_volcanos)
 
 test1 <- map2(corresponding_clusters_diffex, corresponding_seus, plot_corresponding_enrichment, corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all")
-
-
-
-# compare_corresponding_enrichments ------------------------------
-
-debug(compare_corresponding_enrichments)
-
-tar_load(c("corresponding_states_dictionary", "corresponding_seus", "large_clone_comparisons", "numbat_rds_files", "corresponding_clusters_diffex"))
-
-test2 <- map2(corresponding_clusters_diffex, corresponding_seus, compare_corresponding_enrichments)
-
 
 # plot_clone_cc_plots ------------------------------
 
@@ -237,16 +506,6 @@ tar_load(c("corresponding_states_dictionary", "corresponding_seus", "large_clone
 test0 <- map2(corresponding_clusters_diffex, corresponding_seus, plot_corresponding_clusters_diffex_volcanos)
 
 
-# find_diffex_clones_between_corresponding_states ------------------------------
-
-tar_load(c("corresponding_states_dictionary", "corresponding_seus", "large_clone_comparisons", "numbat_rds_files", "corresponding_clusters_diffex"))
-
-debug(find_diffex_clusters_between_corresponding_states)
-# debug(make_cluster_comparison)
-
-test0 <- find_diffex_clusters_between_corresponding_states(corresponding_seus[[4]], corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all")
-
-test1 <- compare_corresponding_enrichments(corresponding_clusters_diffex[[1]], corresponding_seus[[1]])
 
 
 # plot_clone_pearls ------------------------------
@@ -377,20 +636,6 @@ tar_load(c("interesting_genes", "debranched_seus_1q"))
 # debug(plot_markers_in_sample)
 
 plot_putative_marker_across_samples(interesting_genes, unlist(debranched_seus_1q), plot_type = VlnPlot, group_by = "clusters", cluster_dictionary)
-
-# plot_seu_marker_heatmap_all_resolutions ------------------------------
-
-# debug(plot_seu_marker_heatmap_all_resolutions)
-# debug(plot_seu_marker_heatmap)
-# debug(plot_clone_tree)
-
-tar_load(c("debranched_seus", "debranched_cluster_orders", "large_clone_simplifications", "numbat_rds_files"))
-
-test0 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[10]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
-
-test1 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[11]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
-
-test2 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[12]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
 
 
 
@@ -586,15 +831,6 @@ enrich_oncoprints_clusters(large_filter_expressions,
 													 gene_set = "hallmark"
 )
 
-
-# find_diffex_bw_clones_for_each_cluster ------------------------------
-
-# debug(find_diffex_bw_clones_for_each_cluster)
-# debug(clone_diff_per_cluster)
-
-tar_load(c("debranched_seus", "numbat_rds_files",  "large_clone_comparisons", "debranched_cluster_orders"))
-
-find_diffex_bw_clones_for_each_cluster(debranched_seus[[1]], numbat_rds_files,  large_clone_comparisons, debranched_cluster_orders, location = "out_of_segment")
 
 
 
@@ -1195,14 +1431,6 @@ c("STMN4", "GNG3", "MEG3", "CRABP2", "LY6H", "NDUFA4L2", "PDE6H",
 plot_plae_celltype_expression(c("BCL11A", "ISOC1", "NRXN1", "CRYBG3", "RBP7", "PRDM1"))
 
 plot_plae_celltype_expression(c("RORB", "CADPS", "FXYD3", "ARID1B"))
-
-# effect of regression ------------------------------
-
-debug(plot_effect_of_regression)
-
-plot_effect_of_regression("output/seurat/SRR14800540_filtered_seu.rds",
-                          "output/seurat/SRR14800540_regressed_seu.rds")
-
 
 ## clone distribution ------------------------------
 
