@@ -334,7 +334,7 @@ tar_plan(
   tar_target(fig_s15, plot_study_metadata(study_cell_stats)),
   tar_target(table_s01, make_table_s01(study_cell_stats)), # umi, genes detected, mito %
   tar_target(table_s02, make_table_s02()), # detailed sample metadata
-  tar_target(table_s03, make_table_s03()), # tally clusters removed (filtered out) with marker genes
+  tar_target(table_s03, make_table_s03(cluster_dictionary)), # tally clusters removed (filtered out) with marker genes
   tar_target(table_s04_fig_s16, make_fig_s16_table_s04()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
   tar_target(table_s07, make_table_s07()), # For each 1q+ sample, percentage of clone in cluster.
   tar_target(table_s09, make_table_s09(seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", table_path = "results/table_s09.csv")), # For each 16q- sample, percentage of clone in cluster.
@@ -721,7 +721,7 @@ tar_plan(
   ),
 
   tar_target(regression_effect_plots,
-    plot_effect_of_regression(final_seus, regressed_seus),
+    plot_effect_of_regression(final_seus, regressed_seus, w = 18, h = 12),
     pattern = map(final_seus, regressed_seus),
     iteration = "list"
   ),
@@ -769,6 +769,11 @@ tar_plan(
     pattern = map(debranched_seus, debranched_samples),
     iteration = "list"
   ),
+  
+  # tar_target(clustrees,
+  # 					 make_clustrees_for_sample("output/seurat/integrated_1q/integrated_seu_1q_complete.rds", mylabel = "sdfg", assay = "SCT")
+  # ),
+  
   tarchetypes::tar_files(clustree_compilation, qpdf::pdf_combine(unlist(clustrees), "results/clustrees.pdf"), format = "file"),
   
   # filtered_numbat_heatmaps
@@ -1233,7 +1238,7 @@ tar_target(fig_03,
 ),
 
 tar_target(fig_04,
-					 plot_fig_04_05(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", "output/seurat/SRR13884247_branch_6_filtered_seu.rds"), corresponding_clusters_enrichments[[6]], plot_path = "results/fig_04.pdf", integrated_seu_paths = integrated_seus_2p, cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 18, height = 10)
+					 plot_fig_04_05(c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", "output/seurat/SRR13884247_branch_6_filtered_seu.rds"), corresponding_clusters_enrichments[[6]], plot_path = "results/fig_04.pdf", integrated_seu_paths = integrated_seus_2p, cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p", width = 14, height = 10)
 ),
 
 tar_target(fig_05,
@@ -1406,13 +1411,76 @@ tar_target(corresponding_states_dictionary,
 					 	"SRR17960484_filtered_seu_6p.rds",     "g1_0",      "g1_1", "6p",
 					 	# "SRR17960484_filtered_seu_6p.rds",     "s_4",      "s_6", "6p",
 					 	
-					 	"seurat_2p_integrated_duo.rds",     "g1_2-g1_1-g1_4",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_1-g1_4",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_4",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_1",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_1",      "g1_4", "2p",
 					 	
 					 	"integrated_seu_6p_duo.rds",     "g1_4",      "g1_3", "6p",
 					 	
 					 	"SRR13884248_filtered_seu_6p.rds",   "g1_0",    "g1_2", "6p"
 					 ))
 ),
+
+# 2p ------------------------------
+
+tar_target(states_dictionary_2p,
+					 make_corresponding_states_dictionary(tibble::tribble(
+					 	~file_name, ~w_scna, ~wo_scna, ~scna_of_interest,
+					 	"seurat_2p_integrated_duo.rds",     "g1_1-g1_4",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_4",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_1",      "g1_9", "2p",
+					 	"seurat_2p_integrated_duo.rds",     "g1_1",      "g1_4", "2p"
+					 ))
+),
+
+tar_target(corresponding_clusters_diffex_2p,
+					 find_diffex_clusters_between_corresponding_states("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", states_dictionary_2p, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all")
+),
+
+tar_target(corresponding_clusters_volcanos_2p,
+					 plot_corresponding_clusters_diffex_volcanos(corresponding_clusters_diffex_2p, "output/seurat/integrated_2p/seurat_2p_integrated_duo.rds")
+),
+
+tar_target(corresponding_clusters_enrichments_2p,
+					 plot_corresponding_enrichment(corresponding_clusters_diffex_2p, "output/seurat/integrated_2p/seurat_2p_integrated_duo.rds"),
+),
+
+# 6p ------------------------------
+
+tar_target(states_dictionary_6p,
+					 make_corresponding_states_dictionary(tibble::tribble(
+					 	~file_name, ~w_scna, ~wo_scna, ~scna_of_interest,
+					 	"SRR13884247_filtered_seu.rds",   "g1_0-g1_1",    "g1_4-g1_5", "6p",
+					 	"SRR17960484_filtered_seu_6p.rds",     "g1_0",      "g1_1", "6p"
+					 ))
+),
+
+tar_target(corresponding_state_6p_seus,
+					 list(
+					 	"output/seurat/SRR13884247_filtered_seu.rds",
+					 	"output/seurat/SRR17960484_filtered_seu_6p.rds"
+					 )),
+
+tar_target(corresponding_clusters_diffex_6p,
+					 find_diffex_clusters_between_corresponding_states(unlist(corresponding_state_6p_seus), states_dictionary_6p, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all"),
+					 pattern = map(corresponding_state_6p_seus, states_dictionary_6p),
+					 iteration = "list"
+),
+
+tar_target(corresponding_clusters_volcanos_6p,
+					 plot_corresponding_clusters_diffex_volcanos(corresponding_clusters_diffex_6p, unlist(corresponding_state_6p_seus)),
+					 pattern = map(corresponding_clusters_diffex_6p, corresponding_state_6p_seus),
+					 iteration = "list"
+),
+
+tar_target(corresponding_clusters_enrichments_6p,
+					 plot_corresponding_enrichment(corresponding_clusters_diffex_6p, unlist(corresponding_state_6p_seus)),
+					 pattern = map(corresponding_clusters_diffex_6p, corresponding_state_6p_seus),
+					 iteration = "list"
+),
+
+# rest ------------------------------
 
 	tar_target(corresponding_clusters_diffex,
 						 find_diffex_clusters_between_corresponding_states(unlist(corresponding_seus), corresponding_states_dictionary, large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all"),
