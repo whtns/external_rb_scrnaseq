@@ -13,15 +13,6 @@
 #'
 #' @examples
 plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", ...) {
-  # celltypes <-
-  #   myseu@meta.data["type"] %>%
-  #   tibble::rownames_to_column("cell") %>%
-  #   dplyr::mutate(cell = str_replace(cell, "\\.", "-")) %>%
-  #   identity()
-  #
-  # myannot <- dplyr::left_join(myannot, celltypes, by = "cell")
-
-  # mypal = c('1' = 'gray', '2' = "#377EB8", '3' = "#4DAF4A", '4' = "#984EA3")
 
   num_cols <- length(unique(nb$clone_post$clone_opt))
   clone_pal <- scales::hue_pal()(num_cols) %>%
@@ -1701,7 +1692,7 @@ enrichment_analysis <- function(df, fold_change_col = "avg_log2FC", analysis_met
   		)
   	} 
   	else if (gene_set == "both"){
-  		browser()
+  		
   		
   		gene_sets <- map(c("H" = "H", "C6" = "C6"), ~msigdbr::msigdbr(species = "human", category = .x)) |> 
   			map(dplyr::select, gs_name, entrez_gene) |> 
@@ -3200,8 +3191,6 @@ find_diffex_clusters_between_corresponding_states <- function(seu_path, correspo
   names(diffex) <-
     corresponding_states$comparison
   
-  # 
-
   tables_path <- diffex |>
     purrr::list_flatten() |>
     writexl::write_xlsx(glue("results/corresponding_states_diffex_{file_name}.xlsx"))
@@ -3607,7 +3596,7 @@ make_clone_comparison <- function(mysegs, comparison, seu, mynb, location = "cis
 
 }
 
-#' Make a differential expression cluster comparison between tx clusters for 
+#' Make a differential expression cluster comparison between tx clusters for
 #' SCNA genes either cis, trans, or all
 #'
 #' @param mysegs
@@ -4259,7 +4248,8 @@ plot_recurrence <- function(diffex_input, scna_of_interest, segment_region = "ci
     dplyr::group_by(symbol) %>%
     dplyr::mutate(mean_FC = mean(avg_log2FC)) %>%
     dplyr::ungroup() %>%
-    dplyr::arrange(desc(mean_FC)) %>%
+    # dplyr::arrange(desc(mean_FC)) %>%
+  	dplyr::arrange(p_val_adj) %>%
     dplyr::mutate(symbol = factor(symbol, levels = unique(symbol))) %>%
     dplyr::mutate(neg_log_p_val_adj = -log10(p_val_adj)) %>%
     dplyr::mutate(abs_log2FC = abs(avg_log2FC)) %>%
@@ -4292,7 +4282,7 @@ plot_recurrence <- function(diffex_input, scna_of_interest, segment_region = "ci
 
   plot_input <-
     plot_input %>%
-    # dplyr::filter(symbol %in% top_genes) %>%
+    dplyr::filter(symbol %in% top_genes) %>%
     dplyr::filter(minor_sign < 2) %>%
     dplyr::mutate(comparison_sign = ifelse(num_positive > num_negative, 1, -1)) %>%
     dplyr::filter(sign(avg_log2FC) == sign(comparison_sign)) %>%
@@ -5950,7 +5940,7 @@ montage_images <- function(plot_files, sample_id, numbat_dir = "numbat_sridhar",
   return(montage_path)
 }
 
-make_volcano_plots <- function(myres, mysubtitle, sample_id) {
+make_volcano_plots <- function(myres, mysubtitle, sample_id, color_by_chrom = TRUE, force_genes = c("MYCN")) {
   diffex_comparison <- str_split(unique(myres[["diffex_comparison"]]), "_", simplify = TRUE)
 
   right_label <- diffex_comparison[[1]] %||% "right"
@@ -5981,26 +5971,39 @@ make_volcano_plots <- function(myres, mysubtitle, sample_id) {
   mypal <- scales::hue_pal()(length(chrs))
   names(mypal) <- chrs
 
-  custom_cols <- mypal[ref_var]
+  if(!color_by_chrom){
+  	custom_cols <- NULL
+  } else {
+  	custom_cols <- mypal[ref_var]
+  }
 
   FCcutoff <- summary(abs(myres$avg_log2FC))[[5]]
 
   selected_genes <-
     myres %>%
     dplyr::filter(abs(avg_log2FC) > 0.05, p_val_adj < 0.1) %>%
-    dplyr::pull(symbol)
-
-
+  	dplyr::slice_head(n = 25) |> 
+    dplyr::pull(symbol) |>
+  	identity()
+  
+  selected_genes <- c(force_genes, selected_genes)
+  
   myplot <- EnhancedVolcano(myres,
     lab = rownames(myres),
     selectLab = selected_genes,
     labSize = 4,
+    pointSize = c(ifelse(myres$symbol %in% force_genes, 4, 1)),
     x = "avg_log2FC",
     y = "p_val_adj",
     FCcutoff = FCcutoff,
     pCutoff = 5e-2,
     colCustom = custom_cols,
-    max.overlaps = 25
+    max.overlaps = Inf,
+    drawConnectors = TRUE,
+    # maxoverlapsConnectors = 15,
+    min.segment.length = 0.1,
+    colConnectors = "grey",
+    raster = TRUE
   ) +
     aes(color = chr) +
     # facet_wrap(~chr) +
@@ -6022,8 +6025,8 @@ make_volcano_plots <- function(myres, mysubtitle, sample_id) {
       ),
       xmin = -Inf,
       xmax = -Inf,
-      ymin = plot_ymax + plot_ymax / 10,
-      ymax = plot_ymax + plot_ymax / 10
+      ymin = plot_ymax,
+      ymax = plot_ymax
     ) +
     annotation_custom(
       text_grob(
@@ -6034,8 +6037,8 @@ make_volcano_plots <- function(myres, mysubtitle, sample_id) {
       ),
       xmin = Inf,
       xmax = Inf,
-      ymin = plot_ymax + plot_ymax / 10,
-      ymax = plot_ymax + plot_ymax / 10
+      ymin = plot_ymax,
+      ymax = plot_ymax
     ) +
     theme(plot.margin = unit(c(1, 3, 1, 1), "lines")) +
     coord_cartesian(clip = "off") +
@@ -6201,151 +6204,230 @@ derive_pseudobulk_subtype_scores <- function(seu_paths) {
 }
 
 plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path, group.by = "SCT_snn_res.0.6") {
-  #
+	#
+	
+	plot_list <- list()
+	
+	sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
+	
+	unfiltered_seu <- readRDS(unfiltered_seu_path)
+	
+	filtered_seu <- readRDS(filtered_seu_path)
+	
+	fs::dir_create("results/effect_of_filtering")
+	
+	# distribution ------------------------------
+	dir_create("results/effect_of_filtering/distribution")
+	plot_distribution_of_clones_across_clusters(filtered_seu, sample_id, var_x = "scna", var_y = group.by)
+	fs::dir_create(glue("results/effect_of_filtering/distribution/filtered/"))
+	plot_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_filtered_distribution.pdf")
+	plot_list["filtered_distribution"] <- plot_path
+	ggsave(plot_path, height = 4, width = 8)
+	
+	filtered_dist_tables <- table_distribution_of_clones_across_clusters(filtered_seu, sample_id, clusters = group.by)
+	
+	table_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_filtered_distribution.xlsx")
+	plot_list["filtered_distribution_tables"] <- table_path
+	writexl::write_xlsx(filtered_dist_tables, table_path)
+	
+	plot_distribution_of_clones_across_clusters(unfiltered_seu, sample_id, var_y = group.by)
+	fs::dir_create(glue("results/effect_of_filtering/distribution/filtered"))
+	plot_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_unfiltered_distribution.pdf")
+	plot_list["unfiltered_distribution"] <- plot_path
+	ggsave(plot_path, height = 4, width = 8)
+	
+	unfiltered_dist_tables <- table_distribution_of_clones_across_clusters(unfiltered_seu, sample_id, clusters = group.by)
+	
+	table_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_unfiltered_distribution.xlsx")
+	plot_list["unfiltered_distribution_tables"] <- table_path
+	writexl::write_xlsx(unfiltered_dist_tables, table_path)
+	
+	# abbreviation markers ------------------------------
+	dir_create("results/effect_of_filtering/abbreviation")
+	(plot_markers(filtered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 10) +
+			labs(title = "filtered")) +
+		(plot_markers(unfiltered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 10) +
+		 	labs(title = "unfiltered")) +
+		plot_annotation(title = sample_id)
+	
+	plot_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_abbreviation_markers.pdf")
+	plot_list["abbreviation_markers"] <- plot_path
+	ggsave(plot_path, height = 12, width = 15)
+	
+	filtered_marker_tables <- table_cluster_markers(filtered_seu)
+	
+	table_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_filtered_markers.xlsx")
+	plot_list["filtered_marker_tables"] <- table_path
+	writexl::write_xlsx(filtered_marker_tables, table_path)
+	
+	unfiltered_marker_tables <- table_cluster_markers(unfiltered_seu) %>%
+		purrr::compact()
+	
+	table_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_unfiltered_markers.xlsx")
+	plot_list["unfiltered_marker_tables"] <- table_path
+	writexl::write_xlsx(unfiltered_marker_tables, table_path)
+	
+	heatmap_features <-
+		table_cluster_markers(unfiltered_seu) %>%
+		pluck(group.by) %>%
+		group_by(Cluster) %>%
+		slice_head(n = 10) %>%
+		dplyr::pull(Gene.Name) %>%
+		identity()
+	
+	ggplotify::as.ggplot(
+		seu_complex_heatmap(unfiltered_seu,
+												features = heatmap_features,
+												group.by = c(group.by, "Phase", "scna"),
+												col_arrangement = c(group.by, "Phase", "scna"),
+												cluster_rows = FALSE, use_raster = TRUE
+		)
+	) +
+		labs(title = sample_id)
+	
+	plot_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_abbreviation_heatmap.pdf")
+	plot_list["abbreviation_heatmap"] <- plot_path
+	ggsave(plot_path, height = 8, width = 8)
+	
+	# nCount_gene umaps ------------------------------
+	
+	unfiltered_seu$log_nCount_gene <- log1p(unfiltered_seu$nCount_gene)
+	filtered_seu$log_nCount_gene <- log1p(filtered_seu$nCount_gene)
+	
+	(FeaturePlot(unfiltered_seu, features = "log_nCount_gene", cols = c("blue", "lightgrey")) +
+			labs(title = "unfiltered")) +
+		(FeaturePlot(filtered_seu, features = "log_nCount_gene", cols = c("blue", "lightgrey")) +
+		 	labs(title = "filtered")) +
+		plot_annotation(title = sample_id)
+	
+	fs::dir_create(glue("results/effect_of_filtering/nCount_gene"))
+	plot_path <- glue("results/effect_of_filtering/nCount_gene/{sample_id}_nCount_gene_umaps.pdf")
+	plot_list["nCount_gene_umaps"] <- plot_path
+	ggsave(plot_path, height = 8, width = 10)
+	
+	# abbreviation umaps ------------------------------
+	mycols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["abbreviation"]])))
+	
+	(DimPlot(unfiltered_seu, group.by = "abbreviation", cols = mycols) +
+			labs(title = "unfiltered")) +
+		(DimPlot(filtered_seu, group.by = "abbreviation", cols = mycols) +
+		 	labs(title = "filtered")) +
+		# (DimPlot(regressed_seu, group.by = "gene_snn_res.0.2") +
+		#   labs(title = "regressed")) +
+		plot_annotation(title = sample_id)
+	
+	fs::dir_create(glue("results/effect_of_filtering/abbreviation"))
+	plot_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_abbreviation_umaps.pdf")
+	plot_list["abbreviation_umaps"] <- plot_path
+	ggsave(plot_path, height = 8, width = 10)
+	
+	# scna umaps ------------------------------
+	mycols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["scna"]])))
+	
+	unfiltered_seu@meta.data$scna <- vec_split_label_line(unfiltered_seu@meta.data$scna, 3)
+	filtered_seu@meta.data$scna <- vec_split_label_line(filtered_seu@meta.data$scna, 3)
+	
+	(DimPlot(unfiltered_seu, group.by = "scna", cols = mycols) +
+			labs(title = "unfiltered")) +
+		(DimPlot(filtered_seu, group.by = "scna", cols = mycols) +
+		 	labs(title = "filtered")) +
+		# (DimPlot(regressed_seu, group.by = "gene_snn_res.0.2") +
+		#     labs(title = "regressed")) +
+		plot_annotation(title = sample_id)
+	
+	fs::dir_create(glue("results/effect_of_filtering/scna"))
+	plot_path <- glue("results/effect_of_filtering/scna/{sample_id}_scna_umaps.pdf")
+	plot_list["scna_umaps"] <- plot_path
+	ggsave(plot_path, height = 8, width = 10)
+	
+	return(plot_list)
+}
+
+plot_fig_02_01_1 <- function(unfiltered_seu_path, filtered_seu_path = NULL, group.by = "gene_snn_res.0.2", removed_clusters, plot_path = "results/fig_02.01.1.pdf") {
+	
+	sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
+	
+	unfiltered_seu <- readRDS(unfiltered_seu_path)
+	
+	original_filtered_seu <- readRDS(filtered_seu_path)
 
   plot_list <- list()
 
-  sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
-
-  unfiltered_seu <- readRDS(unfiltered_seu_path)
-
-  filtered_seu <- readRDS(filtered_seu_path)
-
-  fs::dir_create("results/effect_of_filtering")
-
-  # distribution ------------------------------
-  dir_create("results/effect_of_filtering/distribution")
-  plot_distribution_of_clones_across_clusters(filtered_seu, sample_id, var_x = "scna", var_y = group.by)
-  fs::dir_create(glue("results/effect_of_filtering/distribution/filtered/"))
-  plot_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_filtered_distribution.pdf")
-  plot_list["filtered_distribution"] <- plot_path
-  ggsave(plot_path, height = 4, width = 8)
-
-  filtered_dist_tables <- table_distribution_of_clones_across_clusters(filtered_seu, sample_id, clusters = group.by)
-
-  table_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_filtered_distribution.xlsx")
-  plot_list["filtered_distribution_tables"] <- table_path
-  writexl::write_xlsx(filtered_dist_tables, table_path)
-
-  plot_distribution_of_clones_across_clusters(unfiltered_seu, sample_id, var_y = group.by)
-  fs::dir_create(glue("results/effect_of_filtering/distribution/filtered"))
-  plot_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_unfiltered_distribution.pdf")
-  plot_list["unfiltered_distribution"] <- plot_path
-  ggsave(plot_path, height = 4, width = 8)
-
-  unfiltered_dist_tables <- table_distribution_of_clones_across_clusters(unfiltered_seu, sample_id, clusters = group.by)
-
-  table_path <- glue("results/effect_of_filtering/distribution/filtered/{sample_id}_unfiltered_distribution.xlsx")
-  plot_list["unfiltered_distribution_tables"] <- table_path
-  writexl::write_xlsx(unfiltered_dist_tables, table_path)
+  removed_clusters <- removed_clusters[removed_clusters$sample_id == sample_id,][["gene_snn_res.0.2"]]
+  
+  filtered_seu <- unfiltered_seu[,!unfiltered_seu$gene_snn_res.0.2 %in% removed_clusters]
 
   # abbreviation markers ------------------------------
-  dir_create("results/effect_of_filtering/abbreviation")
-  (plot_markers(filtered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 10) +
-    labs(title = "filtered")) +
-    (plot_markers(unfiltered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 10) +
-      labs(title = "unfiltered")) +
-    plot_annotation(title = sample_id)
+  (plot_markers(unfiltered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
+  		labs(title = "unfiltered") + 
+   	theme(legend.position = "none") + 
+   	NULL) +
+  	(plot_markers(original_filtered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
+    labs(title = "filtered") + 
+    	theme(axis.title.y = element_blank()) +
+    	NULL) +
+    plot_annotation(title = sample_id) + 
+  	plot_layout(guides='collect')
 
-  plot_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_abbreviation_markers.pdf")
-  plot_list["abbreviation_markers"] <- plot_path
-  ggsave(plot_path, height = 12, width = 15)
-
-  filtered_marker_tables <- table_cluster_markers(filtered_seu)
-
-  table_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_filtered_markers.xlsx")
-  plot_list["filtered_marker_tables"] <- table_path
-  writexl::write_xlsx(filtered_marker_tables, table_path)
-
-  unfiltered_marker_tables <- table_cluster_markers(unfiltered_seu) %>%
-    purrr::compact()
-
-  table_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_unfiltered_markers.xlsx")
-  plot_list["unfiltered_marker_tables"] <- table_path
-  writexl::write_xlsx(unfiltered_marker_tables, table_path)
-
-  heatmap_features <-
-    table_cluster_markers(unfiltered_seu) %>%
-    pluck(group.by) %>%
-    group_by(Cluster) %>%
-    slice_head(n = 10) %>%
-    dplyr::pull(Gene.Name) %>%
-    identity()
-
-  ggplotify::as.ggplot(
-    seu_complex_heatmap(unfiltered_seu,
-      features = heatmap_features,
-      group.by = c(group.by, "Phase", "scna"),
-      col_arrangement = c(group.by, "Phase", "scna"),
-      cluster_rows = FALSE, use_raster = TRUE
-    )
-  ) +
-    labs(title = sample_id)
-
-  plot_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_abbreviation_heatmap.pdf")
-  plot_list["abbreviation_heatmap"] <- plot_path
-  ggsave(plot_path, height = 8, width = 8)
-
-  # nCount_gene umaps ------------------------------
-
-  unfiltered_seu$log_nCount_gene <- log1p(unfiltered_seu$nCount_gene)
-  filtered_seu$log_nCount_gene <- log1p(filtered_seu$nCount_gene)
-
-  (FeaturePlot(unfiltered_seu, features = "log_nCount_gene", cols = c("blue", "lightgrey")) +
-    labs(title = "unfiltered")) +
-    (FeaturePlot(filtered_seu, features = "log_nCount_gene", cols = c("blue", "lightgrey")) +
-      labs(title = "filtered")) +
-    plot_annotation(title = sample_id)
-
-  fs::dir_create(glue("results/effect_of_filtering/nCount_gene"))
-  plot_path <- glue("results/effect_of_filtering/nCount_gene/{sample_id}_nCount_gene_umaps.pdf")
-  plot_list["nCount_gene_umaps"] <- plot_path
-  ggsave(plot_path, height = 8, width = 10)
-
-  # abbreviation umaps ------------------------------
-  mycols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["abbreviation"]])))
-
-  (DimPlot(unfiltered_seu, group.by = "abbreviation", cols = mycols) +
-    labs(title = "unfiltered")) +
-    (DimPlot(filtered_seu, group.by = "abbreviation", cols = mycols) +
-      labs(title = "filtered")) +
-    # (DimPlot(regressed_seu, group.by = "gene_snn_res.0.2") +
-    #   labs(title = "regressed")) +
-    plot_annotation(title = sample_id)
-
-  fs::dir_create(glue("results/effect_of_filtering/abbreviation"))
-  plot_path <- glue("results/effect_of_filtering/abbreviation/{sample_id}_abbreviation_umaps.pdf")
-  plot_list["abbreviation_umaps"] <- plot_path
-  ggsave(plot_path, height = 8, width = 10)
+  tmp_path <- tempfile(fileext = ".pdf")
+  plot_list["abbreviation_markers"] <- tmp_path
+  ggsave(tmp_path, height = 6, width = 9)
 
   # scna umaps ------------------------------
-  mycols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["scna"]])))
-
+  scna_cols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["scna"]])))
+  
   unfiltered_seu@meta.data$scna <- vec_split_label_line(unfiltered_seu@meta.data$scna, 3)
   filtered_seu@meta.data$scna <- vec_split_label_line(filtered_seu@meta.data$scna, 3)
 
-  (DimPlot(unfiltered_seu, group.by = "scna", cols = mycols) +
-    labs(title = "unfiltered")) +
-    (DimPlot(filtered_seu, group.by = "scna", cols = mycols) +
-      labs(title = "filtered")) +
-    # (DimPlot(regressed_seu, group.by = "gene_snn_res.0.2") +
-    #     labs(title = "regressed")) +
-    plot_annotation(title = sample_id)
+  # abbreviation umaps ------------------------------
+  group_cols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[[group.by]])))
 
-  fs::dir_create(glue("results/effect_of_filtering/scna"))
-  plot_path <- glue("results/effect_of_filtering/scna/{sample_id}_scna_umaps.pdf")
-  plot_list["scna_umaps"] <- plot_path
-  ggsave(plot_path, height = 8, width = 10)
+  (DimPlot(unfiltered_seu, group.by = "scna", cols = scna_cols) +
+  		labs(title = "unfiltered") +
+  		theme(axis.title.x = element_blank()) +
+  		NULL) +
+  	(DimPlot(filtered_seu, group.by = "scna", cols = scna_cols) +
+  	 	labs(title = "excluded") +
+  	 	theme(axis.title.x = element_blank(),
+  	 				axis.title.y = element_blank()) +
+  	 	NULL) +
+  	(DimPlot(original_filtered_seu, group.by = "scna", cols = scna_cols) +
+  	 	labs(title = "filtered") +
+  	 	theme(axis.title.x = element_blank(),
+  	 				axis.title.y = element_blank()) +
+  	 	NULL) +
+  (DimPlot(unfiltered_seu, group.by = group.by, cols = group_cols) +
+    NULL) +
+    (DimPlot(filtered_seu, group.by = group.by, cols = group_cols) +
+     	theme(axis.title.y = element_blank(),
+     				legend.position = "none") +
+      NULL) +
+  	(DimPlot(original_filtered_seu, group.by = group.by, cols = group_cols) +
+  	 	theme(axis.title.y = element_blank(),
+  	 				legend.position = "none") +
+  	 	NULL) +
+    plot_annotation(title = sample_id) +
+  	plot_layout(guides='collect')
 
-  return(plot_list)
+  tmp_path <- tempfile(fileext = ".pdf")
+  plot_list["abbreviation_umaps"] <- tmp_path
+  ggsave(tmp_path, height = 6, width = 9)
+  
+  plot_path <- qpdf::pdf_combine(plot_list, plot_path)
+
+  return(plot_path)
 }
 
-plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, resolution = 0.4) {
+plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, resolution = 0.4, filter_dropped_cluster = NULL, regress_dropped_cluster = NULL, ...) {
   #
 
   sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
 
   regressed_seu <- readRDS(regressed_seu_path)
+  
+  
+  regressed_seu$scna[regressed_seu$scna == ""] <- ".diploid"
+  regressed_seu$scna <- factor(regressed_seu$scna)
 
   regressed_meta <- regressed_seu@meta.data %>%
     tibble::rownames_to_column("cell") %>%
@@ -6358,19 +6440,31 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
     identity()
 
   filtered_seu <- readRDS(filtered_seu_path)
+  
+  filtered_seu$scna[filtered_seu$scna == ""] <- ".diploid"
+  filtered_seu$scna <- factor(filtered_seu$scna)
 
   filtered_seu <- AddMetaData(filtered_seu, regressed_meta)
 
   filtered_seu <- find_all_markers(filtered_seu, colnames(regressed_meta))
 
   regressed_cluster <- glue("regressed.{resolution}")
+  
+  # if(!is.null(regress_dropped_cluster)){
+  # 	regressed_seu <- regressed_seu[,!regressed_seu@meta.data[[regressed_cluster]] %in% regress_dropped_cluster]
+  # }
 
   filtered_cluster <- glue("SCT_snn_res.{resolution}")
+  
+  # browser()
+  if(!is.null(filter_dropped_cluster)){
+  	filtered_seu <- filtered_seu[,!filtered_seu@meta.data[[filtered_cluster]] %in% filter_dropped_cluster]
+  }
 
   regressed_features <-
     filtered_seu@misc$markers[[regressed_cluster]]$presto %>%
     group_by(Cluster) %>%
-    slice_head(n = 10) %>%
+    slice_head(n = 5) %>%
     dplyr::select(regressed_cluster = Cluster, Gene.Name) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(Gene.Name, .keep_all = TRUE) %>%
@@ -6380,7 +6474,7 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
   filtered_features <-
     filtered_seu@misc$markers[[filtered_cluster]]$presto %>%
     group_by(Cluster) %>%
-    slice_head(n = 10) %>%
+    slice_head(n = 5) %>%
     dplyr::select(Cluster, Gene.Name) %>%
     dplyr::mutate(filtered_cluster = Cluster) %>%
     dplyr::ungroup() %>%
@@ -6427,7 +6521,7 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
     ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[[filtered_cluster]], color = .data[["scna"]])) +
     geom_point(size = 0.1) +
     geom_point(data = centroid_data, aes(x = mean_x, y = mean_y, fill = .data[[filtered_cluster]]), size = 6, alpha = 0.7, shape = 23, colour = "black") +
-    facet_wrap(~ .data[[filtered_cluster]], ncol = 2) +
+    facet_wrap(~ .data[[filtered_cluster]], ncol = 3) +
     theme_light() +
     # geom_label(data = labels,
     # 					 aes(label = label),
@@ -6485,7 +6579,7 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
     ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[[regressed_cluster]], color = .data[["scna"]])) +
     geom_point(size = 0.1) +
     geom_point(data = centroid_data, aes(x = mean_x, y = mean_y, fill = .data[[regressed_cluster]]), size = 6, alpha = 0.7, shape = 23, colour = "black") +
-    facet_wrap(~ .data[[regressed_cluster]], ncol = 2) +
+    facet_wrap(~ .data[[regressed_cluster]], ncol = 3) +
     theme_light() +
     # geom_label(data = labels,
     # 					 aes(label = label),
@@ -6506,15 +6600,34 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
 
 
   # patchworks ------------------------------
+  
+  plot_list = list(
+  	"A" = filtered_heatmap,
+  	"B" = regressed_heatmap,
+  	"C" = filtered_facet_cell_cycle_plot,
+  	"D" = regressed_facet_cell_cycle_plot,
+  	"E" = plot_spacer(),
+  	"F" = plot_spacer()
+  )
+  
+  layout <- "
+              AAAABBBB
+              AAAABBBB
+              AAAABBBB
+              AAAABBBB
+              AAAABBBB
+              CCCEDDDF
+              CCCEDDDF
+              "
+  
   wrap_plots(
-    filtered_heatmap,
-    regressed_heatmap,
-    filtered_facet_cell_cycle_plot,
-    regressed_facet_cell_cycle_plot
+  	plot_list
   ) +
+  	plot_layout(design = layout) +
     plot_annotation(title = sample_id)
 
-  mypatch <- ggsave(glue("results/{sample_id}_regression_effects.pdf"), w = 24, h = 20)
+  plot_path <- glue("results/{sample_id}_regression_effects.pdf")
+  mypatch <- ggsave(plot_path, ...)
 
   # markerplot <- plot_seu_marker_heatmap(filtered_seu_path, nb_path = numbat_rds_file, clone_simplifications = large_clone_simplifications, ...)
   return(mypatch)
@@ -7921,10 +8034,12 @@ make_clustrees_for_sample <- function(seu_path, mylabel = "sample_id", assay = "
   sample_id <- mylabel
 
   seu <- readRDS(seu_path)
-  seu@meta.data <- seu@meta.data %>%
-    dplyr::mutate(scna = na_if(scna, "")) %>%
-    dplyr::mutate(scna = replace_na(scna, ".diploid")) %>%
-    identity()
+  
+  seu@meta.data <- 
+  	seu@meta.data %>%
+  	dplyr::mutate(across(where(is.character), ~na_if(.x, ""))) %>%
+  	dplyr::mutate(scna = replace_na(scna, ".diploid")) %>%
+  	identity()
 
   scna_counts <-
     seu@meta.data %>%
@@ -7943,21 +8058,28 @@ make_clustrees_for_sample <- function(seu_path, mylabel = "sample_id", assay = "
   names(pairwise_clone_vectors) <- map(pairwise_clone_vectors, ~ paste(., collapse = "_v_"))
 
   possible_make_clustree_for_clone_comparison <- possibly(make_clustree_for_clone_comparison)
-
+  
+  
+  
   clustree_output <- map(pairwise_clone_vectors, ~ possible_make_clustree_for_clone_comparison(seu, sample_id, .x, mylabel, assay, resolutions, fisher_p_val_threshold))
 
   return(clustree_output)
 }
 
 make_clustree_for_clone_comparison <- function(seu, sample_id, clone_set, mylabel = "sample_id", assay = "SCT", resolutions = seq(0.2, 2.0, by = 0.2), fisher_p_val_threshold = 0.1) {
+	
+	
+	
   seu <- seu[, seu$scna %in% clone_set]
 
   resolutions <-
     glue("{assay}_snn_res.{resolutions}") %>%
     set_names(.)
 
-  seu_meta <- seu@meta.data %>%
-    dplyr::mutate(scna = na_if(scna, "")) %>%
+  # sdfg
+  seu_meta <- 
+  	seu@meta.data %>%
+  	dplyr::mutate(across(where(is.character), ~na_if(.x, ""))) %>%
     dplyr::mutate(scna = replace_na(scna, "diploid")) %>%
     identity()
 
@@ -7974,37 +8096,42 @@ make_clustree_for_clone_comparison <- function(seu, sample_id, clone_set, mylabe
 
   clustree_plot <- clustree::clustree(seu, assay = assay, show_axis = TRUE)
 
-  clustree_meta <- seu@meta.data[, str_subset(colnames(seu@meta.data), "SCT_snn.res.*")]
+  clustree_meta <- seu@meta.data[, str_subset(colnames(seu@meta.data), glue("{assay}_snn.res.*"))]
 
   clustree_graph <- clustree:::build_tree_graph(
     clusterings = clustree_meta,
-    prefix = "SCT_snn_res.",
+    prefix = glue("{assay}_snn.res."),
     metadata = clustree_meta,
-    node_aes_list = list(colour = list(value = "SCT_snn_res.", aggr = NULL), size = list(
+    node_aes_list = list(colour = list(value = glue("{assay}_snn.res."), aggr = NULL), size = list(
       value = "size", aggr = NULL
     ), alpha = list(value = 1, aggr = NULL)),
     prop_filter = 0.1,
     count_filter = 0
   )
 
+  from_res_col = as.character(glue("from_{assay}_snn.res."))
+  to_res_col = as.character(glue("to_{assay}_snn.res."))
+  
   daughter_clusters <-
-    clustree_graph %>%
-    tidygraph::activate(edges) %>%
-    data.frame() %>%
-    dplyr::group_by(from_SCT_snn_res., from_clust) %>%
-    dplyr::arrange(from_SCT_snn_res., from_clust, to_clust) %>%
-    dplyr::filter(n_distinct(to_clust) > 1) %>%
-    dplyr::mutate(from_SCT_snn_res. = as.character(from_SCT_snn_res.)) %>%
-    dplyr::mutate(from_clust = as.character(from_clust)) %>%
-    split(.$from_SCT_snn_res.) %>%
-    map(~ split(.x, .x$from_clust)) %>%
-    identity()
+  	clustree_graph %>%
+  	tidygraph::activate(edges) %>%
+  	data.frame() %>%
+  	dplyr::group_by(.data[[from_res_col]], from_clust) %>%
+  	dplyr::arrange(.data[[from_res_col]], from_clust, to_clust) %>%
+  	dplyr::filter(n_distinct(to_clust) > 1) %>%
+  	dplyr::mutate({{from_res_col}} := as.character(.data[[from_res_col]])) %>%
+  	dplyr::mutate(from_clust = as.character(from_clust)) %>%
+  	split(.[[from_res_col]]) %>%
+  	map(~ split(.x, .x[[from_res_col]])) %>%
+  	identity()
 
   for (resolution in names(daughter_clusters)) {
     for (from_clust in names(daughter_clusters[[resolution]])) {
-      daughter_clusters[[resolution]][[from_clust]] <- chi_sq_daughter_clusters(seu, daughter_clusters, resolution = resolution, from_clust = from_clust)
+      daughter_clusters[[resolution]][[from_clust]] <- chi_sq_daughter_clusters(seu, daughter_clusters, resolution = resolution, from_clust = from_clust, assay = assay)
     }
   }
+  
+  
 
   daughter_clusters <-
     daughter_clusters %>%
@@ -8015,30 +8142,44 @@ make_clustree_for_clone_comparison <- function(seu, sample_id, clone_set, mylabe
     dplyr::ungroup() %>%
     dplyr::arrange(clone_comparison, p.value) %>%
     dplyr::slice_min(p.value, n = 20, by = clone_comparison) %>%
-    dplyr::distinct(from_clust, to_clust, clone_comparison, from_SCT_snn_res., .keep_all = TRUE) %>%
+    dplyr::distinct(from_clust, to_clust, clone_comparison, .data[[from_res_col]], .keep_all = TRUE) %>%
     dplyr::select(all_of(c(
-      "to_clust", "to_SCT_snn_res.", "from_clust", "from_SCT_snn_res.",
+      "to_clust", to_res_col, "from_clust", from_res_col,
       "count", "in_prop", "clone_comparison", "p.value", "method"
     ))) %>%
-    dplyr::group_by(from_clust, from_SCT_snn_res., clone_comparison) %>%
+    dplyr::group_by(from_clust, .data[[from_res_col]], clone_comparison) %>%
     dplyr::mutate(to_clust = paste(to_clust, collapse = "_")) %>%
-    dplyr::distinct(from_clust, from_SCT_snn_res., clone_comparison, .keep_all = TRUE) %>%
+    dplyr::distinct(from_clust, .data[[from_res_col]], clone_comparison, .keep_all = TRUE) %>%
     tidyr::pivot_wider(names_from = "clone_comparison", values_from = "p.value") %>%
     identity()
 
-  clone_comparisons <- str_subset(colnames(daughter_clusters), "_v_") %>%
-    set_names(.)
+  # clone_comparisons <- str_subset(colnames(daughter_clusters), "_v_") %>%
+  #   set_names(.)
+  
+  clone_comparisons <-
+  	paste0(clone_set, collapse= "_v_")
+
+  res_col = glue("{assay}_snn_res.")
+  
+  # clustree_plot$data <-
+  #   dplyr::left_join(clustree_plot$data, speckle_proportions, by = c("node" = "clusters")) %>%
+  #   dplyr::left_join(daughter_clusters, by = c(res_col = from_res_col, "cluster" = "from_clust")) %>%
+  #   # dplyr::mutate(signif = ifelse(is.na(method), 0, 1)) %>%
+  #   identity()
 
   clustree_plot$data <-
-    dplyr::left_join(clustree_plot$data, speckle_proportions, by = c("node" = "clusters")) %>%
-    dplyr::left_join(daughter_clusters, by = c("SCT_snn_res." = "from_SCT_snn_res.", "cluster" = "from_clust")) %>%
-    # dplyr::mutate(signif = ifelse(is.na(method), 0, 1)) %>%
-    identity()
-
+  clustree_plot$data |> 
+  	dplyr::left_join(speckle_proportions, by = c("node" = "clusters")) %>%
+  	dplyr::left_join(daughter_clusters, by = join_by({{res_col}} == {{from_res_col}}, "cluster" == "from_clust")) |>
+  	identity()
+  
   clustree_plot$layers[[2]] <- NULL
-
+  
+  # browser()
+  
   clustree_res <- map(clone_comparisons, plot_clustree_per_comparison, clustree_plot, speckle_proportions, sample_id)
 
+  
   clustree_plots <- map(clustree_res, "plot")
 
   clustree_plot_path <- glue("results/{mylabel}_{clone_comparisons}_clustree.pdf")
@@ -8072,7 +8213,7 @@ plot_clustree_per_comparison <- function(mylabel, clustree_plot, speckle_proport
   clone_colors <- brewer_palettes[1:length(clone_names)] %>%
     set_names(clone_names)
 
-  clone_colors <- clone_colors[names(clone_colors) %in% comparison_clones]
+  # clone_colors <- clone_colors[names(clone_colors) %in% comparison_clones]
 
   clustree_res <- imap(clone_colors, ~ color_clustree_by_clone(clustree_plot, .x, .y, mylabel = mylabel, sample_id))
 
@@ -8089,7 +8230,7 @@ color_clustree_by_clone <- function(clustree_plot, mycolor, myclone, mylabel = "
 
   label_data <-
     clustree_plot$data %>%
-    dplyr::filter(!!sym(mylabel) < 0.05) %>%
+    dplyr::filter(!!sym(myclone) < 0.05) %>%
     # dplyr::filter(x12p_16q_1q_2p_v_x12p_16q_1q_2p_11p_8p < 0.05) %>%
     identity()
 
@@ -8104,15 +8245,18 @@ color_clustree_by_clone <- function(clustree_plot, mycolor, myclone, mylabel = "
   return(list("plot" = myplot, "table" = clustree_plot$data))
 }
 
-chi_sq_daughter_clusters <- function(seu, daughter_clusters, resolution, from_clust) {
+chi_sq_daughter_clusters <- function(seu, daughter_clusters, resolution, from_clust, assay = "SCT") {
   #
-  from_resolution <- glue("SCT_snn_res.{resolution}")
+  from_resolution <- glue("{assay}_snn_res.{resolution}")
 
   to_clusts <- daughter_clusters[[as.character(resolution)]][[as.character(from_clust)]][["to_clust"]]
-  to_resolution <- unique(daughter_clusters[[as.character(resolution)]][[as.character(from_clust)]][["to_SCT_snn_res."]])
-  to_resolution <- glue("SCT_snn_res.{to_resolution}")
+  
+  to_resolution <- unique(daughter_clusters[[as.character(resolution)]][[as.character(from_clust)]][[glue("to_{assay}_snn.res.")]])
+  
+  to_resolution <- glue("{assay}_snn_res.{to_resolution}")
 
   message(glue("resolution: {from_resolution} from_clust: {from_clust}"))
+  
   test_seu <- seu[, seu[[]][[to_resolution]] %in% to_clusts]
 
   test_seu$scna <- janitor::make_clean_names(test_seu$scna, allow_dupes = TRUE)
@@ -8715,8 +8859,19 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
       dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters))) %>%
       dplyr::mutate(centroid = "centroids") %>%
       identity()
-
-
+    
+    centroid_plot <-
+    	cc_data %>%
+    	ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[["clusters"]], color = .data[["clusters"]])) +
+    	geom_point(size = 0.1) +
+    	theme_light() +
+    	theme(
+    		strip.background = element_blank(),
+    		strip.text.x = element_blank()
+    	) +
+    	geom_point(data = centroid_data, aes(x = mean_x, y = mean_y, fill = .data[["clusters"]]), size = 6, alpha = 0.7, shape = 23, colour = "black") +
+    	guides(fill = "none", color = "none") +
+    	NULL
 
     facet_cell_cycle_plot <-
       cc_data %>%
@@ -9234,7 +9389,7 @@ make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL
 		} else {
 			iterative <- group.bys
 		}
-	# browser()
+	
 	
 	for(value in iterative){
 		# start loop ------------------------------
@@ -9414,19 +9569,24 @@ make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL
 			# dplyr::rename({{group.by}} := cluster) %>%
 			identity()
 		
-		cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna"))
+		cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna")) |> 
+			dplyr::mutate(cluster_facet = dplyr::case_when(
+				str_detect(.data[["clusters"]], "hsp") ~ "stress",
+				str_detect(.data[["clusters"]], "hyp") ~ "stress",
+				.default = "cc"))
 		
 		centroid_data <-
 			cc_data %>%
-			dplyr::group_by(clusters) %>%
+			dplyr::group_by(clusters, cluster_facet) %>%
 			dplyr::summarise(mean_x = mean(S.Score), mean_y = mean(G2M.Score)) %>%
 			dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters))) %>%
 			dplyr::mutate(centroid = "centroids") %>%
 			identity()
 		
 		centroid_plot <-
-			cc_data %>%
+			cc_data  |> 
 			ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[["clusters"]], color = .data[["clusters"]])) +
+			facet_wrap(~cluster_facet) +
 			geom_point(size = 0.1) +
 			theme_light() +
 			theme(
@@ -9737,8 +9897,6 @@ make_clone_distribution_figure_debug <- function(full_seu, seu_path = NULL, clus
 		
 		# cluster similarity ------------------------------
 		
-		# 
-		
 		cluster_similarity_plot <-
 			cluster_similarity |> 
 			dplyr::mutate(similarity = 1-avg_dist) |> 
@@ -9805,7 +9963,6 @@ make_clone_distribution_figure_debug <- function(full_seu, seu_path = NULL, clus
 			dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters))) %>%
 			dplyr::mutate(centroid = "centroids") %>%
 			identity()
-		
 		centroid_plot <-
 			cc_data %>%
 			ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[["clusters"]], color = .data[["clusters"]])) +
@@ -13053,7 +13210,7 @@ make_cc_plot <- function(seu, var_y = "clusters") {
 	return(list("facet" = centroid_plot, "whole" = cc_plot))
 }
 
-plot_corresponding_clusters_diffex_volcanos <- function(diffex_list, seu_path) {
+plot_corresponding_clusters_diffex_volcanos <- function(diffex_list, seu_path, ...) {
   # asdf
   file_name <- fs::path_ext_remove(fs::path_file(seu_path))
 
@@ -13068,10 +13225,8 @@ plot_corresponding_clusters_diffex_volcanos <- function(diffex_list, seu_path) {
     map(tibble::column_to_rownames, "symbol") |>
     identity()
 
-  # undebug(make_volcano_plots)
-
   myplots <-
-    imap(res, ~ make_volcano_plots(.x, sample_id = .y, mysubtitle = .y)) %>%
+    imap(res, ~ make_volcano_plots(.x, sample_id = .y, mysubtitle = .y, color_by_chrom = FALSE)) %>%
     identity()
 
   pdf_path <- glue("results/diffex_volcanos_{file_name}.pdf")
@@ -13433,6 +13588,53 @@ plot_corresponding_enrichment <- function(sample_diffex_list, filename, ...){
 		map(filter_enrichment_result) |> 
 		map(plot_enrichment) |>
 		imap(~{.x + labs(title = sample_id, subtitle = .y)}) |>
+		map(~{.x + scale_y_discrete(labels = function(x) str_wrap(str_replace_all(str_remove(x, "HALLMARK"), "_", " "), width = 20))}) |>
+		identity()
+	
+	enrichment_plots[[1]] + 
+		scale_y_discrete(labels = function(x) str_wrap(str_replace_all(str_remove(x, "HALLMARK"), "_", " "), width = 10)) +
+		# theme(axis.text.y = element_text(angle = 45, hjust = 1)) + 
+		NULL
+	
+	enrichment_tables <-
+		enrichments |> 
+		map(clusterProfiler::setReadable, OrgDb = org.Hs.eg.db::org.Hs.eg.db, keyType = "ENTREZID") |>
+		map(as_tibble) |> 
+		identity()
+	
+	tables_path <- writexl::write_xlsx(enrichment_tables, glue("results/corresponding_states_enrichment_{sample_id}.xlsx"))
+	
+	plot_path <- glue("results/{sample_id}_corresponding_clusters_diffex_enrichment.pdf", h = 10)
+	pdf(plot_path)
+	print(enrichment_plots)
+	dev.off()
+	
+	return(list("plot" = plot_path, "table" = tables_path, "enrichment" = enrichments))
+	
+}
+
+plot_fig_03_09 <- function(sample_diffex_list, filename, ...){
+	
+	sample_id <- fs::path_file(filename)
+	
+	gene_sets <- map(c("H" = "H", "C6" = "C6"), ~msigdbr::msigdbr(species = "human", category = .x)) |> 
+		map(dplyr::select, gs_name, entrez_gene) |> 
+		dplyr::bind_rows()
+	
+	enrichments <- sample_diffex_list |> 
+		map("all") |> 
+		map(prep_for_enrichment, TERM2GENE = gene_sets)
+	
+	filter_enrichment_result <- function(enrichment_result){
+		enrichment_result@result[enrichment_result@result$p.adjust < 0.25,] 
+		return(enrichment_result)
+	}
+	
+	enrichment_plots <- 
+		enrichments |> 
+		map(filter_enrichment_result) |> 
+		map(plot_enrichment) |>
+		imap(~{.x + labs(title = sample_id, subtitle = .y)}) |>
 		identity()
 	
 	enrichment_tables <-
@@ -13569,7 +13771,7 @@ plot_fig_02 <- function(cluster_orders, plot_path = "results/fig_02.pdf"){
 	fig_2d_cc <- map(c(batch_corrected_seu, integrated_1q_seus), plot_clone_cc_plots, var_y = "clusters", scna_of_interest = "1q", labeled_values = c("g2_m"))
 	
 	fig_2d_cc_table <- map(fig_2d_cc, ~.x$data) |> 
-		set_names(str_extract(integrated_1q_seus, "SRR[0-9]*")) |> 
+		set_names(c("integrated", str_extract(integrated_1q_seus, "SRR[0-9]*"))) |> 
 		write_xlsx(path = "results/fig_2d_cc.xlsx")
 	
 	drop_y_axis <- function(myplot){
@@ -13642,13 +13844,13 @@ plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 	names(integrated_16q_seus) <- fs::path_ext_remove(fs::path_file(integrated_16q_seus))
 	
 	fig_3a_c <- make_clone_distribution_figure("output/seurat/integrated_16q/integrated_seu_16q_complete.rds", cluster_orders,
-																						 height = 12, width = 20, plot_path = "results/fig_3a_c.pdf",
+																						 height = 12, width = 18, plot_path = "results/fig_3a_c.pdf",
 																						 heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch"))
 	
 	fig_3d_cc <- map(c(batch_corrected_seu, integrated_16q_seus), plot_clone_cc_plots, scna_of_interest = "16q", var_y = "clusters", labeled_values = c("pm"))
 	
 	fig_3d_cc_table <- map(fig_3d_cc, ~.x$data) |> 
-		set_names(str_extract(integrated_16q_seus, "SRR[0-9]*")) |> 
+		set_names(c("integrated", str_extract(integrated_16q_seus, "SRR[0-9]*"))) |> 
 		write_xlsx(path = "results/fig_3d_cc.xlsx")
 	
 	drop_y_axis <- function(myplot){
@@ -13773,7 +13975,7 @@ plot_fig_04_05 <- function(seu_paths, integrated_enrichment, plot_path = "result
 	
 }
 
-plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_paths = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", height = 10, width = 18, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, rb_scna_samples, large_clone_comparisons, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, split_columns = "clusters", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch")) {
+plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_paths = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", height = 10, width = 14, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, rb_scna_samples, large_clone_comparisons, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, split_columns = "clusters", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch")) {
 	kept_phases <- kept_phases %||% phase_levels
 	
 	file_id <- fs::path_file(seu_path)
@@ -13931,15 +14133,6 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 				dplyr::filter(Gene.Name %in% VariableFeatures(seu)) %>%
 				identity()
 		}
-		# 
-		#     large_enough_clusters <-
-		#       seu@meta.data %>%
-		#       dplyr::group_by(clusters) %>%
-		#       dplyr::count() |>
-		#       dplyr::filter(n >= min_cells_per_cluster) %>%
-		#       dplyr::pull(clusters)
-		# 
-		#     seu <- seu[, seu$clusters %in% large_enough_clusters]
 		
 		seu$scna[seu$scna == ""] <- ".diploid"
 		seu$scna <- factor(seu$scna)
@@ -13986,19 +14179,46 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 			# dplyr::rename({{group.by}} := cluster) %>%
 			identity()
 		
-		cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna"))
+		# cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna"))
+		# 
+		# centroid_data <-
+		# 	cc_data %>%
+		# 	dplyr::group_by(clusters) %>%
+		# 	dplyr::summarise(mean_x = mean(S.Score), mean_y = mean(G2M.Score)) %>%
+		# 	dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters))) %>%
+		# 	dplyr::mutate(centroid = "centroids") %>%
+		# 	identity()
+		# 
+		# centroid_plot <-
+		# 	cc_data %>%
+		# 	ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[["clusters"]], color = .data[["clusters"]])) +
+		# 	geom_point(size = 0.1) +
+		# 	theme_light() +
+		# 	theme(
+		# 		strip.background = element_blank(),
+		# 		strip.text.x = element_blank()
+		# 	) +
+		# 	geom_point(data = centroid_data, aes(x = mean_x, y = mean_y, fill = .data[["clusters"]]), size = 6, alpha = 0.7, shape = 23, colour = "black") +
+		# 	guides(fill = "none", color = "none") +
+		# 	NULL
+		cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna")) |> 
+			dplyr::mutate(cluster_facet = dplyr::case_when(
+				str_detect(.data[["clusters"]], "hsp") ~ "stress",
+				str_detect(.data[["clusters"]], "hyp") ~ "stress",
+				.default = "cc"))
 		
 		centroid_data <-
 			cc_data %>%
-			dplyr::group_by(clusters) %>%
+			dplyr::group_by(clusters, cluster_facet) %>%
 			dplyr::summarise(mean_x = mean(S.Score), mean_y = mean(G2M.Score)) %>%
 			dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters))) %>%
 			dplyr::mutate(centroid = "centroids") %>%
 			identity()
 		
 		centroid_plot <-
-			cc_data %>%
+			cc_data  |> 
 			ggplot(aes(x = `S.Score`, y = `G2M.Score`, group = .data[["clusters"]], color = .data[["clusters"]])) +
+			facet_wrap(~cluster_facet) +
 			geom_point(size = 0.1) +
 			theme_light() +
 			theme(
@@ -14008,6 +14228,8 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 			geom_point(data = centroid_data, aes(x = mean_x, y = mean_y, fill = .data[["clusters"]]), size = 6, alpha = 0.7, shape = 23, colour = "black") +
 			guides(fill = "none", color = "none") +
 			NULL
+		
+		# 
 		
 		
 		facet_cell_cycle_plot <-
@@ -14051,11 +14273,6 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 			seu_name = glue("{tumor_id} {comparison_scna}"), var_x = "scna", var_y = "clusters", signif = TRUE, plot_type = "clone"
 		)
 		
-		# umap_plots <- DimPlot(full_seu, group.by = c("scna", "clusters"), combine = FALSE) %>%
-		# 	# map(~(.x + theme(legend.position = "bottom"))) %>%
-		# 	wrap_plots(ncol = 1)
-		# full_seu$clusters
-		# full_seu[[group.by]] <-
 		full_seu@meta.data[[group.by]] <- factor(full_seu@meta.data[[group.by]], levels = single_cluster_order_vec)
 		levels(full_seu@meta.data[[group.by]]) <- names(single_cluster_order_vec)
 		# umap_plots <- make_faded_umap_plots(full_seu, retained_clones, group_by = group.by)
@@ -14099,11 +14316,11 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 			)
 			
 			layout <- "
-              AAAAAABBCD
-              AAAAAABBEE
-              AAAAAABBEE
-              AAAAAABBEE
-              AAAAAABBEE
+              AAAAAACC
+              AAAAAABB
+              AAAAAABB
+              AAAAAABB
+              AAAAAADD
       "
 			
 			plot_collage <- wrap_plots(collage_plots) +
@@ -14368,7 +14585,7 @@ plot_fig_07c <- function(){
 		map(plot_enrichment, analysis_method = "ora") |> 
 		imap(~{.x + labs(title = .y)})
 	
-	# browser()
+	
 	enrichment_plots <- c(rbind(c6_enrichment_plots, h_enrichments_plots)) |> 
 		map(~{.x + scale_y_discrete(labels = function(x) str_wrap(str_replace_all(x, "_", " "), width = 15)) })
 	
@@ -14449,7 +14666,7 @@ make_corresponding_states_dictionary <- function(my_tbl){
 }
 
 make_annoHighlight_from_consensus <- function(ideogramPlot, ploty, chrom, chromstart, chromend, fill, width, pg_width){
-	# browser()
+	
 	region <- pgParams(chrom = chrom, chromstart = chromstart, chromend = chromend)
 	annoHighlight(
 		plot = ideogramPlot, params = region,
@@ -14473,7 +14690,7 @@ make_annoHighlight_from_consensus <- function(ideogramPlot, ploty, chrom, chroms
 }
 
 make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
-	# browser()
+	
 	chrom_lengths = seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene)
 	maxChromSize <- max(chrom_lengths)
 	
@@ -14497,7 +14714,7 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
 		# print(n = 40) |>
 		identity()
 	
-	test0 <- mynb$joint_post |> 
+	segmentation_table <- mynb$joint_post |> 
 		dplyr::filter(seg %in% retained_segs) |> 
 		dplyr::filter(p_cnv > 0.9) |> 
 		dplyr::distinct(CHROM, seg, cnv_state, .keep_all = TRUE) |> 
@@ -14512,7 +14729,9 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
 																					cnv_state == "loh" ~ "green")) |> 
 		dplyr::rename(chrom = CHROM, chromstart = seg_start, chromend = seg_end) |> 
 		dplyr::mutate(width = chromend - chromstart) |> 
-		dplyr::select(chrom, chromstart, chromend, fill, width)
+		dplyr::select(chrom, chromstart, chromend, fill, width, cnv_state) |> 
+		dplyr::mutate(chrom = factor(chrom, levels = paste0("chr", seq(1,22)))) |> 
+		dplyr::arrange(chrom, chromstart)
 	
 	pg_width = 4.25
 	pg_height = 8.85
@@ -14555,9 +14774,9 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
 			x = 0.05, y = yCoord, fontsize = 10, rot = 90
 		)
 		
-		if(chr %in% test0$chrom){
+		if(chr %in% segmentation_table$chrom){
 			print("yes")
-			test0 |>
+			segmentation_table |>
 				dplyr::filter(chrom %in% chr) |>
 				pmap(~make_annoHighlight_from_consensus(ideogramPlot, yCoord, ..1, ..2, ..3, ..4, ..5, pg_width))
 		}
@@ -14566,17 +14785,10 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
 	}
 	
 	axis_length <- (4 * chrom_lengths[["chr1"]]) / maxChromSize
-	# ## Plot genome label
-	# plotGenomeLabel(
-	# 	chrom = "chr1", chromstart = 0, chromend = maxChromSize,
-	# 	assembly = "hg38", x = 0.15, y = yCoord, 
-	# 	length = axis_length, at = maxChromSize/4*seq(0,4),
-	# 	scale = "Mb", just = c("left", "top"), default.units = "inches"
-	# )
 	
 	dev.off()
 	
-	return(plot_path)
+	return(list("plot" = plot_path, "table" = segmentation_table))
 	
 }
 
@@ -14693,15 +14905,27 @@ make_rb_scna_ideograms_old <- function(consensus_file) {
 	return(plot_path)
 }
 
-plot_fig_s03c <- function(plot_path = "results/fig_s0x.pdf"){
+plot_fig_s03c <- function(plot_path = "results/fig_s03c.pdf", table_path = "results/table_s12.xlsx"){
 	
 	nb_paths <- dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> 
 		sort()
 	
-	ideogram_plots<- map(nb_paths, make_rb_scna_ideograms) |> 
+	ideogram_res <- map(nb_paths, make_rb_scna_ideograms)
+	
+	ideogram_tables <- 
+		ideogram_res |> 
+		map("table")
+	
+	ideogram_tables |> 
+		set_names(str_extract(names(ideogram_tables), "SRR[0-9]*")) |> 
+		writexl::write_xlsx(path = table_path)
+	
+	ideogram_plots <-
+		ideogram_res |>
+		map("plot") |>
 		qpdf::pdf_combine(plot_path)
 	
-	return(plot_path)
+	return(list(plot_path, table_path))
 	
 }
 
@@ -14748,7 +14972,7 @@ make_table_s02 <- function(meta_path = "data/metadata.tsv") {
 }
 
 check_cluster_marker_gene <- function(seu_path, cluster_dictionary){
-	# browser()
+	
 	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
 	seu <- readRDS(seu_path)
 	
@@ -14964,7 +15188,7 @@ make_fig_s16_table_s04 <- function(plot_path = "results/fig_s16.pdf", table_path
 			"UCEC",                             "Uterine Corpus Endometrial Carcinoma",
 			"UVM",                                                   "Uveal Melanoma"
 		) |> 
-		clean_names()
+		janitor::clean_names()
 	
 	
 	taylor_freq0 <- read_xlsx("data/taylor_et_al_2018_genomic_and_functional_approaches_to_understanding_cancer_aneuploidy/1-s2.0-S1535610818301119-mmc2.xlsx", skip = 1) |> 
@@ -15393,4 +15617,56 @@ label_enrichment_by_cis <- function(mytable, mychrom = "01", myarm = "q") {
 	test3 <- 
 		dplyr::left_join(mytable, test2, by = c("cluster", "ID")) |> 
 		dplyr::select(cluster, ID, geneID, genes_in_cis, everything())
+}
+
+
+plot_tcga_gistic <- function(plot_path = "results/plot_gistic.pdf") {
+	
+	tcga_cohorts <- 
+		tcga_gistic_available() |> 
+		dplyr::filter(CopyNumberLevel == "all") |> 
+		dplyr::select(FullName, Cohort) |> 
+		dplyr::mutate(FullName = glue("{FullName} ({Cohort})")) |> 
+		tibble::deframe() |>
+		identity()
+	
+	make_gistic_plot <- function(cohort, fullname){
+		cohort |> 
+			tcga_gistic_load(source = "Firehose", cnLevel = "all") |> 
+			gisticChromPlot(fdrCutOff = 0.05) |> 
+			recordPlot()
+		# ggplotify::as.ggplot(gisticChromPlot(cohort))
+		title(main = fullname, 
+					cex.main = 1,   font.main= 4, col.main= "black"
+		)
+	}
+	
+	possibly_gistic_plot <- possibly(make_gistic_plot)
+	
+	possibly_gistic_plot("READ")
+	
+	pdf(plot_path, h = 3)
+	gistic_plots <- 
+		tcga_cohorts |> 
+		imap(possibly_gistic_plot)
+	dev.off()
+	
+	return(plot_path)
+}
+
+
+extract_full_segmentation <- function(numbat_rds_files, table_path = "results/table_s11.xlsx") {
+	retrieve_segmentation <- function(rds_file){
+		joint_post <- readRDS(rds_file)[["joint_post"]]
+		return(joint_post)
+	}
+	
+	segmentation_table <- 
+		numbat_rds_files |> 
+		set_names(str_extract(numbat_rds_files, "SRR[0-9]*")) |> 
+		map(retrieve_segmentation) |> 
+		# dplyr::bind_rows(.id = "sample_id") |> 
+		identity()
+	
+	writexl::write_xlsx(segmentation_table, table_path)
 }
