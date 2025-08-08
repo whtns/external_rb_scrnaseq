@@ -23,14 +23,14 @@ library(glue)
 hallmark_gene_sets = msigdbr(species = "Homo sapiens", category = "H")
 ```
 
-## functions 
+## functions
 
 ```{r}
 source("functions.R")
 
 ```
 
-## objects 
+## objects
 
 ```{r}
 myseus <- list()
@@ -893,6 +893,7 @@ myseus[[sample_id]] <- NULL
 ```
 
 ## SRR14800541 numbat ------------------------------
+
 ```{r}
 sample_id = "SRR14800541"
 study = "yang"
@@ -957,6 +958,7 @@ merged_metadata = read_csv(path(glue("~/single_cell_projects/resources/{study}_e
 ```
 
 ## SRR17960481 numbat ------------------------------
+
 ```{r}
 sample_id = "SRR17960481"
 study = "field"
@@ -1064,6 +1066,7 @@ myseus[[sample_id]] <- NULL
 ```
 
 ## SRR17960483 numbat ------------------------------
+
 ```{r}
 sample_id = "SRR17960483"
 study = "field"
@@ -1117,6 +1120,7 @@ myseus[[sample_id]] <- NULL
 ```
 
 ## SRR17960484 numbat ------------------------------
+
 ```{r}
 sample_id = "SRR17960484"
 study = "field"
@@ -1190,7 +1194,7 @@ dev.off()
 browseURL("results/phylo_probability_plots.pdf")
 ```
 
-## subtype marker plots 
+## subtype marker plots
 
 ```{r}
 subtype_hallmarks <-
@@ -1228,7 +1232,8 @@ dev.off()
 browseURL("results/subtype_hallmark_plots.pdf")
 ```
 
-## marker plots 
+## marker plots
+
 ```{r}
 merged_marker_plots <- map(output_plots, "merged_marker")
 sample_marker_plots <- map(output_plots, "sample_marker")
@@ -1242,6 +1247,7 @@ browseURL("results/marker_plots.pdf")
 ```
 
 ## dimplots
+
 ```{r}
 pdf("results/dimplots.pdf", width = 10)
 map(output_plots, "dimplot")
@@ -1251,6 +1257,7 @@ browseURL("results/dimplots.pdf")
 ```
 
 ## markers of interest ------------------------------
+
 ```{r}
 checked_cluster_markers <-
 	list(
