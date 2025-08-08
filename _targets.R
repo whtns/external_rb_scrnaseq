@@ -572,7 +572,6 @@ tar_plan(
   					 )
   					 ),
   
-  
   tar_target(filtered_seus,
     filter_cluster_save_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, cells_to_remove, extension = "_filtered", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
     pattern = map(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions),
@@ -870,13 +869,13 @@ tar_plan(
 
   # cis ------------------------------
   tar_target(cis_diffex_clones,
-    find_diffex_clones(debranched_seus, numbat_rds_files, large_clone_comparisons, location = "in_segment"),
+    find_diffex_clones(debranched_seus, numbat_rds_files, large_clone_comparisons, location = "cis"),
     pattern = map(debranched_seus),
     iteration = "list"
   ),
   
   tar_target(cis_diffex_clones_for_each_cluster,
-    find_diffex_bw_clones_for_each_cluster(debranched_seus, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "in_segment"),
+    find_diffex_bw_clones_for_each_cluster(debranched_seus, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "cis"),
     pattern = map(debranched_seus),
     iteration = "list"
   ),
@@ -1159,11 +1158,11 @@ tar_plan(
   
   tar_target(debranched_seus_2p,
   		c(
-  			# "SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds", 
+  			"SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds",
   			"SRR13884247" = "output/seurat/SRR13884247_branch_6_filtered_seu.rds", 
   			"SRR13884248" = "output/seurat/SRR13884248_filtered_seu_2p.rds", 
-  			"SRR13884249" = "output/seurat/SRR13884249_filtered_seu_2p.rds", 
-  			"SRR17960481" = "output/seurat/SRR17960481_filtered_seu.rds", 
+  			# "SRR13884249" = "output/seurat/SRR13884249_filtered_seu_2p.rds", 
+  			# "SRR17960481" = "output/seurat/SRR17960481_filtered_seu.rds", 
   			"SRR17960484" = "output/seurat/SRR17960484_filtered_seu_2p.rds" # too many changes at once to conclude anything
   		)
   		),
@@ -1208,33 +1207,55 @@ tar_plan(
   					 pattern = map(debranched_seus_2p),
   					 iteration = "list"
   ),
+# Figure S4.9: Sample-specific analyses of tumors with 2p+ subclones without integration. 
+	tar_target(fig_s04_09,
+						 qpdf::pdf_combine(collages_2p, "results_fig_s04_09.pdf")
+	),
 
 	tar_target(fig_02,
 						 plot_fig_02(cluster_orders),
 						 ),
 	
+# Sample-specific analyses of tumors with 1q+ subclones after integration.
 	tar_target(fig_s07,
 						 plot_fig_s04_06(integrated_seus_1q, cluster_orders, "results/fig_s07.pdf")
 	),
 
-tar_target(fig_s08,
-					 plot_fig_s04_06(integrated_seus_16q, cluster_orders, "results/fig_s08.pdf")
-),
-
-tar_target(fig_s10,
-					 plot_fig_s07_08(integrated_seus_2p, cluster_orders, "results/fig_s10.pdf")
-),
-
+# Sample-specific analyses of tumors with 16q- subclones after integration.
 tar_target(fig_s12,
-					 plot_fig_s07_08(integrated_seus_6p, cluster_orders, "results/fig_s12.pdf")
+					 plot_fig_s04_06(integrated_seus_16q, cluster_orders, "results/fig_s12.pdf")
 ),
 
+# Sample-specific analyses of tumors with 2p+ subclones after integration.
+tar_target(fig_s04_08,
+					 plot_fig_s04_06(integrated_seus_2p, cluster_orders, "results/fig_s04_08.pdf")
+),
+
+tar_target(fig_s11,
+					 plot_fig_s07_08(integrated_seus_2p, cluster_orders, "results/fig_s11.pdf")
+),
+
+tar_target(fig_s23,
+					 plot_fig_s07_08(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf")
+),
+
+tar_target(fig_s25,
+           plot_fig_s25(subtype_markers = subtype_markers)
+),
+
+# karyograms
 tar_target(fig_s0x,
 					 plot_fig_s0x()
 ),
 
+# includes Alternative resolutions for integrated 16q- analysis. 
 tar_target(fig_03,
 					 plot_fig_03(cluster_orders),
+),
+
+# includes Alternative resolutions for integrated 16q- analysis. 
+tar_target(fig_04_07,
+					 plot_fig_04_07(cluster_orders),
 ),
 
 tar_target(fig_04,
@@ -1245,8 +1266,13 @@ tar_target(fig_05,
 					 plot_fig_04_05("output/seurat/integrated_6p/integrated_seu_6p_duo.rds", corresponding_clusters_enrichments[[7]], integrated_seu_paths = integrated_seus_6p, plot_path = "results/fig_05.pdf", cluster_order = cluster_orders, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "6p", width = 18, height = 10)
 ),
 
-tar_target(fig_s06,
-					 plot_fig_s06()), # Fig. S06: Differential expression comparisons between integrated 1q clusters of interest…
+tar_target(fig_s08,
+           plot_fig_s08()), # Fig. S08: Differential expression comparisons between integrated 1q clones within clusters of interest…
+
+tar_target(fig_s10, plot_fig_s10()), # Fig. S10: Differential expression comparisons between integrated 16q clones within clusters of interest…
+
+tar_target(fig_s20,
+					 plot_fig_s20()), # Fig. S20: Differential expression comparisons between integrated 2p clones within clusters of interest…
 
 tar_target(integrated_seus_1q,
 					 c(
@@ -1264,6 +1290,7 @@ tar_target(integrated_seus_16q,
 					 	"SRR14800536_filtered_seu.rds" = "output/seurat/integrated_16q/SRR14800536_integrated_16q_filtered_seu.rds"
 					 )
 ),
+
 
 tar_target(integrated_seus_2p,
 					 c(
@@ -1285,6 +1312,11 @@ tar_target(fig_07a_input,
 					 iteration = "list"
 					 ),
 
+# # cis diffex b/w clones whole tumor integrated_seus_1q
+# tar_target(fig_07d,
+# 					 plot_fig_07d()
+# 					 ),
+
 tar_target(fig_07a,
 					 plot_fig_07_08(fig_07a_input, plot_path = "results/fig_07a.pdf", plot_title = "fig_07a: 1q+ cluster diffex after integration", height = 5, width = 4),
 					 iteration = "list"
@@ -1301,8 +1333,8 @@ tar_target(fig_07b,
 					 iteration = "list"
 ),
 
-tar_target(fig_07c,
-					 plot_fig_07c() # Fig. S06: Differential expression comparisons between integrated 1q clusters of interest…
+tar_target(fig_s09,
+					 plot_fig_s09() # Fig. S09: Differential expression comparisons between integrated 1q clusters of interest…
 ),
 
 tar_target(fig_08a_input,
@@ -1327,7 +1359,6 @@ tar_target(fig_08b,
 					 iteration = "list"
 ),
 
-
 tar_target(
 	corresponding_seus_2p,
 	c(
@@ -1339,8 +1370,7 @@ tar_target(
 	)
 ),
 
-tar_target(fig_09,
-					 plot_fig_09_10(corresponding_seus_2p, corresponding_seus, corresponding_clusters_diffex, corresponding_clusters_enrichments, recurrence_threshold = 3, plot_path = "results/fig_09.pdf", widths = rep(4, 3), heights = rep(8,3), common_seus = c("SRR13884248_filtered_seu_2p.rds", "SRR17960484_filtered_seu_2p.rds"))
+tar_target(fig_09, plot_fig_09_10(corresponding_seus_2p, corresponding_seus, corresponding_clusters_diffex, corresponding_clusters_enrichments, recurrence_threshold = 3, plot_path = "results/fig_09.pdf", widths = rep(4, 3), heights = rep(8,3), common_seus = c("SRR13884248_filtered_seu_2p.rds", "SRR17960484_filtered_seu_2p.rds"))
 ),
 
 tar_target(
@@ -1352,7 +1382,7 @@ tar_target(
 ),
 
 tar_target(fig_10,
-					 plot_fig_09_10(corresponding_seus_6p, corresponding_seus, corresponding_clusters_diffex, corresponding_clusters_enrichments, recurrence_threshold = 2, plot_path = "results/fig_10.pdf", widths = rep(4,3), heights = c(12, 4, 12), common_seus = c("SRR13884248_filtered_seu_6p.rds", "SRR17960484_filtered_seu_6p.rds"))
+					 plot_fig_09_10(corresponding_seus_6p, corresponding_seus, corresponding_clusters_diffex, corresponding_clusters_enrichments, recurrence_threshold = 2, plot_path = "results/fig_10.pdf", widths = rep(4,3), heights = c(12, 4, 12), common_seus = c("SRR13884247_filtered_seu_6p.rds", "SRR17960484_filtered_seu_6p.rds"))
 ),
 
   tar_target(collages_6p,
@@ -1361,6 +1391,7 @@ tar_target(fig_10,
   					 iteration = "list"
   ),
 
+# Sample-specific analyses of tumors with 16q- subclones without integration. 
   tar_target(collages_16q,
   					 plot_seu_marker_heatmap_by_scna(unlist(debranched_seus_16q), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q"),
   					 pattern = map(debranched_seus_16q),
@@ -1710,7 +1741,6 @@ tar_target(enrichment_6p_g1,
 
 tar_target(table_06,
 					 rod_rich_samples),
-
 
   tar_target(celltype_rich_samples,
     score_samples_for_celltype_enrichment(unfiltered_seus, final_seus, celltype_markers),
