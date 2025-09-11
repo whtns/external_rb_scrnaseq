@@ -1,0 +1,624 @@
+SRR13884242:
+  sample_id:
+  - SRR13884242
+  - SRR13884242
+  - SRR13884242
+  - SRR13884242
+  - SRR13884242
+  - SRR13884242
+  - SRR13884242
+  abbreviation:
+  - MARCKSL1
+  - G2M
+  - HSP
+  - MEG3
+  - MARCKSL1
+  - APOE
+  - cone
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+  - 1.0
+SRR13884243:
+  sample_id:
+  - SRR13884243
+  - SRR13884243
+  - SRR13884243
+  - SRR13884243
+  - SRR13884243
+  - SRR13884243
+  abbreviation:
+  - MARCKSL1
+  - G2M
+  - HSP
+  - HSP
+  - MEG3
+  - MALAT1
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+SRR13884246:
+  sample_id:
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  - SRR13884246
+  abbreviation:
+  - '0'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  - '8'
+  - '9'
+  - '10'
+  - '11'
+  - '12'
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  - 9.0
+  - 10.0
+  - 11.0
+  - 12.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+SRR13884247:
+  sample_id:
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  - SRR13884247
+  abbreviation:
+  - cone
+  - G2M
+  - TFF1
+  - MEG3
+  - ARL6IP1
+  - PRL
+  - TFF1
+  - cone
+  - rod
+  - APOE
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  - 9.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+  - 1.0
+SRR13884248:
+  sample_id:
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  - SRR13884248
+  abbreviation:
+  - '0'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  - '8'
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+SRR13884249:
+  sample_id:
+  - SRR13884249
+  - SRR13884249
+  - SRR13884249
+  - SRR13884249
+  - SRR13884249
+  - SRR13884249
+  abbreviation:
+  - MARCKSL1
+  - HSP
+  - G2M
+  - MALAT1
+  - G2M
+  - rod
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+SRR14800534:
+  sample_id:
+  - SRR14800534
+  - SRR14800534
+  - SRR14800534
+  - SRR14800534
+  - SRR14800534
+  - SRR14800534
+  - SRR14800534
+  abbreviation:
+  - TFF1
+  - PCLAF
+  - G2M
+  - HSP
+  - G2M
+  - APOE
+  - HIST1H4C
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+  - .na.real
+SRR14800535:
+  sample_id:
+  - SRR14800535
+  - SRR14800535
+  - SRR14800535
+  - SRR14800535
+  - SRR14800535
+  - SRR14800535
+  abbreviation:
+  - TFF1
+  - G2M
+  - MALAT1
+  - ARL1IP1
+  - APOE
+  - HIST1H4C
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+  - .na.real
+SRR14800536:
+  sample_id:
+  - SRR14800536
+  - SRR14800536
+  - SRR14800536
+  - SRR14800536
+  - SRR14800536
+  - SRR14800536
+  - SRR14800536
+  abbreviation:
+  - TFF1
+  - MALAT1
+  - G2M
+  - G2M
+  - HSP
+  - APOE
+  - rod
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+  - 1.0
+SRR14800540:
+  sample_id:
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  - SRR14800540
+  abbreviation:
+  - rod
+  - MARCKSL1
+  - B2M
+  - G2M
+  - TFF1
+  - APOE
+  - APOE
+  - G2M
+  - CALM1
+  - B2M
+  - cone
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 10.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  - 9.0
+  remove:
+  - 1.0
+  - .na.real
+  - 1.0
+  - .na.real
+  - .na.real
+  - 1.0
+  - 1.0
+  - .na.real
+  - 1.0
+  - 1.0
+  - .na.real
+SRR14800541:
+  sample_id:
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  - SRR14800541
+  abbreviation:
+  - cone
+  - MALAT1
+  - G2M
+  - HSP
+  - APOE
+  - B2M
+  - APOC1
+  - MEG3
+  - G2M
+  - B2M
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  - 9.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+  - 1.0
+  - 1.0
+  - .na.real
+  - .na.real
+  - 1.0
+SRR14800543:
+  sample_id:
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  - SRR14800543
+  abbreviation:
+  - MYCN
+  - rod
+  - B2M
+  - B2M
+  - ITLN1
+  - APOE
+  - TTR
+  - rod
+  - APOE
+  - G2M
+  - MYCN
+  - B2M
+  - CALM1
+  - APOE
+  - G2M
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 10.0
+  - 11.0
+  - 12.0
+  - 13.0
+  - 14.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  - 9.0
+  remove:
+  - .na.real
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - .na.real
+  - 1.0
+  - 1.0
+  - .na.real
+  - .na.real
+  - 1.0
+  - 1.0
+  - 1.0
+  - .na.real
+SRR17960481:
+  sample_id:
+  - SRR17960481
+  - SRR17960481
+  - SRR17960481
+  - SRR17960481
+  - SRR17960481
+  abbreviation:
+  - G2M
+  - MARCKSL1
+  - APOC1
+  - HSP
+  - cone
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  remove:
+  - .na.real
+  - .na.real
+  - 1.0
+  - .na.real
+  - .na.real
+SRR17960484:
+  sample_id:
+  - SRR17960484
+  - SRR17960484
+  - SRR17960484
+  - SRR17960484
+  - SRR17960484
+  - SRR17960484
+  - SRR17960484
+  abbreviation:
+  - G2M
+  - MALAT1
+  - RACK1
+  - cone
+  - TFF1
+  - G2M
+  - B2M
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - 1.0
+SRR27187899:
+  sample_id:
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  - SRR27187899
+  abbreviation:
+  - '0'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  - '8'
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  - 8.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+SRR27187902:
+  sample_id:
+  - SRR27187902
+  - SRR27187902
+  - SRR27187902
+  - SRR27187902
+  - SRR27187902
+  - SRR27187902
+  - SRR27187902
+  - SRR27187902
+  abbreviation:
+  - '0'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  gene_snn_res.0.2:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  - 6.0
+  - 7.0
+  remove:
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real
+  - .na.real

@@ -1,0 +1,97 @@
+SRR13884242:
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16b"
+- clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "16b"
+SRR13884243:
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "16b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16b"
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+SRR13884244:
+- clone_opt %in% c(2,3,4,5) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(2,3,4,5) & p_cnv <= 0.5 & seg == "16a"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16a"
+SRR13884245:
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "16b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16b"
+SRR13884246:
+- clone_opt %in% c(2,3,4,5,6) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(5,6) & p_cnv <= 0.5 & seg == "2b"
+- clone_opt %in% c(1,2,3,4) & p_cnv > 0.5 & seg == "2b"
+SRR13884247:
+- clone_opt %in% c(2,3,4,5,6) & p_cnv <= 0.5 & seg == "6c"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6c"
+- clone_opt %in% c(1,2,3,4,5) & p_cnv > 0.5 & seg == "2b"
+- clone_opt %in% c(6) & p_cnv <= 0.5 & seg == "2b"
+SRR13884248:
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "2b"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "2b"
+- clone_opt %in% c(2) & p_cnv <= 0.5 & seg == "6a"
+SRR13884249:
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "2a"
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "2a"
+SRR14800534:
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "16c"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16c"
+SRR14800535:
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "16b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16b"
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "1b"
+SRR14800536:
+- clone_opt %in% c(3,4) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "1b"
+- clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "16b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "16b"
+SRR14800540:
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "1d"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "1d"
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "1e"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "1e"
+- clone_opt %in% c(1,3) & p_cnv > 0.5 & seg == "6b"
+- clone_opt %in% c(2) & p_cnv <= 0.5 & seg == "6b"
+- clone_opt %in% c(1,3) & p_cnv > 0.5 & seg == "16e"
+- clone_opt %in% c(2) & p_cnv <= 0.5 & seg == "16e"
+SRR14800541:
+- clone_opt %in% c(2,3,4,5,6,7) & p_cnv <= 0.5 & seg == "1f"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1f"
+- clone_opt %in% c(2,3,4,5,6,7) & p_cnv <= 0.5 & seg == "2a"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "2a"
+- clone_opt %in% c(2,3,4,5,6,7) & p_cnv <= 0.5 & seg == "6a"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6a"
+- clone_opt %in% c(3,4) & p_cnv <= 0.5 & seg == "16d"
+- clone_opt %in% c(1,2,5,6,7) & p_cnv > 0.5 & seg == "16d"
+SRR14800543:
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "1c"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "1c"
+- clone_opt %in% c(1,2,4) & p_cnv > 0.5 & seg == "16c"
+- clone_opt %in% c(3) & p_cnv <= 0.5 & seg == "16c"
+SRR17960481:
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"
+SRR17960484:
+- clone_opt %in% c(2,3,4,5) & p_cnv <= 0.5 & seg == "1c"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1c"
+- clone_opt %in% c(4,5) & p_cnv <= 0.5 & seg == "2a"
+- clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "2a"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "6a"
+- clone_opt %in% c(3,4,5) & p_cnv <= 0.5 & seg == "6a"
+SRR27187899:
+- clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "6b"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6b"
+- clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "16e"
+- clone_opt %in% c(4) & p_cnv <= 0.5 & seg == "16e"
+SRR27187902:
+- clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "1k"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1k"
+- clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "16a"
+- clone_opt %in% c(4) & p_cnv <= 0.5 & seg == "16a"

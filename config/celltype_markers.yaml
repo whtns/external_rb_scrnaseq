@@ -1,0 +1,54 @@
+cones:
+- PDE6H
+- ARR3
+- MYL4
+- RCVRN
+- GNAT2
+rods:
+- GNGT1
+- RHO
+- CNGA1
+- SAG
+- PDE6G
+Müller glia:
+- TF
+- NPVF
+- RLBP1
+- RRH
+- RGR
+retinal astrocytes:
+- TRH
+- MLC1
+- NDP
+- PAX5
+- PAX2
+microglia:
+- RGS1
+- C1QB
+- C1QA
+- C1QC
+- CCL3
+bipolar cells:
+- CABP5
+- TMEM215
+- GABRA1
+- CA10
+- PCP2
+retinal ganglion cells:
+- NEFL
+- NEFM
+- PVALB
+- SNCG
+- STMN2
+amacrine cells:
+- C1QL2
+- GAD2
+- CARTPT
+- GAD1
+- SLC32A1
+RPE:
+- TTR
+- RPE65
+- RGR
+- RLBP1
+- BEST1
