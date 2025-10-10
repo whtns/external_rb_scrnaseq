@@ -1,7 +1,84 @@
 library(targets)
 suppressPackageStartupMessages(source("packages.R"))
-source("functions.R")
-library(plotgardener)
+lapply(list.files("./R", full.names = TRUE), source)
+
+# plot_seu_marker_heatmap_by_scna ------------------------------
+
+tar_load(c("hypoxia_seus", "hypoxia_seus_high", "hypoxia_1q_high", "numbat_rds_files", "large_clone_simplifications", "cluster_orders", "rb_scna_samples", "large_clone_comparisons"))
+
+debug(plot_seu_marker_heatmap)
+
+plot_seu_marker_heatmap(hypoxia_seus[[12]], nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE, hypoxia_expr = "hypoxia_score <= 0.5")
+
+plot_seu_marker_heatmap(hypoxia_seus_high[[2]], nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE)
+
+# debug(plot_seu_marker_heatmap_by_scna)
+debug(plot_seu_marker_heatmap)
+# debug(dummy_cluster_order)
+
+plot_seu_marker_heatmap(hypoxia_seus_high[[2]], nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE)
+
+plot_seu_marker_heatmap_by_scna(hypoxia_1q_high[[1]], cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q", tmp_plot_path = TRUE)
+
+
+test0 <- plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800534_seu_low_hypoxia.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q")
+test0 <- plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800534_seu_hypoxia.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q")
+
+
+
+plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800535_seu_low_hypoxia.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q") |> 
+	browseURL()
+
+plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800536_seu_low_hypoxia.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q") |> 
+	browseURL()
+
+
+
+tar_load(c("hypoxia_seus", "cluster_orders"))
+
+subset_to_high_hypoxia(hypoxia_seus[[1]])
+
+df0 <- read_all_hypoxia_scores(hypoxia_seus)
+
+# check all hypoxia scores -------------------------------
+df0  |> 
+group_by(sample_id) |>
+dplyr::summarize(min = min(hypoxia_score)) |> 
+  arrange(min) |> 
+  print(n=Inf)
+
+debug(add_hypoxia_score)
+
+test_seu <- readRDS(hypoxia_seus[[1]])
+
+add_hypoxia_score(test_seu)
+
+# debug(load_and_save_hypoxia_score)
+
+# source("functions.R")
+
+# filter_cluster_save_seu ------------------------------
+
+tar_load(c("numbat_rds_files", seus, "cluster_dictionary", "large_clone_simplifications", "cells_to_remove"))
+
+# undebug(filter_cluster_save_seu)
+
+test0 <- filter_cluster_save_seu(numbat_rds_files[[2]], seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv")
+
+# lapply(list.files("./R", full.names = TRUE), source)
+
+# library(plotgardener)
+
+
+seu <- readRDS("output/seurat/SRR13884245_filtered_seu2.rds")
+
+# make_numbat_plot_files ------------------------------
+tar_load(c("numbat_rds_files", "seus", "cluster_dictionary", "large_filter_expressions", "large_clone_simplifications"))
+
+# debug(make_numbat_plot_files)
+
+make_numbat_plot_files(seus[[1]], numbat_rds_files, cluster_dictionary, large_filter_expressions, large_clone_simplifications, extension = "_filtered")
+
 
 # fig_02 ------------------------------
 
@@ -15,8 +92,6 @@ tar_load("cluster_orders")
 fig_03_afterall <- plot_fig_03_afterall(cluster_orders)
 
 fig_02_afterall <- plot_fig_02_afterall(cluster_orders)
-
-
 
 
 # assign_phase_clusters ------------------------------
@@ -49,7 +124,7 @@ seu_16q |>
     SplitObject(split.by = "batch") |> 
     imap(~saveRDS(.x, glue("output/seurat/integrated_1q_16q/{.y}_integrated_16q_filtered_seu.rds")))
 
-# fig_s08------------------------------
+# fig_s08 1q clusters------------------------------
 
 debug(plot_fig_s08)
 
@@ -66,20 +141,6 @@ plot_fig_07d(plot_path = "results/fig_07d.pdf", integrated_seu_path = "output/se
 
 debug(plot_fig_07d)
 
-# plot_seu_marker_heatmap_by_scna ------------------------------
-
-tar_load(c("numbat_rds_files", "large_clone_simplifications", "cluster_orders", "rb_scna_samples", "large_clone_comparisons"))
-
-undebug(plot_seu_marker_heatmap_by_scna)
-
-plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800534_filtered_seu.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q") |> 
-	browseURL()
-
-plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800535_filtered_seu.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q") |> 
-	browseURL()
-
-plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800536_filtered_seu.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q") |> 
-	browseURL()
 
 # make_clone_distribution_figure ------------------------------
 
@@ -503,15 +564,6 @@ test0 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[10]], numbat_r
 test1 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[11]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
 
 test2 <- plot_seu_marker_heatmap_all_resolutions(debranched_seus[[12]], numbat_rds_files, large_clone_simplifications, debranched_cluster_orders)
-
-# filter_cluster_save_seu ------------------------------
-
-tar_load(c("numbat_rds_files", "cluster_dictionary", "large_clone_simplifications", "cells_to_remove"))
-
-debug(filter_cluster_save_seu)
-
-filter_cluster_save_seu("output/numbat_sridhar/SRR14800534_numbat.rds", cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv")
-
 
 # find_diffex_clusters_between_corresponding_states ------------------------------
 
@@ -1233,17 +1285,13 @@ debug(find_diffex_clones)
 find_diffex_clones(debranched_seus[[22]], numbat_rds_files, large_clone_comparisons, location = "in_segment")
 
 
-
-
-
-
 # plot_clone_tree_from_path ------------------------------
 
 debug(plot_clone_tree_from_path)
 
-tar_load(c("debranched_seus", "numbat_rds_files", "large_clone_simplifications"))
+tar_load(c("seus", "numbat_rds_files", "large_clone_simplifications"))
 
-plot_clone_tree_from_path(debranched_seus[[3]], numbat_rds_files, large_clone_simplifications, legend = FALSE, horizontal = FALSE)
+plot_clone_tree_from_path(seus[[3]], numbat_rds_files, large_clone_simplifications, legend = FALSE, horizontal = FALSE)
 
 
 # pull_cluster_orders ------------------------------
