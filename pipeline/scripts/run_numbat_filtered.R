@@ -106,7 +106,8 @@ out = numbat::run_numbat(
 	out_dir = out_dir,
 	tau = as.numeric(tau),
 	skip_nj = TRUE,
-	expression_only = expression_only)
+	# expression_only = expression_only
+	)
 
 done_file <- fs::path(out_dir, "done.txt")
 

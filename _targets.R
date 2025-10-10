@@ -1,6 +1,10 @@
-## Load your packages, e.g. library(targets).
-source("./packages.R")
-source("./functions.R")
+  ## Load your packages, e.g. library(targets).
+  suppressPackageStartupMessages(source("./packages.R"))
+  ## Load your R files
+  lapply(list.files("./R", full.names = TRUE), source)
+
+# All R scripts in ./R/ are sourced below, including packages.R and functions.R if present.
+# Uncomment and use these for debugging as needed:
 # plan(callr)
 # debug(make_numbat_heatmaps)
 # debug(make_numbat_plot_files)
@@ -12,11 +16,18 @@ source("./functions.R")
 # debug(find_diffex_bw_clusters_for_each_clone)
 # debug(calculate_clone_distribution)
 
-tar_option_set(
-  memory = "transient",
-  garbage_collection = TRUE,
-  error = "null"
-)
+# plan(future.callr::callr, workers = 4)
+plan(callr)
+
+# tar_config_set(
+#   # Set the parallel backend to use the future package.
+#   # This tells targets to use the parallel plan you set with plan().
+#   resources = tar_resources(future = tar_resources_future())
+# )
+
+source("tar_option_set.R")
+
+
 
 output_plot_extensions <- c(
   "dimplot.pdf",
@@ -26,14 +37,65 @@ output_plot_extensions <- c(
   "clone_distribution.pdf"
 )
 
-## Load your R files
-lapply(list.files("./R", full.names = TRUE), source)
-
 ## tar_plan supports drake-style targets and also tar_target()
 tar_plan(
+
+  tar_target(hypoxia_1q,
+  c(
+    "SRR13884246" = "output/seurat/SRR13884246_seu_hypoxia.rds", 
+    "SRR13884249" = "output/seurat/SRR13884249_seu_hypoxia.rds", 
+    "SRR14800534" = "output/seurat/SRR14800534_seu_hypoxia.rds", 
+    "SRR14800535" = "output/seurat/SRR14800535_seu_hypoxia.rds", 
+    "SRR14800536" = "output/seurat/SRR14800536_seu_hypoxia.rds"
+    )
+  ),
+
+    tar_target(hypoxia_1q_low,
+  c(
+    "SRR13884246" = "output/seurat/SRR13884246_seu_low_hypoxia.rds", 
+    "SRR13884249" = "output/seurat/SRR13884249_seu_low_hypoxia.rds", 
+    "SRR14800534" = "output/seurat/SRR14800534_seu_low_hypoxia.rds", 
+    "SRR14800535" = "output/seurat/SRR14800535_seu_low_hypoxia.rds", 
+    "SRR14800536" = "output/seurat/SRR14800536_seu_low_hypoxia.rds"
+    )
+  ),
+
+    tar_target(hypoxia_1q_high,
+  c(
+    "SRR13884246" = "output/seurat/SRR13884246_seu_high_hypoxia.rds", 
+    "SRR13884249" = "output/seurat/SRR13884249_seu_high_hypoxia.rds", 
+    "SRR14800534" = "output/seurat/SRR14800534_seu_high_hypoxia.rds", 
+    "SRR14800535" = "output/seurat/SRR14800535_seu_high_hypoxia.rds", 
+    "SRR14800536" = "output/seurat/SRR14800536_seu_high_hypoxia.rds"
+    )
+  ),
+
+  tar_target(hypoxia_16q_low,
+  		c(
+  			"SRR14800534" = "output/seurat/SRR14800534_seu_hypoxia.rds", 
+  			"SRR14800535" = "output/seurat/SRR14800535_seu_hypoxia.rds", 
+  			"SRR14800536" = "output/seurat/SRR14800536_seu_hypoxia.rds"
+  		)
+  ),
+
+  tar_target(collages_16q_low_hypoxia,
+  					 plot_seu_marker_heatmap_by_scna(unlist(low_hypoxia_16q), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q"),
+  					 pattern = map(low_hypoxia_16q),
+  					 iteration = "list"
+  ),
+ 
   tar_target(
     figures_and_tables,
     list(
+      fig_s02_table_s04, # tcga frequency
+      fig_s03, # gistic plots
+      fig_s04, # study cell stats
+      fig_s05, # smoothed expression
+      fig_s06a, # karyograms,
+      fig_02, # integrated 1q fig (with yellow clones)
+      fig_s07, # Sample-specific analyses of tumors with 1q+ subclones after integration.
+      fig_s12, # Sample-specific analyses of tumors with 2p+ subclones after integration.
+      fig_s04_08, # Sample-specific analyses of tumors with 16q- subclones after integration.
       clustree_compilation,
       collage_compilation,
       table_all_diffex_clones,
@@ -45,10 +107,27 @@ tar_plan(
     )
   ),
   tar_target(
+    pipeline_notification,
+    {
+      # depend on figures_and_tables so this runs after the main outputs are ready
+      invisible(figures_and_tables)
+      tryCatch({
+        send_pipeline_notification(subject = "Targets pipeline completed", body = NULL)
+        TRUE
+      }, error = function(e) {
+        warning("Failed to send pipeline notification: ", e$message)
+        FALSE
+      })
+    },
+  ),
+  tar_target(
     plae_ref,
     generate_plae_ref()
   ),
+  tarchetypes::tar_files(all_numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/"), format = "file"),
+  tarchetypes::tar_files(all_seus, retrieve_seus("output/seurat/"), format = "file"),
   tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples), format = "file"),
+  tarchetypes::tar_files(numbat_rds_filtered_files, retrieve_numbat_rds_files("output/numbat_sridhar_filtered/", interesting_samples), format = "file"),
   tarchetypes::tar_files(seus, retrieve_seus("output/seurat/", interesting_samples), format = "file"),
   tar_target(
     celltype_markers,
@@ -76,8 +155,8 @@ tar_plan(
     c(
       "SRR13884242",
       "SRR13884243",
-      # "SRR13884244",
-      # "SRR13884245",
+      "SRR13884244",
+      "SRR13884245",
       "SRR13884246",
       "SRR13884247",
       "SRR13884248",
@@ -92,7 +171,7 @@ tar_plan(
       "SRR17960484",
       "SRR27187899",
       "SRR27187900",
-      # "SRR27187901",
+      "SRR27187901",
       "SRR27187902"
     )
   ),
@@ -134,14 +213,13 @@ tar_plan(
       "SRR17960481" = list("2_v_1_1q+_6p+" = c("1b", "6a", "6b"), "3_v_2_2p+" = c("2a")), # 1q/2p/6p
       "SRR17960484" = list("2_v_1_1q+" = c("1c"), "3_v_2_6p+" = c("6a"), "4_v_3_2p+" = c("2a")),
       "SRR27187899" = list("2_v_1_6p+" = c("6b"), "3_v_2_16q-" = c("16e")),
-      # "SRR27187900" = list("3_v_2_1q+_6p+_16q-" = c("1d", "6b", "16b")), # not enough cells "2_v_1_1q+_6p+_16q-" = c("1d", "6b", "16b")
-      # "SRR27187901" = list("2_v_1_1q+" = c("1c"), "3_v_2_6p+" = c("6a"), "4_v_3_2p+" = c("2a")),
+      "SRR27187900" = list("3_v_2_1q+_6p+_16q-" = c("1d", "6b", "16b")), # not enough cells "2_v_1_1q+_6p+_16q-" = c("1d", "6b", "16b")
+      "SRR27187901" = list("2_v_1_1q+" = c("1c"), "3_v_2_6p+" = c("6a"), "4_v_3_2p+" = c("2a")),
       "SRR27187902_branch_3" = list("2_v_1_1q+_2p+" = c("1k", "2b")),
       "SRR27187902_branch_4" = list("2_v_1_1q+_2p+" = c("1k", "2b"), "4_v_2_16q-" = c("16a"))
     )
   ),
-  tar_target(
-    large_clone_simplifications,
+  tar_target(large_clone_simplifications,
     list(
       "SRR13884242" = c("1q+" = "1b", "2p+" = "2b", "8p-" = "8a", "11p-" = "11a", "12p-" = "12a", "16q-" = "16b"), # 16q
       "SRR13884243" = c("1q+" = "1b", "2p+" = "2b", "8p-" = "8a", "11p-" = "11a", "12p-" = "12a", "16q-" = "16b"),
@@ -160,13 +238,13 @@ tar_plan(
       "SRR17960481" = c("1q+" = "1b", "2p+" = "2a", "6p+" = "6a", "9q+" = "9b", "13cnloh" = "13b"), # 1q/2p/6p
       "SRR17960484" = c("1q+" = "1c", "2p+" = "2a", "5qcnloh" = "5e", "6p+" = "6a", "9qcnloh" = "9b", "10q+" = "10b", "11pcnloh" = "11a", "15+" = "15b", "16q-" = "16c"), # 16q only in GT 4; 2,3,4 have 1q; interesting sample
       "SRR27187899" = c("6p+" = "6b", "16q-" = "16e"), # 1q/2p/6p
-      # "SRR27187900" = c("1q+" = "1d", "6p+" = "6c", "16q-" = "16b"), # 1q/2p/6p
-      # "SRR27187901" = c("1q+" = "1b", "2p+" = "2a", "6p+" = "6a", "9q+" = "9b", "13cnloh" = "13b"), # 1q/2p/6p
+      "SRR27187900" = c("1q+" = "1d", "6p+" = "6c", "16q-" = "16b"), # 1q/2p/6p
+      # "SRR27187901" = c("1q+" = "1b", "2p+" = "2a", "6p+" = "6a", "9q+" = "9b", "13cnloh" = "13b"), # 1q/2p/6p 
+      "SRR27187901" = c("1q+" = "1a", "1q-" = "1h", "12q-" = "12h", "16q-" = "16b"), # 1q/16q 
       "SRR27187902" = c("1q+" = "1k", "2p+" = "2b", "16q-" = "16a") # 1q/2p/6p
     )
   ),
-  tar_target(
-    large_filter_expressions,
+  tar_target(large_filter_expressions,
     list(
       "SRR13884242" = c(
         'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1b"',
@@ -277,20 +355,20 @@ tar_plan(
         'clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "16e"',
         'clone_opt %in% c(4) & p_cnv <= 0.5 & seg == "16e"'
       ),
-      # "SRR27187900" = c(
-      # 	'clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1d"',
-      # 	'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1d"',
-      # 	'clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "6c"',
-      # 	'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6c"'
-      # ),
-      # "SRR27187901" = c(
-      # 	'clone_opt %in% c(2,3,4,5) & p_cnv <= 0.5 & seg == "1c"',
-      # 	'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1c"',
-      # 	'clone_opt %in% c(4,5) & p_cnv <= 0.5 & seg == "2a"',
-      # 	'clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "2a"',
-      # 	'clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "6a"',
-      # 	'clone_opt %in% c(3,4,5) & p_cnv <= 0.5 & seg == "6a"'
-      # ),
+      "SRR27187900" = c(
+      	'clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1d"',
+      	'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1d"',
+      	'clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "6c"',
+      	'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6c"'
+      ),
+      "SRR27187901" = c(
+      	'clone_opt %in% c(2,3,4,5) & p_cnv <= 0.5 & seg == "1c"',
+      	'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1c"',
+      	'clone_opt %in% c(4,5) & p_cnv <= 0.5 & seg == "2a"',
+      	'clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "2a"',
+      	'clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "6a"',
+      	'clone_opt %in% c(3,4,5) & p_cnv <= 0.5 & seg == "6a"'
+      ),
       "SRR27187902" = c(
         'clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "1k"',
         'clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1k"',
@@ -299,22 +377,10 @@ tar_plan(
       )
     )
   ),
+
   tar_target(
     clone_comparison_table,
     tabulate_clone_comparisons(large_clone_comparisons)
-  ),
-  tar_target(whole_pseudobulks,
-    score_whole_pseudobulks(numbat_rds_files, subtype_markers),
-    pattern = map(numbat_rds_files),
-    iteration = "list"
-  ),
-  tar_target(
-    unfiltered_derived_pseudobulk_subtype_scores,
-    derive_pseudobulk_subtype_scores(unfiltered_seus),
-  ),
-  tar_target(
-    filtered_derived_pseudobulk_subtype_scores,
-    derive_pseudobulk_subtype_scores(final_seus),
   ),
 
   # tar_target(
@@ -331,11 +397,18 @@ tar_plan(
 
   # total metadata ------------------------------
   tar_target(study_cell_stats, collect_study_metadata()),
-  tar_target(fig_s15, plot_study_metadata(study_cell_stats)),
+
+  tar_target(fig_s04, plot_study_metadata(study_cell_stats)),
+
   tar_target(table_s01, make_table_s01(study_cell_stats)), # umi, genes detected, mito %
+
   tar_target(table_s02, make_table_s02()), # detailed sample metadata
+
   tar_target(table_s03, make_table_s03(cluster_dictionary)), # tally clusters removed (filtered out) with marker genes
-  tar_target(table_s04_fig_s16, make_fig_s16_table_s04()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
+  
+  tar_target(fig_s02_table_s04, rb_scna_frequency_in_tcga_by_cancer_type()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
+  
+  tar_target(fig_s03, make_gistic_plot()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
   tar_target(table_s07, make_table_s07()), # For each 1q+ sample, percentage of clone in cluster.
   tar_target(table_s09, make_table_s09(seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", table_path = "results/table_s09.csv")), # For each 16q- sample, percentage of clone in cluster.
   tar_target(table_s10, make_table_s10(seu_path = "output/seurat/integrated_2p/seurat_2p_integrated_duo.rds", table_path = "results/table_s10.csv")), # For each 16q- sample, percentage of clone in cluster.
@@ -541,8 +614,8 @@ tar_plan(
   ),
   
   tar_target(filtered_large_plot_files,
-    make_numbat_plot_files(numbat_rds_files, final_seus, cluster_dictionary, large_filter_expressions, large_clone_simplifications, extension = "_filtered"),
-    pattern = map(numbat_rds_files, final_seus, cluster_dictionary, large_filter_expressions, large_clone_simplifications),
+    make_numbat_plot_files(numbat_rds_files, seus, cluster_dictionary, large_filter_expressions, large_clone_simplifications, extension = "_filtered"),
+    pattern = map(numbat_rds_files, seus, cluster_dictionary, large_filter_expressions, large_clone_simplifications),
     iteration = "list"
   ),
   
@@ -573,9 +646,9 @@ tar_plan(
   					 ),
   
   tar_target(filtered_seus,
-    filter_cluster_save_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, cells_to_remove, extension = "_filtered", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
-    pattern = map(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions),
-    iteration = "list"
+  filter_cluster_save_seu(numbat_rds_files, seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
+  pattern = map(numbat_rds_files),
+  iteration = "list"
   ),
 
   tar_target(
@@ -744,17 +817,17 @@ tar_plan(
   #   pattern = map(numbat_rds_files, large_filter_expressions, cluster_dictionary),
   #   iteration = "list"
   # ),
+  
+  # rb scna ideograms
+  tar_target(fig_s06a,
+  					 plot_fig_s06a()),
 
-  # unfiltered_numbat_heatmaps
+    # unfiltered_numbat_heatmaps
   tar_target(fig_s03a_plots,
     make_numbat_heatmaps(original_seus, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "_unfiltered"),
     pattern = map(original_seus),
     iteration = "list"
   ),
-  
-  # rb scna ideograms
-  # tar_target(fig_s03c,
-  # 					 plot_fig_s03c()),
   
   tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_plots), "results/unfiltered_heatmaps.pdf")),
   
@@ -1023,12 +1096,10 @@ tar_plan(
     large_numbat_expression,
     retrieve_numbat_plot_type(large_numbat_pdfs, "exp_roll_clust.pdf")
   ),
-  tar_target(
-    large_numbat_expression_file,
+  tar_target(fig_s05,
     qpdf::pdf_combine(large_numbat_expression, "results/numbat_expression.pdf")
   ),
-  tar_target(
-    clone_trees,
+  tar_target(clone_trees_old,
     retrieve_numbat_plot_type(filtered_large_plot_files, "tree_filtered.pdf")
   ),
   
@@ -1098,6 +1169,12 @@ tar_plan(
   					 pattern = map(debranched_seus),
   					 iteration = "list"
   ),
+
+  tar_target(clone_trees,
+  					 plot_clone_tree_from_path(seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
+  					 pattern = map(seus),
+  					 iteration = "list"
+  ),
   
   tar_target(
   	debranched_clone_trees_file,
@@ -1114,7 +1191,7 @@ tar_plan(
   	final_clone_trees_file,
   	qpdf::pdf_combine(final_clone_trees_files, "results/final_clone_trees.pdf")
   ),
-  
+
   tar_target(heatmap_collages,
     plot_seu_marker_heatmap_all_resolutions(debranched_seus, numbat_rds_files, large_clone_simplifications),
     pattern = map(debranched_seus),
@@ -1138,6 +1215,56 @@ tar_plan(
     plot_seu_marker_heatmap(debranched_seus, cluster_orders, numbat_rds_files, large_clone_simplifications),
     pattern = map(debranched_seus),
     iteration = "list"
+  ),
+
+
+# hypoxia ------------------------------
+
+  tar_target(hypoxia_seus,
+  load_and_save_hypoxia_score(filtered_seus),
+  pattern = map(filtered_seus),
+  iteration = "list"
+  ),
+
+  tar_target(
+    hypoxia_score_plots,
+    plot_hypoxia_score(hypoxia_seus, threshold = 0.5),
+    pattern = map(hypoxia_seus),
+    iteration = "list"
+  ),
+
+  tar_target(heatmap_collages_hypoxia,
+    plot_seu_marker_heatmap(hypoxia_seus, nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE),
+    pattern = map(hypoxia_seus),
+    iteration = "list"
+  ),
+
+  tar_target(heatmap_collages_hypoxia_low,
+    plot_seu_marker_heatmap(hypoxia_seus, nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE, hypoxia_expr = "hypoxia_score <= 0.5"),
+    pattern = map(hypoxia_seus),
+    iteration = "list"
+  ),
+
+    tar_target(heatmap_collages_hypoxia_low_clusters,
+    plot_seu_marker_heatmap(hypoxia_seus, nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE, hypoxia_expr = "hypoxia_score <= 0.5", run_hypoxia_clustering = TRUE),
+    pattern = map(hypoxia_seus),
+    iteration = "list"
+  ),
+
+  tar_target(heatmap_collages_hypoxia_high,
+    plot_seu_marker_heatmap(hypoxia_seus, nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE, hypoxia_expr = "hypoxia_score >= 0.5"),
+    pattern = map(hypoxia_seus),
+    iteration = "list"
+  ),
+
+  tar_target(hypoxia_effect_plots,
+    list(
+      qpdf::pdf_combine(unlist(hypoxia_score_plots), "01_hypoxia_score_plots.pdf"),
+      qpdf::pdf_combine(unlist(heatmap_collages_hypoxia), "02_hypoxia_heatmap.pdf"),
+      qpdf::pdf_combine(unlist(heatmap_collages_hypoxia_low), "03_hypoxia_heatmap_low.pdf"),
+      qpdf::pdf_combine(unlist(heatmap_collages_hypoxia_low_clusters), "04_hypoxia_heatmap_low_clusters.pdf"),
+      qpdf::pdf_combine(unlist(heatmap_collages_hypoxia_high), "05_hypoxia_heatmap_high.pdf")
+    ),
   ),
   
   tar_target(silhouette_plots,
@@ -1195,9 +1322,27 @@ tar_plan(
   
   
 # medium resolution ------------------------------
-  
+
   tar_target(collages_1q,
-  					 plot_seu_marker_heatmap_by_scna(unlist(debranched_seus_1q), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q"),
+  					 plot_seu_marker_heatmap_by_scna(unlist(hypoxia_1q), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q"),
+  					 pattern = map(hypoxia_1q),
+  					 iteration = "list"
+  ),
+
+    tar_target(collages_1q_hypoxia,
+  					 plot_seu_marker_heatmap_by_scna(unlist(hypoxia_1q_low), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q", tmp_plot_path = TRUE),
+  					 pattern = map(hypoxia_1q_low),
+  					 iteration = "list"
+  ),
+
+    tar_target(collages_1q_hypoxia_low,
+  					 plot_seu_marker_heatmap_by_scna(unlist(hypoxia_1q_high), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q", tmp_plot_path = TRUE),
+  					 pattern = map(hypoxia_1q_high),
+  					 iteration = "list"
+  ),
+
+    tar_target(collages_1q_hypoxia_high,
+  					 plot_seu_marker_heatmap_by_scna(unlist(debranched_seus_1q), cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q", tmp_plot_path = TRUE),
   					 pattern = map(debranched_seus_1q),
   					 iteration = "list"
   ),
@@ -1212,40 +1357,36 @@ tar_plan(
 						 qpdf::pdf_combine(collages_2p, "results_fig_s04_09.pdf")
 	),
 
+# integrated 1q fig (with yellow clones)
 	tar_target(fig_02,
-						 plot_fig_02(cluster_orders),
+						 plot_integrated_1q_fig(cluster_orders),
 						 ),
 	
 # Sample-specific analyses of tumors with 1q+ subclones after integration.
 	tar_target(fig_s07,
-						 plot_fig_s04_06(integrated_seus_1q, cluster_orders, "results/fig_s07.pdf")
+						 sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_1q, cluster_orders, "results/fig_s07.pdf")
 	),
 
 # Sample-specific analyses of tumors with 16q- subclones after integration.
 tar_target(fig_s12,
-					 plot_fig_s04_06(integrated_seus_16q, cluster_orders, "results/fig_s12.pdf")
+					 sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_16q, cluster_orders, "results/fig_s12.pdf")
 ),
 
 # Sample-specific analyses of tumors with 2p+ subclones after integration.
 tar_target(fig_s04_08,
-					 plot_fig_s04_06(integrated_seus_2p, cluster_orders, "results/fig_s04_08.pdf")
+					 sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_2p, cluster_orders, "results/fig_s04_08.pdf")
 ),
 
 tar_target(fig_s11,
-					 plot_fig_s07_08(integrated_seus_2p, cluster_orders, "results/fig_s11.pdf")
+					 not_sure_what_this_does(integrated_seus_2p, cluster_orders, "results/fig_s11.pdf")
 ),
 
 tar_target(fig_s23,
-					 plot_fig_s07_08(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf")
+					 not_sure_what_this_does(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf")
 ),
 
 tar_target(fig_s25,
            plot_fig_s25(subtype_markers = subtype_markers)
-),
-
-# karyograms
-tar_target(fig_s0x,
-					 plot_fig_s0x()
 ),
 
 # includes Alternative resolutions for integrated 16q- analysis. 
@@ -1663,7 +1804,7 @@ tar_target(enrichment_6p_g1,
     num_diffex_clone_scna_tally,
     tally_num_diffex(oncoprint_input_by_scna_unfiltered)
   ),
-
+  
   # tar_target(
   #   num_diffex_cluster_scna_tally,
   #   tally_num_diffex(oncoprint_input_by_scna_for_each_cluster_unfiltered)
@@ -1866,7 +2007,7 @@ tar_target(table_06,
 						 iteration = "list"
 	),
   
-  tar_target(oncoprint_plots,
+  tar_target(oncoprint_plots, 
     make_oncoprint_plots(oncoprint_input_by_scna, debranched_clone_trees, oncoprint_settings, label = "_by_clone")
   ),
   
@@ -1880,7 +2021,22 @@ tar_target(table_06,
     pattern = map(final_seus),
     iteration = "list"
   ),
-
+  
+  # pseudobulks -------------------------------
+  
+  tar_target(whole_pseudobulks,
+    score_whole_pseudobulks(numbat_rds_files, subtype_markers),
+    pattern = map(numbat_rds_files),
+    iteration = "list"
+  ),
+  tar_target(
+    unfiltered_derived_pseudobulk_subtype_scores,
+    derive_pseudobulk_subtype_scores(unfiltered_seus),
+  ),
+  tar_target(
+    filtered_derived_pseudobulk_subtype_scores,
+    derive_pseudobulk_subtype_scores(final_seus),
+  ),
   #
   # tar_target(
   #   large_cluster_markers,
