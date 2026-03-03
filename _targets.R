@@ -432,30 +432,28 @@ tar_plan(
   	plot_putative_marker_across_samples(interesting_genes[["S1"]], scna_seus, plot_type = VlnPlot, group_by = "clusters", extension = "s1")
   ),
   
-  # factor_heatmaps_{scna} + factor_heatmaps_combined_{scna} — generated via tar_map
-  # Creates: factor_heatmaps_1q/2p/6p/16q (dynamic branches per sample)
-  #      and factor_heatmaps_combined_1q/2p/6p/16q (per-SCNA merged PDFs)
-  {
-    fh_map <- tarchetypes::tar_map(
-      unlist = FALSE,
-      values = scna_map_values[, c("scna", "seus_sym")],
-      names  = "scna",
-      tar_target(factor_heatmaps,
-        plot_seu_gene_heatmap(seus_sym, large_clone_comparisons, scna_of_interest = scna, w = 8, h = 12),
-        pattern   = map(seus_sym),
-        iteration = "list"
-      ),
-      tar_target(factor_heatmaps_combined,
-        qpdf::pdf_combine(factor_heatmaps, paste0("results/factor_heatmaps_", scna, ".pdf"))
-      )
+  # factor_heatmaps_{scna} + factor_heatmaps_combined_{scna} via tar_map
+  # Creates targets: factor_heatmaps_1q/2p/6p/16q  (dynamic branches, one per sample)
+  #              and factor_heatmaps_combined_1q/2p/6p/16q  (per-SCNA merged PDFs)
+  tarchetypes::tar_map(
+    values = scna_map_values[, c("scna", "seus_sym")],
+    names  = "scna",
+    tar_target(factor_heatmaps,
+      plot_seu_gene_heatmap(seus_sym, large_clone_comparisons, scna_of_interest = scna, w = 8, h = 12),
+      pattern   = map(seus_sym),
+      iteration = "list"
+    ),
+    tar_target(factor_heatmaps_combined,
+      qpdf::pdf_combine(factor_heatmaps, paste0("results/factor_heatmaps_", scna, ".pdf"))
     )
-    tarchetypes::tar_combine(
-      all_factor_heatmaps,
-      fh_map[["factor_heatmaps_combined"]],
-      command = qpdf::pdf_combine(c(!!!.x), "results/fig_s16.pdf")
+  ),
+  tar_target(all_factor_heatmaps,
+    qpdf::pdf_combine(
+      c(factor_heatmaps_combined_1q, factor_heatmaps_combined_2p,
+        factor_heatmaps_combined_6p, factor_heatmaps_combined_16q),
+      "results/fig_s16.pdf"
     )
-    fh_map
-  },
+  ),
   
   tar_target(
     marker_gene_featureplots_by_cluster,
@@ -697,7 +695,8 @@ tar_plan(
     make_numbat_heatmaps(final_seus, numbat_rds_files, p_min = 0.5, line_width = 0.1, extension = "_filtered"),
     pattern = map(final_seus, numbat_rds_files),
     iteration = "list",
-    cue = tar_cue("always")
+    cue = tar_cue("always")  # force re-render each run: heatmap layout depends on
+                              # session graphics device state, not captured by hash
   ),
   
   tar_target(filtered_numbat_heatmaps_file, qpdf::pdf_combine(map_chr(fig_s13, 1), "results/filtered_heatmaps.pdf")),
@@ -878,36 +877,22 @@ tar_plan(
     iteration = "list"
   ),
   
-  tar_target(clone_pearls_1q,
-  					 plot_clone_pearls(debranched_seus_1q, var_y = "phase_level"),
-  					 pattern = map(debranched_seus_1q),
-  					 iteration = "list"
+  # clone_pearls_1q/2p/6p/16q — generated via tar_map over scna_map_values
+  # var_y: 1q and 16q use "phase_level"; 2p and 6p use "clusters"
+  tarchetypes::tar_map(
+    values = scna_map_values,
+    names  = "scna",
+    tar_target(clone_pearls,
+      plot_clone_pearls(seus_sym, var_y = var_y),
+      pattern   = map(seus_sym),
+      iteration = "list"
+    )
   ),
-  
-  tar_target(clone_pearls_2p,
-  					 plot_clone_pearls(debranched_seus_2p, var_y = "clusters"),
-  					 pattern = map(debranched_seus_2p),
-  					 iteration = "list"
-  ),
-  
+
   tar_target(cluster_terms,
-  					 enrich_by_cluster(scna_seus),
-  					 pattern = map(scna_seus),
-  					 iteration = "list"
-  ),
-  
-  # enrich_by_cluster
-  
-  tar_target(clone_pearls_6p,
-  					 plot_clone_pearls(debranched_seus_6p, var_y = "clusters"),
-  					 pattern = map(debranched_seus_6p),
-  					 iteration = "list"
-  ),
-  
-  tar_target(clone_pearls_16q,
-  					 plot_clone_pearls(debranched_seus_16q, var_y = "phase_level"),
-  					 pattern = map(debranched_seus_16q),
-  					 iteration = "list"
+    enrich_by_cluster(scna_seus),
+    pattern   = map(scna_seus),
+    iteration = "list"
   ),
   
   tar_target(unpaired_clone_distribution_plots,
@@ -1213,16 +1198,27 @@ tar_plan(
     format = "file"
   ),
 
-  tar_target(integrated_seu_1q_low_hypoxia,
-    integration_by_scna_clones(hypoxia_seus_1q, scna_of_interest = "1q", large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5")
+  tarchetypes::tar_map(
+    values = tibble::tibble(
+      scna        = c("1q", "2p", "6p", "16q"),
+      hypoxia_sym = rlang::syms(c("hypoxia_seus_1q", "hypoxia_seus_2p",
+                                  "hypoxia_seus_6p", "hypoxia_seus_16q"))
+    ),
+    names = "scna",
+    tar_target(integrated_seu_low_hypoxia,
+      integration_by_scna_clones(
+        hypoxia_sym, scna_of_interest = scna,
+        large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5"
+      )
+    )
   ),
 
   tar_target(hypoxia_low_integrated_heatmap_collages,
-    plot_seu_marker_heatmap_integrated(integrated_seu_1q_low_hypoxia)
+    plot_seu_marker_heatmap_integrated(integrated_seu_low_hypoxia_1q)
   ),
 
   tar_target(hypoxia_low_integrated_heatmap_collages0,
-    plot_integrated_1q_fig_low_hypoxia(integrated_seu_1q_low_hypoxia)
+    plot_integrated_1q_fig_low_hypoxia(integrated_seu_low_hypoxia_1q)
   ),
 
 # tar_target(integrated_seu_1q_low_hypoxia_heatmaps,
@@ -1235,17 +1231,6 @@ tar_plan(
   # 					 iteration = "list"
   # ),
 
-  tar_target(integrated_seu_2p_low_hypoxia,
-    integration_by_scna_clones(hypoxia_seus_2p, scna_of_interest = "2p", large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5")
-  ),
-
-  tar_target(integrated_seu_6p_low_hypoxia,
-    integration_by_scna_clones(hypoxia_seus_6p, scna_of_interest = "6p", large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5")
-  ),
-
-  tar_target(integrated_seu_16q_low_hypoxia,
-    integration_by_scna_clones(hypoxia_seus_16q, scna_of_interest = "16q", large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5")
-  ),
 
   tar_target(integrated_seus_16q,
     c(
@@ -1648,10 +1633,14 @@ tar_target(enrichment_6p_g1,
   	"16q" = c("SRR14800534", "SRR14800535", "SRR14800536")
   )),
 
-  tar_target(hypoxia_seus_1q, str_subset(unlist(seus_low_hypoxia), str_c(rb_scna_samples[["1q"]], collapse = "|"))),
-  tar_target(hypoxia_seus_16q, str_subset(unlist(seus_low_hypoxia), str_c(rb_scna_samples[["16q"]], collapse = "|"))),
-  tar_target(hypoxia_seus_2p, str_subset(unlist(seus_low_hypoxia), str_c(rb_scna_samples[["2p"]], collapse = "|"))),
-  tar_target(hypoxia_seus_6p, str_subset(unlist(seus_low_hypoxia), str_c(rb_scna_samples[["6p"]], collapse = "|"))),
+  # hypoxia_seus_1q/2p/6p/16q — subset seus_low_hypoxia to each SCNA's samples
+  tarchetypes::tar_map(
+    values = scna_map_values[, "scna", drop = FALSE],
+    names  = "scna",
+    tar_target(hypoxia_seus,
+      str_subset(unlist(seus_low_hypoxia), str_c(rb_scna_samples[[scna]], collapse = "|"))
+    )
+  ),
 
   tar_target(
   	unfiltered_oncoprint_input_by_scna,
