@@ -101,7 +101,3 @@ qpdf::pdf_combine(
 	), 
 	"results/fig_01.pdf"
 )
-
-browseURL("results/fig_01.pdf")
-
-browseURL("results/fig_01.pdf")

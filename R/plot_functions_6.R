@@ -200,8 +200,6 @@ plot_several_diffex_clones_in_phase <- function(enrichments, scna_of_interest = 
 plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", label = "_filtered_", height = 10, width = 18, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL) {
   kept_phases <- kept_phases %||% phase_levels
 
-  #
-
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
@@ -299,6 +297,9 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
       slice_max(Average.Log.Fold.Change, n = 5) %>%
       identity()
   } else {
+
+    seu <- find_all_markers(seu, metavar = group.by)
+
     heatmap_features <-
       seu@misc$markers[[group.by]][["presto"]]
 
@@ -330,6 +331,8 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
 
   seu$scna <- factor(seu$scna)
   levels(seu$scna)[1] <- "none"
+
+  giotti_genes <- read_giotti_genes()
 
   heatmap_features <-
     heatmap_features %>%

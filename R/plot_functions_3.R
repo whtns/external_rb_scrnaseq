@@ -92,7 +92,9 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
   )
   seu <- find_all_markers(seu, seurat_assay = "SCT")
   filtered_seu_path <- glue("output/seurat/{sample_id}_filtered_seu2.rds")
-  saveRDS(seu, filtered_seu_path)
+  Project(seu) <- sample_id
+  add_hash_metadata(seu = seu, filepath = filtered_seu_path)
+
   cell_type_meta <- seu@meta.data
   plot_filtering_timeline(all_cells_meta, scna_meta, qc_meta, cell_type_meta, sample_id)
   ggsave(glue("results/{sample_id}_filtering_timeline_new.pdf"), width = 8, height = 4)
@@ -156,7 +158,8 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
   )
   seu <- find_all_markers(seu, seurat_assay = "SCT")
   unfiltered_seu_path <- glue("output/seurat/{sample_id}_unfiltered_seu.rds")
-  saveRDS(seu, unfiltered_seu_path)
+
+  add_hash_metadata(seu = seu, filepath = unfiltered_seu_path)
   return(unfiltered_seu_path)
 }
 
@@ -181,7 +184,7 @@ regress_filtered_seu <- function(filtered_seu_path) {
     reduction = "pca"
   )
   regressed_seu <- find_all_markers(regressed_seu, seurat_assay = "SCT")
-  saveRDS(regressed_seu, regressed_seu_path)
+  add_hash_metadata(seu = regressed_seu, filepath = regressed_seu_path)
   return(regressed_seu_path)
 }
 

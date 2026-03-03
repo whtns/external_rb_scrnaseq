@@ -370,7 +370,7 @@ plot_clone_cc_plots <- function(seu_path, large_clone_comparisons = NULL, scna_o
 
   seu <- readRDS(seu_path)
   
-  var_y_levels <- var_y_levels %||% levels(seu@meta.data[[var_y]])
+  var_y_levels <- var_y_levels %||% levels(seu@meta.data[[var_y]]) %||% levels(factor(as.numeric(seu@meta.data[[var_y]])))
   
   var_y_colors <-
   	scales::hue_pal()(length(var_y_levels)) |> 
@@ -397,7 +397,7 @@ plot_clone_cc_plots <- function(seu_path, large_clone_comparisons = NULL, scna_o
   
   centroid_data <-
     cc_data %>%
-  	dplyr::filter(phase_level %in% kept_phases) |> 
+    { if ("phase_level" %in% names(.)) dplyr::filter(., phase_level %in% kept_phases) else . } %>%
     dplyr::group_by(.data[[var_y]], scna) %>%
     dplyr::summarise(mean_x = mean(S.Score), mean_y = mean(G2M.Score), n_cells = dplyr::n()) %>%
   	group_by(scna) %>%
@@ -429,8 +429,8 @@ plot_clone_cc_plots <- function(seu_path, large_clone_comparisons = NULL, scna_o
   	scale_fill_manual(values = var_y_colors) + 
   	# guides(fill = "none") + 
   	NULL
-    
-  cc_data <- dplyr::filter(cc_data, phase_level %in% kept_phases)
+
+  if("phase_level" %in% names(cc_data)) cc_data <- dplyr::filter(cc_data, phase_level %in% kept_phases)
 
   centroid_plot <-
     cc_data %>%

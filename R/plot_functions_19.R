@@ -561,32 +561,12 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
   return(plot_path)
 }
 
-plot_seu_marker_heatmap <- function(seu_path = NULL, cluster_order = NULL, 
-nb_paths = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", 
-assay = "SCT", label = "_filtered_", height = 10, width = 18, 
-equalize_scna_clones = FALSE, 
-phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), 
-kept_phases = NULL, tmp_plot_path = FALSE, hypoxia_expr = NULL, 
-run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
-  kept_phases <- kept_phases %||% phase_levels
-
-  file_id <- fs::path_file(seu_path)
-  
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
-  
-  sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
-  
-  message(file_id)
-
-  # cluster_order <- if(is.null(cluster_order[[file_id]])){
-  #   dummy_cluster_order(seu_path, kept_phases = kept_phases)
-  # } else {
-  #   cluster_order[[file_id]]
-  # }
+subset_seu_by_expression <- function(seu_path, hypoxia_expr = NULL, 
+run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2), assay = "SCT", slug = "hypoxia_low") {
 
   seu <- readRDS(seu_path)
 
-  # optionally subset the Seurat object by hypoxia expression string (evaluated in @meta.data)
+    # optionally subset the Seurat object by hypoxia expression string (evaluated in @meta.data)
   if (!is.null(hypoxia_expr)) {
     keep_cells <- tryCatch({
       with(seu@meta.data, eval(parse(text = hypoxia_expr)))
@@ -612,6 +592,35 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
     seu <- find_all_markers(seu, seurat_assay = assay)
   }
 
+  new_filepath <- str_replace(seu_path, "_seu.*.rds", paste0("_", slug, "_seu.rds"))
+  add_hash_metadata(new_filepath, seu = seu)
+  return(new_filepath)
+}
+
+plot_seu_marker_heatmap <- function(seu_path = NULL, cluster_order = NULL, 
+nb_paths = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", 
+assay = "SCT", label = "_filtered_", height = 10, width = 18, 
+equalize_scna_clones = FALSE, 
+phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), 
+kept_phases = NULL, tmp_plot_path = FALSE, hypoxia_expr = NULL, 
+run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
+  kept_phases <- kept_phases %||% phase_levels
+
+  file_id <- fs::path_file(seu_path)
+  
+  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  
+  sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
+  
+  message(file_id)
+
+  # cluster_order <- if(is.null(cluster_order[[file_id]])){
+  #   dummy_cluster_order(seu_path, kept_phases = kept_phases)
+  # } else {
+  #   cluster_order[[file_id]]
+  # }
+
+  seu <- readRDS(seu_path)
 
   nb_paths <- nb_paths %>%
     set_names(str_extract(., "SRR[0-9]*"))

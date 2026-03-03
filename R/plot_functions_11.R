@@ -60,7 +60,7 @@ find_cluster_pairwise_distance <- function(seu, group.by) {
 #' @param ... Additional arguments passed to other functions
 #' @return ggplot2 plot object
 #' @export
-compare_corresponding_enrichments <- function(enrichment_list, common_seus = NULL, plot_path = "results/compared_enrichments.pdf", ...) {
+compare_corresponding_enrichments <- function(enrichment_list, common_seus = NULL, plot_path = tempfile(tmpdir = "results", fileext = ".pdf"), ...) {
 
 	enrichment_results <- enrichment_list |> 
 		map("enrichment") |> 
@@ -170,7 +170,8 @@ filter_enrichment_result <- function(enrichment_result){
 	
 	tables_path <- writexl::write_xlsx(enrichment_tables, glue("results/corresponding_states_enrichment_{sample_id}.xlsx"))
 	
-	plot_path <- glue("results/{sample_id}_corresponding_clusters_diffex_enrichment.pdf", h = 10)
+	plot_path <- tempfile(tmpdir = "results", fileext = ".pdf")
+
 	pdf(plot_path)
 	print(enrichment_plots)
 	dev.off()

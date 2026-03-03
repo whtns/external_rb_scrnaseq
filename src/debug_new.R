@@ -2,23 +2,73 @@ library(targets)
 suppressPackageStartupMessages(source("packages.R"))
 lapply(list.files("./R", full.names = TRUE), source)
 
-# plot_seu_marker_heatmap_by_scna ------------------------------
+# integration_by_scna_clones -------------------------------
 
+tar_load(c("hypoxia_seus_1q", "large_clone_comparisons"))
+
+debug(integration_by_scna_clones)
+
+integration_by_scna_clones(hypoxia_seus_1q, scna_of_interest = "1q", large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5")
+
+
+
+# integrated_1q -------------------------------
+
+tar_load(c("cluster_orders", "integrated_seu_1q_low_hypoxia"))
+
+# debug(plot_integrated_1q_fig_low_hypoxia)
+# debug(make_clone_distribution_figure)
+# debug(plot_clone_cc_plots)
+# options(error = recover)
+test1 <- plot_integrated_1q_fig_low_hypoxia(seu_path = integrated_seu_1q_low_hypoxia, cluster_orders)
+
+browseURL(test1$plot)
+
+
+# subset_seu_by_expression -------------------------------
+
+tar_load(c("hypoxia_seus", "hypoxia_seus_1q", "large_clone_comparisons"))
+
+# subset_seu_by_expression(hypoxia_seus[[1]], run_hypoxia_clustering = TRUE, hypoxia_expr = "hypoxia_score <= 0.5", slug = "hypoxia_low")
+
+debug(integration_by_scna_clones)
+
+integration_by_scna_clones(hypoxia_seus_1q, scna_of_interest = "1q", large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5")
+
+
+
+
+
+
+
+tar_load(hypoxia_seus)
+
+test1 <- subset_seu_by_expression(hypoxia_seus[[1]], run_hypoxia_clustering = TRUE, hypoxia_expr = "hypoxia_score <= 0.5")
+
+
+# plot_seu_marker_heatmap_integrated ------------------------------
+
+tar_load(integrated_seu_1q_low_hypoxia)
+
+debug(plot_seu_marker_heatmap_integrated)
+
+test0 <- plot_seu_marker_heatmap_integrated(integrated_seu_1q_low_hypoxia, group.by = "integrated_snn_res.0.2", assay = "integrated")
+
+
+
+# plot_seu_marker_heatmap -------------------------------
 tar_load(c("hypoxia_seus", "hypoxia_seus_high", "hypoxia_1q_high", "numbat_rds_files", "large_clone_simplifications", "cluster_orders", "rb_scna_samples", "large_clone_comparisons"))
 
-debug(plot_seu_marker_heatmap)
+# debug(plot_seu_marker_heatmap)
 
 plot_seu_marker_heatmap(hypoxia_seus[[12]], nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE, hypoxia_expr = "hypoxia_score <= 0.5")
 
 plot_seu_marker_heatmap(hypoxia_seus_high[[2]], nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE)
+ 
 
-# debug(plot_seu_marker_heatmap_by_scna)
-debug(plot_seu_marker_heatmap)
-# debug(dummy_cluster_order)
+# plot_seu_marker_heatmap_by_scna ------------------------------
 
-plot_seu_marker_heatmap(hypoxia_seus_high[[2]], nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE)
-
-plot_seu_marker_heatmap_by_scna(hypoxia_1q_high[[1]], cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "1q", tmp_plot_path = TRUE)
+tar_load(c("hypoxia_seus", "hypoxia_seus_high", "hypoxia_1q_high", "numbat_rds_files", "large_clone_simplifications", "cluster_orders", "rb_scna_samples", "large_clone_comparisons"))
 
 
 test0 <- plot_seu_marker_heatmap_by_scna("output/seurat/SRR14800534_seu_low_hypoxia.rds", cluster_orders, numbat_rds_files, large_clone_simplifications, rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q")
@@ -134,12 +184,6 @@ browseURL(fig_s08$plot)
 
 plot_fig_s09() 
 
-# plot fig_s06 ------------------------------
-
-plot_fig_07d(plot_path = "results/fig_07d.pdf", integrated_seu_path = "output/seurat/integrated_1q/integrated_seu_1q_complete.rds", direction = "up", p_val_adj_threshold = 0.05, recurrence_threshold = 3, n_genes = 10) |> 
-    browseURL()
-
-debug(plot_fig_07d)
 
 
 # make_clone_distribution_figure ------------------------------
@@ -320,10 +364,10 @@ plot_fig_04_07(cluster_orders)
 
 
 
-plot_fig_07d(plot_path = "results/fig_07e.pdf", integrated_seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", direction = "down", p_val_adj_threshold = 0.05, recurrence_threshold = 2, n_genes = 10, ident.1 = "16q-", ident.2 = ".diploid") |> 
+plot_diffex_genes_on_split_integrated_seu(plot_path = "results/fig_07e.pdf", integrated_seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", direction = "down", p_val_adj_threshold = 0.05, recurrence_threshold = 2, n_genes = 10, ident.1 = "16q-", ident.2 = ".diploid") |> 
 	browseURL()
 
-plot_fig_07d(plot_path = "results/fig_07e.pdf", integrated_seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", direction = "down", p_val_adj_threshold = 0.05, recurrence_threshold = 2, n_genes = 10, ident.1 = "16q-", ident.2 = ".diploid") |> 
+plot_diffex_genes_on_split_integrated_seu(plot_path = "results/fig_07e.pdf", integrated_seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", direction = "down", p_val_adj_threshold = 0.05, recurrence_threshold = 2, n_genes = 10, ident.1 = "16q-", ident.2 = ".diploid") |> 
 	browseURL()
 
 # plot_seu_marker_heatmap_by_scna ------------------------------
@@ -1116,14 +1160,6 @@ debranch_seus(final_seus[3],
 							clone_simplifications = large_clone_simplifications)
 
 
-# plot_seu_marker_heatmap_integrated ------------------------------
-
-tar_load(integrated_seus)
-
-debug(plot_seu_marker_heatmap_integrated)
-
-test0 <- plot_seu_marker_heatmap_integrated(integrated_seus[[1]], group.by = "integrated_snn_res.0.2", assay = "integrated")
-browseURL(test0)
 
 
 

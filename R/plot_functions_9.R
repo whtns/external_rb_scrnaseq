@@ -164,7 +164,7 @@ plot_corresponding_clusters_diffex_volcanos <- function(diffex_list, seu_path, .
     imap(res, ~ make_volcano_plots(.x, sample_id = .y, mysubtitle = .y, color_by_chrom = FALSE)) %>%
     identity()
 
-  pdf_path <- glue("results/diffex_volcanos_{file_name}.pdf")
+  pdf_path <- tempfile(tmpdir = "results", fileext = ".pdf")
   pdf(pdf_path)
   print(myplots)
   dev.off()
@@ -273,7 +273,7 @@ plot_corresponding_clusters_diffex_heatmaps <- function(diffex_list, seu_path, c
 
   little_heatmaps <- pmap(test0, make_little_heatmap, diffex_list, seu)
 
-  pdf_path <- glue("results/diffex_heatmaps_{file_name}.pdf")
+  pdf_path <- tempfile(tmpdir = "results", fileext = ".pdf")
   pdf(pdf_path, w = 8, h = 10.5)
   print(little_heatmaps)
   dev.off()

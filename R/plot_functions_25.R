@@ -374,6 +374,8 @@ plot_figure_collage <- function(seu_path = NULL, cluster_order = NULL, nb_paths 
 		seu$scna <- factor(seu$scna)
 		# levels(seu$scna)[1] <- "none"
 		
+		giotti_genes <- read_giotti_genes()
+
 		heatmap_features <-
 			heatmap_features %>%
 			dplyr::ungroup() %>%

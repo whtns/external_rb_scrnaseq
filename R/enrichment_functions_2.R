@@ -45,10 +45,11 @@ enrich_diffex_by_cluster <- function(sample_id, myseus, celldf, ...) {
   enrich_plots <- compact(enrich_plots) %>%
     imap(~ (.x + labs(title = .y))) %>%
     identity()
-  pdf(glue("results/{sample_id}_diffex_cluster_enrichment.pdf"), width = 10)
+  pdf_path <- tempfile(tmpdir = "results", fileext = ".pdf")
+  pdf(pdf_path, width = 10)
   print(enrich_plots)
   dev.off()
-  return(glue("results/{sample_id}_diffex_cluster_enrichment.pdf"))
+  return(pdf_path)
 }
 
 #' Perform enrichment analysis
@@ -98,7 +99,7 @@ drop_cc_genes <- function(df, cc.genes = Seurat::cc.genes) {
     compact() %>%
     imap(~ (.x + labs(title = sample_id, subtitle = .y))) %>%
     identity()
-  gse_plot_path <- glue("results/{sample_id}_cluster_gsea.pdf")
+  gse_plot_path <- tempfile(tmpdir = "results", fileext = ".pdf")
   pdf(gse_plot_path, width = 8, height = 10)
   print(enrich_plots)
   dev.off()

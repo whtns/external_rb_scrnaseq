@@ -105,34 +105,6 @@ plot_variability_at_SCNA <- function(phylo_plot_output, chrom = "1", p_min = 0.9
   return(p_cnv_plot)
 }
 
-#' Load or read data from file
-#'
-#' @param myseus Parameter for myseus
-#' @return Loaded data object
-#' @export
-read_regress_save <- function(myseus) {
-  
-  seu <- myseus[[sample_id]] %>%
-    ScaleData(vars.to.regress = c("S.Score", "G2M.Score"), features = rownames(.)) %>%
-    RunPCA(features = VariableFeatures(.), nfeatures.print = 10) %>%
-    FindNeighbors(dims = 1:10) %>%
-    FindClusters(resolution = 0.15) %>%
-    RunUMAP(dims = 1:10, min.dist = 0.01)
-  saveRDS(seu, myseus)
-}
-
-#' Load or read data from file
-#'
-#' @param myseus Parameter for myseus
-#' @return Loaded data object
-#' @export
-read_unregress_cc_save <- function(myseus) {
-  
-  seu <- myseus[[sample_id]] %>%
-    seuratTools::clustering_workflow(resolution = c(0.2, 0.4))
-  # Uncomment below to save the object
-  # saveRDS(seu, myseus)
-}
 
 read_cluster_dictionary <- function(cluster_dictionary_path = "data/cluster_dictionary.csv") {
   cluster_dictionary <- read_tsv(cluster_dictionary_path) %>%
@@ -213,8 +185,10 @@ assign_phase_cluster_at_resolution <- function(seu_path = NULL, cluster_order = 
         arrange(...)
     }
   }
-  return(saveRDS(seu, seu_path))
-  # return(seu_path)
+
+  add_hash_metadata(seu = seu, filepath = seu_path)
+
+  return(seu_path)
 }
 
 calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", height = 5, width = 9, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, large_clone_comparisons, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, split_columns = "clusters", pairwise = TRUE) {
@@ -242,8 +216,8 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
     str_split("_v_", simplify = TRUE)
 
   file_slug <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
-  plot_path <- glue("results/numbat_sridhar/{sample_id}_clone_distribution.pdf")
-  table_path <- glue("results/numbat_sridhar/{sample_id}_clone_distribution.xlsx")
+  plot_path <- tempfile(tmpdir = "results/numbat_sridhar", fileext = ".pdf")
+  table_path <- tempfile(tmpdir = "results/numbat_sridhar", fileext = ".xlsx")
 
   pdf(plot_path, height = height, width = width)
 
