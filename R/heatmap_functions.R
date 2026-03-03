@@ -12,7 +12,7 @@ load_and_save_hypoxia_score <- function(seu_path) {
     seu <- readRDS(seu_path)
     seu <- add_hypoxia_score(seu)
 
-    saveRDS(seu, hypoxia_path)
+    add_hash_metadata(seu = seu, filepath = hypoxia_path)
 
     return(hypoxia_path)
 
@@ -41,7 +41,7 @@ subset_to_low_hypoxia <- function(seu_path, threshold = 0.5, slug="", ...) {
 
     low_hypoxia_path <-  stringr::str_replace(seu_path, "_seu_hypoxia.rds", "_seu_low_hypoxia.rds")
 
-    saveRDS(seu_low_hypoxia, low_hypoxia_path)
+    add_hash_metadata(seu = seu_low_hypoxia, filepath = low_hypoxia_path)
 
     return(low_hypoxia_path)
 }
@@ -69,7 +69,7 @@ subset_to_high_hypoxia <- function(seu_path, threshold = 0.5, slug="", ...) {
 
     high_hypoxia_path <-  stringr::str_replace(seu_path, "_seu_hypoxia.rds", "_seu_high_hypoxia.rds")
 
-    saveRDS(seu_high_hypoxia, high_hypoxia_path)
+    add_hash_metadata(seu = seu_high_hypoxia, filepath = high_hypoxia_path)
 
     return(high_hypoxia_path)
 }
@@ -178,12 +178,8 @@ select_1q_clones <- function(seu, slug="", ...) {
     
     rds_path <-  glue("output/seurat/integrated_1q_16q/integrated_seu_1q_afterall6{slug}.rds")
     
-    saveRDS(seu_1q, rds_path)
-    
-    # seu_1q  |> 
-    #     SplitObject(split.by = "batch") |> 
-    #     # imap(~saveRDS(.x, glue("output/seurat/integrated_1q_16q/{.y}_integrated_1q_after6{slug}_filtered_seu.rds"))) |> 
-    #     identity()
+
+    add_hash_metadata(seu = seu_1q, filepath = rds_path)
     
     pdf_path <- make_clone_distribution_figure_debug(seu_1q, rds_path, group.bys = "clusters", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "hypoxia_score", "batch"), ...)
     
@@ -243,14 +239,8 @@ select_16q_clones <- function(seu, file_id = NULL, slug="", ...) {
     seu_16q <- subset_to_16q(seu, ...)
     
     rds_path <-  glue("output/seurat/integrated_1q_16q/integrated_seu_16q_afterall6{slug}.rds")
-    
-    saveRDS(seu_16q, rds_path)
-    
-    # seu_1q  |> 
-    #     SplitObject(split.by = "batch") |> 
-    #     # imap(~saveRDS(.x, glue("output/seurat/integrated_1q_16q/{.y}_integrated_1q_after6{slug}_filtered_seu.rds"))) |> 
-    #     identity()
-    
+    add_hash_metadata(seu = seu_16q, filepath = rds_path)
+
     pdf_path <- make_clone_distribution_figure_debug(seu_16q, rds_path, group.bys = "clusters", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "hypoxia_score", "batch"), file_id = file_id, ...)
     
     return(pdf_path)

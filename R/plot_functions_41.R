@@ -303,7 +303,7 @@ seu_integrate_rbs <- function(numbat_dir = "output/numbat_sridhar", kept_samples
 
   seu_path <- glue("output/seurat/{sample_slug}_seu.rds")
 
-  saveRDS(integrated_seu, seu_path)
+  add_batch_hash_metadata(seu = integrated_seu, filepath = seu_path)
 
   return(seu_path)
 }

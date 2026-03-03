@@ -154,7 +154,7 @@ split_seu_by_branch <- function(seu_path, branches, ...) {
       prep_seu_branch(debranched_seu, tumor_id = tumor_id, sample_id = sample_id, ...)
 
       seu_paths[[terminal_clone]] <- str_replace(seu_path, "_filtered_seu.*", glue("_branch_{terminal_clone}_filtered_seu.rds"))
-      saveRDS(debranched_seu, seu_paths[[terminal_clone]])
+      add_hash_metadata(seu = debranched_seu, filepath = seu_paths[[terminal_clone]])
     }
   }
 

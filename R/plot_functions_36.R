@@ -636,7 +636,7 @@ drop_bad_cells <- function(seu_path, bad_cell_types = c("RPCs", "Late RPCs", c("
 
   seu <- seu[, !seu$type %in% bad_cell_types]
 
-  saveRDS(seu, str_replace(seu_path, "_seu.rds", "_dropped_cells_seu.rds"))
+  add_hash_metadata(seu = seu, filepath = str_replace(seu_path, "_seu.rds", "_dropped_cells_seu.rds"))
 
   retainedcells_dimplot <- DimPlot(
     seu,

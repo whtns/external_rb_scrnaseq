@@ -116,11 +116,10 @@ plot_fig_s09 <- function(){
 #' @param ... Additional arguments passed to other functions
 #' @return ggplot2 plot object
 #' @export
-plot_fig_07d <- function(plot_path = "results/fig_07d.pdf", integrated_seu_path = "output/seurat/integrated_1q/integrated_seu_1q_complete.rds", direction = "up", p_val_adj_threshold = 0.05, recurrence_threshold = 3, n_genes = 10, ident.1 = "w_scna", ident.2 = "wo_scna", ...){
-  
-  
-	
-	seu_list <- integrated_seu_path |> 
+plot_diffex_genes_on_split_integrated_seu <- function(plot_path = "results/fig_07d.pdf", integrated_seu_path = "output/seurat/integrated_1q/integrated_seu_1q_complete.rds", direction = "up", p_val_adj_threshold = 0.05, recurrence_threshold = 3, n_genes = 10, ident.1 = "w_scna", ident.2 = "wo_scna", ...){
+
+	integrated_seu <- readRDS(integrated_seu_path)
+	seu_list <- integrated_seu |> 
 		SplitObject(split.by = "batch")
 	
 	for(batch_name in names(seu_list)){
@@ -194,8 +193,6 @@ plot_fig_07d <- function(plot_path = "results/fig_07d.pdf", integrated_seu_path 
 #' @return ggplot2 plot object
 #' @export
 plot_fig_08d <- function(plot_path = "results/fig_08d.pdf", integrated_seu_path = "output/seurat/integrated_16q/integrated_seu_16q_complete.rds", direction = "down", p_val_adj_threshold = 0.1, recurrence_threshold = 2, n_genes = 10, ident.1 = "16q-", ident.2 = ".diploid", ...){
-  
-  
 	
 	seu_list <- integrated_seu_path |> 
 		SplitObject(split.by = "batch")

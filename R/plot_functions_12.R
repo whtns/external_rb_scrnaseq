@@ -152,27 +152,6 @@ plot_integrated_1q_fig <- function(cluster_orders, plot_path = "results/fig_02.p
 		write_xlsx(path = "results/fig_2d_cc.xlsx")
 	
 	
-#' Perform drop y axis operation
-#'
-#' @param myplot Plot object (ggplot2)
-#' @return ggplot2 plot object
-#' @export
-drop_y_axis <- function(myplot){
-		myplot[[1]] <- myplot[[1]] + 
-			theme(
-				axis.title.y = element_blank(),
-				axis.text.y = element_blank()
-			)
-		
-		myplot[[2]] <- myplot[[2]] + 
-			theme(
-				axis.title.y = element_blank(),
-				axis.text.y = element_blank()
-			)
-		
-		return(myplot)
-	}
-	
 	for(plot_i in 2:length(fig_2d_cc)){
 		fig_2d_cc[[plot_i]] <- drop_y_axis(fig_2d_cc[[plot_i]])
 	}
@@ -211,6 +190,105 @@ drop_y_axis <- function(myplot){
 			fig_2a_c, 
 			fig_2d_cc_path, 
 			fig_2d_hypoxia_hsp_path
+			),
+		plot_path)
+	
+	return(list("plot" = plot_path, "table" = fig_2d_cc_table))
+}
+
+#' Perform drop y axis operation
+#'
+#' @param myplot Plot object (ggplot2)
+#' @return ggplot2 plot object
+#' @export
+drop_y_axis <- function(myplot){
+		myplot[[1]] <- myplot[[1]] + 
+			theme(
+				axis.title.y = element_blank(),
+				axis.text.y = element_blank()
+			)
+		
+		myplot[[2]] <- myplot[[2]] + 
+			theme(
+				axis.title.y = element_blank(),
+				axis.text.y = element_blank()
+			)
+		
+		return(myplot)
+	}
+
+	#' Create a plot visualization
+#'
+#' @param cluster_orders Cluster information
+#' @param plot_path File path
+#' @return ggplot2 plot object
+#' @export
+plot_integrated_1q_fig_low_hypoxia <- function(seu_path = "output/seurat/integrated_1q/integrated_seu_1q_complete.rds", cluster_orders, plot_path = tempfile(tmpdir = "results", fileext = ".pdf")){
+	
+	batch_corrected_seu <- readRDS(seu_path)
+
+	batch_hashes <- batch_corrected_seu@meta.data[c("batch", "batch_hash")] |> 
+		distinct() |> 
+		tibble::deframe() |> 
+		identity()
+
+	batch_cluster_orders = map(batch_hashes, ~ {
+		read_cluster_orders_table(hash = .x)
+	})
+	
+	integrated_1q_seus <- map_chr(batch_hashes, ~ {
+		read_seu_path(hash = .x) |> as.character()
+	}) |> 
+		identity()
+
+	names(integrated_1q_seus) <- names(batch_hashes)
+
+	fig_2a_c <- make_clone_distribution_figure(seu_path, cluster_orders, height = 12, width = 20, plot_path = tempfile(tmpdir = "results", fileext = ".pdf"), heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch"))
+	
+	possibly_plot_clone_cc_plots <- possibly(plot_clone_cc_plots)
+	fig_2d_cc <- map(c(seu_path, integrated_1q_seus), plot_clone_cc_plots, var_y = "integrated_snn_res.0.6", scna_of_interest = "1q", labeled_values = c("g2_m"))
+	# fig_2d_cc <- map(c(seu_path, integrated_1q_seus), plot_clone_cc_plots, var_y = "clusters", scna_of_interest = "1q", labeled_values = c("g2_m"))
+	
+	fig_2d_cc_table <- map(fig_2d_cc, ~.x$data) |> 
+	set_names(c("integrated", names(integrated_1q_seus)))  |> 
+		write_xlsx(path = tempfile(tmpdir = "results", fileext = ".xlsx"))
+	
+	
+	for(plot_i in 2:length(fig_2d_cc)){
+		fig_2d_cc[[plot_i]] <- drop_y_axis(fig_2d_cc[[plot_i]])
+	}
+	
+	fig_2d_cc <- 
+		fig_2d_cc |> 
+		wrap_plots() +
+		plot_layout(
+			nrow = 1,
+			guides = "collect",
+			axis_titles = "collect") +
+		NULL
+		
+	fig_2d_cc_path <- ggsave(tempfile(tmpdir = "results", fileext = ".pdf"), fig_2d_cc, width = 12, height = 4)
+
+	possibly_plot_clone_cc_plots <- possibly(plot_clone_cc_plots)
+	
+	# fig_2d_hypoxia_hsp <- map(integrated_1q_seus, ~possibly_plot_clone_cc_plots(.x, scna_of_interest = "1q", kept_phases = c("hsp", "hypoxia"), labeled_values = c("hsp", "hypoxia")))
+	
+	# fig_2d_hypoxia_hsp <- 
+	# 	fig_2d_hypoxia_hsp |> 
+	# 	wrap_plots() +
+	# 	plot_layout(
+	# 		nrow = 1,
+	# 		guides = "collect",
+	# 		axis_titles = "collect") +
+	# 	NULL
+		
+	# fig_2d_hypoxia_hsp_path <- ggsave(tempfile(tmpdir = "results", fileext = ".pdf"), fig_2d_hypoxia_hsp, width= 14, height = 6)
+	
+	qpdf::pdf_combine(
+		list(
+			fig_2a_c, 
+			fig_2d_cc_path 
+			# fig_2d_hypoxia_hsp_path
 			),
 		plot_path)
 	
