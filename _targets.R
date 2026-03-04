@@ -1077,6 +1077,14 @@ tar_plan(
     ))
   ),
 
+  # Populate SQLite metadata tables for all SCNA-stratified Seurat objects.
+  # Upserts four tables: seurat_objects, cell_metadata, cluster_composition,
+  # qc_metrics. Re-runs automatically when any debranched_seus_* file changes
+  # (propagated via format = "file" on the upstream file-path targets).
+  tar_target(seu_metadata_db,
+    bulk_extract_seu_metadata(scna_seus, sqlite_path = "batch_hashes.sqlite"),
+    deployment = "main"  # DB writes must run on the main process, not a worker
+  ),
 
   # medium resolution (sample-specific SCNA collages) ------------------------------
 
