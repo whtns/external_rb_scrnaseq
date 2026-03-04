@@ -90,6 +90,18 @@ SRR27187899:
 - clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6b"
 - clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "16e"
 - clone_opt %in% c(4) & p_cnv <= 0.5 & seg == "16e"
+SRR27187900:
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "1d"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1d"
+- clone_opt %in% c(2,3) & p_cnv <= 0.5 & seg == "6c"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "6c"
+SRR27187901:
+- clone_opt %in% c(2,3,4,5) & p_cnv <= 0.5 & seg == "1c"
+- clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1c"
+- clone_opt %in% c(4,5) & p_cnv <= 0.5 & seg == "2a"
+- clone_opt %in% c(1,2,3) & p_cnv > 0.5 & seg == "2a"
+- clone_opt %in% c(1,2) & p_cnv > 0.5 & seg == "6a"
+- clone_opt %in% c(3,4,5) & p_cnv <= 0.5 & seg == "6a"
 SRR27187902:
 - clone_opt %in% c(2,3,4) & p_cnv <= 0.5 & seg == "1k"
 - clone_opt %in% c(1) & p_cnv > 0.5 & seg == "1k"
