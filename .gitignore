@@ -27,3 +27,5 @@ ARMOR/*
 .snakemake
 work
 *.rds
+batch_hashes.sqlite
+doc/table_s01.csv

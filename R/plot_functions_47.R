@@ -92,9 +92,9 @@ summarize_clusters <- function(df) {
 #' @return ggplot2 plot object
 #' @export
 plot_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications, label = "_clone_tree", ...) {
-  
-  
-  seu <- seu_path
+
+
+  seu <- readRDS(seu_path)
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -118,9 +118,9 @@ plot_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications,
 #' @return ggplot2 plot object
 #' @export
 save_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications, label = "_clone_tree", ...) {
-  
-  
-  seu <- seu_path
+
+
+  seu <- readRDS(seu_path)
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 

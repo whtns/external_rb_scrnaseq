@@ -86,26 +86,49 @@ tally_kooi_candidates <- function(cis_diffex_clones = "results/diffex_bw_clones_
   return(list("cis" = cis_diffex_clones, "trans" = trans_diffex_clones))
 }
 
+#' Perform retrieve cell stats operation
+#'
+#' @param seu_path File path
+#' @param sqlite_path Path to Seurat metadata SQLite database
+#' @return Function result
+#' @export
+retrieve_cell_stats <- function(seu_path, sqlite_path = "batch_hashes.sqlite") {
+    if (file.exists(sqlite_path)) {
+      con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+      on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+      if (DBI::dbExistsTable(con, "cell_qc_values")) {
+        stats <- DBI::dbGetQuery(
+          con,
+          "SELECT cell, nCount_gene, nFeature_gene, percent_mt
+           FROM cell_qc_values
+           WHERE filepath = ?
+           ORDER BY cell",
+          params = list(seu_path)
+        )
+
+        if (nrow(stats) > 0) {
+          stats <- stats |>
+            dplyr::rename(`percent.mt` = percent_mt)
+          return(stats)
+        }
+      }
+    }
+
+    seu <- readRDS(seu_path)
+
+    stats <- seu@meta.data[c("nCount_gene", "nFeature_gene", "percent.mt")] |>
+      tibble::rownames_to_column("cell")
+
+    return(stats)
+  }
+
 #' Perform collect study metadata operation
 #'
 #' @return Function result
 #' @export
 collect_study_metadata <- function() {
   #
-  
-#' Perform retrieve cell stats operation
-#'
-#' @param seu_path File path
-#' @return Function result
-#' @export
-retrieve_cell_stats <- function(seu_path) {
-    seu <- readRDS(seu_path)
-
-    stats <- seu@meta.data[c("nCount_gene", "nFeature_gene", "percent.mt")] %>%
-      tibble::rownames_to_column("cell")
-
-    return(stats)
-  }
 
   seus <-
     dir_ls("output/seurat/", regexp = "\\/SRR[0-9]*_seu.rds") %>%
