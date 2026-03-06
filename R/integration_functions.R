@@ -41,10 +41,9 @@ integration_by_scna_clones <- function(seu_paths, scna_of_interest = "1q", clone
 }
 
 subset_seu_by_clones <- function(seu, sample_id, scna_of_interest = "1q", clone_comparisons, filter_expr = NULL){
-        # browser()
 		clone_comparisons <- names(clone_comparisons[[sample_id]])
-		retained_clones <- clone_comparisons %>%
-			str_extract("[0-9]_v_[0-9]") %>%
+		retained_clones <- clone_comparisons |>
+			str_extract("[0-9]_v_[0-9]") |>
 			str_split("_v_", simplify = TRUE)
 
 		mode(retained_clones) <- "integer"
@@ -53,10 +52,10 @@ subset_seu_by_clones <- function(seu, sample_id, scna_of_interest = "1q", clone_
 
 		seu <- seu[, seu$clone_opt %in% retained_clones]
 
-          # optionally subset the Seurat object by filter expression string (evaluated in @meta.data)
+        # optionally subset the Seurat object by filter expression string (evaluated in @meta.data)
         if (!is.null(filter_expr)) {
             keep_cells <- tryCatch({
-            with(seu@meta.data, eval(parse(text = filter_expr)))
+            rlang::eval_tidy(rlang::parse_expr(filter_expr), data = seu@meta.data)
             }, error = function(e) {
             warning("Failed to evaluate filter_expr ('", filter_expr, "') on ", sample_id, ": ", e$message)
             NULL

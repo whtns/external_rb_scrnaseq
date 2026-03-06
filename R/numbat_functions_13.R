@@ -88,34 +88,134 @@ check_cluster_marker_gene <- function(seu_path, cluster_dictionary){
 #'
 #' @param cluster_dictionary Cluster information
 #' @param table_path File path
+#' @param sqlite_path Path to Seurat metadata SQLite database
 #' @return Function result
 #' @export
-make_table_s03 <- function(cluster_dictionary, table_path = "results/table_s03.csv"){
-	myseunames <-c("SRR13884242", "SRR13884243", "SRR13884246", "SRR13884247",
+make_table_s03 <- function(cluster_dictionary,
+                           table_path = "results/table_s03.csv",
+                           sqlite_path = "batch_hashes.sqlite") {
+	myseunames <- c("SRR13884242", "SRR13884243", "SRR13884246", "SRR13884247",
 		"SRR13884248", "SRR13884249", "SRR14800534", "SRR14800535", "SRR14800536",
 		"SRR14800540", "SRR14800541", "SRR14800543", "SRR17960481", "SRR17960484",
 		"SRR27187899", "SRR27187902")
 	
-	seu_paths <- fs::path("output/seurat/", glue("{myseunames}_seu.rds")) |> 
-		set_names(myseunames)
+	if (!file.exists(sqlite_path)) {
+		stop(glue::glue("SQLite database not found: {sqlite_path}"))
+	}
 	
-	possibly_check_cluster_marker_gene <- possibly(check_cluster_marker_gene)
+	con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+	on.exit(DBI::dbDisconnect(con))
 	
-	df2 <- map(seu_paths, possibly_check_cluster_marker_gene, cluster_dictionary) |> 
-		purrr::compact() |> 
-		dplyr::bind_rows() |> 
-		dplyr::group_by(sample_id, abbreviation, gene_snn_res.0.2, n_cells) |> 
-		summarise(marker_genes = paste(Gene.Name, collapse = ", ")) |> 
-		identity()
-		
-		test0 <- 
-			map_int(seu_paths, ~ncol(readRDS(.x))) |>
-			tibble::enframe("sample_id", "total_cells") |> 
-			dplyr::full_join(df2, by = "sample_id") |> 
-			dplyr::group_by(sample_id) |> 
-			dplyr::mutate(percent_filtered = sum(n_cells)/total_cells) |> 
-			dplyr::mutate(percent_filtered = replace_na(percent_filtered, 0)) |>
-			identity()
+	representative_paths <- DBI::dbGetQuery(
+		con,
+		glue::glue_sql(
+			"WITH ranked AS (
+			   SELECT filepath, sample_id, n_cells, recorded_at,
+			          ROW_NUMBER() OVER (
+			            PARTITION BY sample_id
+			            ORDER BY n_cells DESC, recorded_at DESC
+			          ) AS rn
+			   FROM seurat_objects
+			   WHERE sample_id IN ({myseunames*})
+			 )
+			 SELECT sample_id, filepath, n_cells AS total_cells
+			 FROM ranked
+			 WHERE rn = 1",
+			.con = con
+		)
+	)
+	
+	cluster_counts <- DBI::dbGetQuery(
+		con,
+		glue::glue_sql(
+			"SELECT r.sample_id,
+			        cc.cluster AS 'gene_snn_res.0.2',
+			        cc.n_cells
+			 FROM cluster_composition cc
+			 INNER JOIN (
+			   SELECT sample_id, filepath
+			   FROM (
+			     SELECT filepath, sample_id, n_cells, recorded_at,
+			            ROW_NUMBER() OVER (
+			              PARTITION BY sample_id
+			              ORDER BY n_cells DESC, recorded_at DESC
+			            ) AS rn
+			     FROM seurat_objects
+			     WHERE sample_id IN ({myseunames*})
+			   )
+			   WHERE rn = 1
+			 ) r
+			 ON r.filepath = cc.filepath",
+			.con = con
+		)
+	)
+	
+	marker_rows <- if (DBI::dbExistsTable(con, "cluster_markers")) {
+		DBI::dbGetQuery(
+			con,
+			glue::glue_sql(
+				"SELECT r.sample_id,
+			        cm.cluster AS 'gene_snn_res.0.2',
+			        cm.marker_rank,
+			        cm.gene_name
+			 FROM cluster_markers cm
+			 INNER JOIN (
+			   SELECT sample_id, filepath
+			   FROM (
+			     SELECT filepath, sample_id, n_cells, recorded_at,
+			            ROW_NUMBER() OVER (
+			              PARTITION BY sample_id
+			              ORDER BY n_cells DESC, recorded_at DESC
+			            ) AS rn
+			     FROM seurat_objects
+			     WHERE sample_id IN ({myseunames*})
+			   )
+			   WHERE rn = 1
+			 ) r
+			 ON r.filepath = cm.filepath
+			 WHERE cm.marker_rank <= 5",
+				.con = con
+			)
+		)
+	} else {
+		tibble::tibble(
+			sample_id = character(),
+			`gene_snn_res.0.2` = character(),
+			marker_rank = integer(),
+			gene_name = character()
+		)
+	}
+	
+	marker_summary <- marker_rows |>
+		dplyr::arrange(sample_id, gene_snn_res.0.2, marker_rank) |>
+		dplyr::group_by(sample_id, gene_snn_res.0.2) |>
+		dplyr::summarise(marker_genes = paste(gene_name, collapse = ", "), .groups = "drop")
+	
+	removed_clusters <- dplyr::bind_rows(cluster_dictionary) |>
+		dplyr::filter(as.character(remove) == "1") |>
+		dplyr::mutate(gene_snn_res.0.2 = as.character(gene_snn_res.0.2))
+	
+	df2 <- removed_clusters |>
+		dplyr::left_join(
+			cluster_counts |>
+				dplyr::mutate(gene_snn_res.0.2 = as.character(gene_snn_res.0.2)),
+			by = c("sample_id", "gene_snn_res.0.2")
+		) |>
+		dplyr::left_join(marker_summary, by = c("sample_id", "gene_snn_res.0.2")) |>
+		dplyr::select(sample_id, abbreviation, gene_snn_res.0.2, n_cells, marker_genes)
+	
+	test0 <-
+		tibble::tibble(sample_id = myseunames) |>
+		dplyr::left_join(
+			representative_paths |>
+				dplyr::select(sample_id, total_cells),
+			by = "sample_id"
+		) |>
+		dplyr::full_join(df2, by = "sample_id") |>
+		dplyr::group_by(sample_id) |>
+		dplyr::mutate(percent_filtered = sum(n_cells, na.rm = TRUE) / total_cells) |>
+		dplyr::mutate(percent_filtered = tidyr::replace_na(percent_filtered, 0)) |>
+		dplyr::ungroup()
 		
 		# test0 |> 
 		# 	dplyr::ungroup() |> 
