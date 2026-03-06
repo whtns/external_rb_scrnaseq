@@ -1,0 +1,7 @@
+=== PIPELINE SYSTEM SUMMARY ===
+Export Date: 2026-03-05 15:49:51.328873
+Project Root: /dataVolume/storage/single_cell_projects/resources/external_rb_scrnaseq_proj
+
+
+=== MERMAID DAG STRUCTURE ===
+```mermaid

@@ -21,7 +21,7 @@ find_diffex_clones <- function(seu_path, numbat_rds_files, large_clone_compariso
   numbat_rds_files <- numbat_rds_files %>%
     set_names(str_extract(., "SRR[0-9]*"))
 
-  mynb <- numbat_rds_files[[tumor_id]]
+  mynb <- readRDS(numbat_rds_files[[tumor_id]])
 
   seu <- readRDS(seu_path)
 
