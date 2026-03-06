@@ -4,7 +4,9 @@
 # ------
 # seurat_objects   - one row per RDS file (identity, size, provenance)
 # cell_metadata    - one row per (filepath, column): dtype, n_unique, JSON summary
+# cell_qc_values   - one row per (filepath, cell): per-cell QC metrics for fast queries
 # cluster_composition - one row per (filepath, cluster): cell counts
+# cluster_markers  - one row per (filepath, cluster, rank): top marker genes
 # qc_metrics       - one row per (filepath, metric): quantile summary
 # hashes           - legacy: filepath → content hash  (kept for compatibility)
 # cluster_orders   - legacy: file_id → JSON cluster order (kept for compatibility)
@@ -49,12 +51,32 @@ init_seu_metadata_db <- function(sqlite_path = DEFAULT_DB) {
     )")
 
   DBI::dbExecute(con, "
+    CREATE TABLE IF NOT EXISTS cell_qc_values (
+      filepath      TEXT,
+      cell          TEXT,
+      sample_id     TEXT,
+      nCount_gene   REAL,
+      nFeature_gene REAL,
+      percent_mt    REAL,
+      PRIMARY KEY (filepath, cell)
+    )")
+
+  DBI::dbExecute(con, "
     CREATE TABLE IF NOT EXISTS cluster_composition (
       filepath TEXT,
       cluster  TEXT,
       n_cells  INTEGER,
       pct_cells REAL,
       PRIMARY KEY (filepath, cluster)
+    )")
+
+  DBI::dbExecute(con, "
+    CREATE TABLE IF NOT EXISTS cluster_markers (
+      filepath    TEXT,
+      cluster     TEXT,
+      marker_rank INTEGER,
+      gene_name   TEXT,
+      PRIMARY KEY (filepath, cluster, marker_rank)
     )")
 
   DBI::dbExecute(con, "
@@ -91,7 +113,7 @@ init_seu_metadata_db <- function(sqlite_path = DEFAULT_DB) {
 #' Extract metadata from a Seurat object and write to SQLite
 #'
 #' Reads the RDS at \code{filepath} (or uses an in-memory object if \code{seu}
-#' is provided), derives the content hash, and upserts four metadata tables.
+#' is provided), derives the content hash, and upserts six metadata tables.
 #' The function is idempotent: re-running on the same file updates existing rows.
 #'
 #' @param filepath Path to the Seurat RDS file. Used as the primary key.
@@ -182,18 +204,18 @@ extract_seu_metadata <- function(
 
     summary_json <- if (is.numeric(vals)) {
       qs <- quantile(vals, probs = c(0, .25, .5, .75, 1), na.rm = TRUE)
-      jsonlite::toJSON(list(
-        min    = unname(qs[1]),
-        q25    = unname(qs[2]),
-        median = unname(qs[3]),
+      as.character(jsonlite::toJSON(list(
+        min    = base::unname(qs[1]),
+        q25    = base::unname(qs[2]),
+        median = base::unname(qs[3]),
         mean   = mean(vals, na.rm = TRUE),
-        q75    = unname(qs[4]),
-        max    = unname(qs[5])
-      ), auto_unbox = TRUE)
+        q75    = base::unname(qs[4]),
+        max    = base::unname(qs[5])
+      ), auto_unbox = TRUE))
     } else {
       counts <- sort(table(vals), decreasing = TRUE)
       # cap at 50 most common values to keep JSON small
-      jsonlite::toJSON(as.list(head(counts, 50)), auto_unbox = TRUE)
+      as.character(jsonlite::toJSON(as.list(head(counts, 50)), auto_unbox = TRUE))
     }
 
     list(
@@ -215,8 +237,32 @@ extract_seu_metadata <- function(
       INSERT OR REPLACE INTO cell_metadata
         (filepath, column_name, dtype, n_cells, n_unique, n_na, summary_json)
       VALUES (?, ?, ?, ?, ?, ?, ?)",
-      params = as.list(r)
+      params = base::unname(as.list(r))
     )
+  }
+
+  # ── cell_qc_values ──────────────────────────────────────────────────────────
+  qc_cols_available <- base::intersect(c("nCount_gene", "nFeature_gene", "percent.mt"), colnames(md))
+  if (length(qc_cols_available) > 0) {
+    qc_df <- md |>
+      tibble::rownames_to_column("cell") |>
+      dplyr::transmute(
+        filepath = filepath,
+        cell = cell,
+        sample_id = sample_id,
+        nCount_gene = if ("nCount_gene" %in% colnames(md)) .data$nCount_gene else NA_real_,
+        nFeature_gene = if ("nFeature_gene" %in% colnames(md)) .data$nFeature_gene else NA_real_,
+        percent_mt = if ("percent.mt" %in% colnames(md)) .data[["percent.mt"]] else NA_real_
+      )
+
+    DBI::dbExecute(con,
+      "DELETE FROM cell_qc_values WHERE filepath = ?",
+      params = list(filepath)
+    )
+
+    if (nrow(qc_df) > 0) {
+      DBI::dbWriteTable(con, "cell_qc_values", qc_df, append = TRUE)
+    }
   }
 
   # ── cluster_composition ─────────────────────────────────────────────────────
@@ -247,8 +293,54 @@ extract_seu_metadata <- function(
     }
   }
 
+  # ── cluster_markers ─────────────────────────────────────────────────────────
+  markers_tbl <- seu@misc$markers$gene_snn_res.0.2$presto
+  if (!is.null(markers_tbl) && nrow(markers_tbl) > 0) {
+    gene_col <- dplyr::case_when(
+      "Gene.Name" %in% colnames(markers_tbl) ~ "Gene.Name",
+      "gene"      %in% colnames(markers_tbl) ~ "gene",
+      "feature"   %in% colnames(markers_tbl) ~ "feature",
+      TRUE ~ NA_character_
+    )
+
+    if (!is.na(gene_col) && "Cluster" %in% colnames(markers_tbl)) {
+      markers_df <- markers_tbl |>
+        dplyr::mutate(
+          cluster = as.character(Cluster),
+          gene_name = .data[[gene_col]]
+        ) |>
+        dplyr::group_by(cluster) |>
+        dplyr::slice_head(n = 20) |>
+        dplyr::ungroup() |>
+        dplyr::group_by(cluster) |>
+        dplyr::mutate(marker_rank = dplyr::row_number()) |>
+        dplyr::ungroup() |>
+        dplyr::transmute(
+          filepath = filepath,
+          cluster = cluster,
+          marker_rank = marker_rank,
+          gene_name = as.character(gene_name)
+        )
+
+      DBI::dbExecute(con,
+        "DELETE FROM cluster_markers WHERE filepath = ?",
+        params = list(filepath)
+      )
+
+      for (i in seq_len(nrow(markers_df))) {
+        r <- markers_df[i, ]
+        DBI::dbExecute(con, "
+          INSERT OR REPLACE INTO cluster_markers
+            (filepath, cluster, marker_rank, gene_name)
+          VALUES (?, ?, ?, ?)",
+          params = list(r$filepath, r$cluster, r$marker_rank, r$gene_name)
+        )
+      }
+    }
+  }
+
   # ── qc_metrics ──────────────────────────────────────────────────────────────
-  present_qc <- intersect(qc_cols, colnames(md))
+  present_qc <- base::intersect(qc_cols, colnames(md))
   for (metric in present_qc) {
     vals <- md[[metric]]
     if (!is.numeric(vals)) next
@@ -258,9 +350,9 @@ extract_seu_metadata <- function(
         (filepath, metric, min, q25, median, mean, q75, max)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       params = list(filepath, metric,
-                    unname(qs[1]), unname(qs[2]), unname(qs[3]),
+                    base::unname(qs[1]), base::unname(qs[2]), base::unname(qs[3]),
                     mean(vals, na.rm = TRUE),
-                    unname(qs[4]), unname(qs[5]))
+                    base::unname(qs[4]), base::unname(qs[5]))
     )
   }
 
@@ -309,6 +401,24 @@ get_metadata_summary <- function(filepath, sqlite_path = DEFAULT_DB) {
   )
 }
 
+#' Retrieve per-cell QC values for one Seurat object
+#'
+#' @param filepath Path used as primary key in \code{seurat_objects}.
+#' @param sqlite_path Path to the SQLite database.
+#' @return A data frame with cell-level QC columns.
+#' @export
+get_cell_qc_values <- function(filepath, sqlite_path = DEFAULT_DB) {
+  con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+  on.exit(DBI::dbDisconnect(con))
+  DBI::dbGetQuery(con, "
+    SELECT cell, nCount_gene, nFeature_gene, percent_mt
+    FROM   cell_qc_values
+    WHERE  filepath = ?
+    ORDER  BY cell",
+    params = list(filepath)
+  )
+}
+
 #' Retrieve cluster composition for one Seurat object
 #'
 #' @param filepath Path used as primary key in \code{seurat_objects}.
@@ -324,6 +434,26 @@ get_cluster_composition <- function(filepath, sqlite_path = DEFAULT_DB) {
     WHERE  filepath = ?
     ORDER  BY n_cells DESC",
     params = list(filepath)
+  )
+}
+
+#' Retrieve top marker genes for one Seurat object
+#'
+#' @param filepath Path used as primary key in \code{seurat_objects}.
+#' @param top_n Number of top markers to return per cluster.
+#' @param sqlite_path Path to the SQLite database.
+#' @return A data frame with cluster, marker_rank, and gene_name columns.
+#' @export
+get_cluster_markers <- function(filepath, top_n = 5, sqlite_path = DEFAULT_DB) {
+  con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+  on.exit(DBI::dbDisconnect(con))
+  DBI::dbGetQuery(con, "
+    SELECT cluster, marker_rank, gene_name
+    FROM   cluster_markers
+    WHERE  filepath = ?
+       AND marker_rank <= ?
+    ORDER  BY cluster, marker_rank",
+    params = list(filepath, top_n)
   )
 }
 

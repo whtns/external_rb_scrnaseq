@@ -1,0 +1,7 @@
+*
+!.gitignore
+!meta
+meta/*
+!meta/meta
+*.sqlite
+*.csv
