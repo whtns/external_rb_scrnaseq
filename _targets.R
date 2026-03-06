@@ -878,7 +878,7 @@ tar_plan(
   # Purpose: Track file path input/output for final clone trees file.
   tar_target(
   	final_clone_trees_file,
-  	qpdf::pdf_combine(final_clone_trees_files, "results/final_clone_trees.pdf")
+  	qpdf::pdf_combine(final_clone_tree_files, "results/final_clone_trees.pdf")
   ),
 
   # Purpose: Build dependency target for heatmap collages.
@@ -1080,14 +1080,9 @@ tar_plan(
     sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_2p, cluster_orders, "results/fig_s04_08.pdf")
   ),
 
-  # TODO: replace not_sure_what_this_does with the correct function name
-  tar_target(fig_s11,
-    not_sure_what_this_does(integrated_seus_2p, cluster_orders, "results/fig_s11.pdf")
-  ),
-
   # Purpose: Generate output for fig s23.
   tar_target(fig_s23,
-    not_sure_what_this_does(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf")
+    sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf")
   ),
 
   # Purpose: Generate output for fig s25.
@@ -1340,7 +1335,7 @@ tar_target(
   # Purpose: Build dependency target for collected scna collages.
   tar_target(collected_scna_collages,
   					 qpdf::pdf_combine(
-  					 	unlist(list(collages_1q, collages_2p, collages_6p, collages_16q)), 
+  					 	unlist(list(collages_2p, collages_6p, collages_16q)),
   					 	"results/fig_s17.pdf")
   					 ),
 
@@ -1686,7 +1681,7 @@ tar_target(enrichment_6p_g1,
   # Purpose: Prepare oncoprint data/plots for oncoprint input by scna for each cluster.
   tar_target(
   	oncoprint_input_by_scna_for_each_cluster,
-  	filter_oncoprint_diffex(unfiltered_oncoprint_input_by_scna_for_each_cluster, oncoprint_settings_by_cluster)
+  	filter_oncoprint_diffex(unfiltered_oncoprint_input_by_scna_for_each_cluster, oncoprint_settings_per_cluster)
   ),
   
   # Purpose: Run enrichment analysis for oncoprint enrich clones gobp.
@@ -1844,7 +1839,7 @@ tar_target(enrichment_6p_g1,
   # Purpose: Prepare oncoprint data/plots for oncoprint plots by cluster.
   tar_target(
   	oncoprint_plots_by_cluster,
-  	make_oncoprint_plots(oncoprint_input_by_scna_for_each_cluster$cis, oncoprint_input_by_scna_for_each_cluster$trans, oncoprint_input_by_scna_for_each_cluster$all, debranched_clone_trees, oncoprint_settings_by_cluster, label = "_by_cluster", p_val_threshold = 1)
+  	make_oncoprint_plots(oncoprint_input_by_scna_for_each_cluster, debranched_clone_trees, oncoprint_settings_per_cluster, label = "_by_cluster", p_val_threshold = 1)
   ),
   
   # Purpose: Generate plot set for stachelek score plots.
