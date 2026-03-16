@@ -296,6 +296,9 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
   cells_with_regressed <- !is.na(filtered_seu@meta.data[[colnames(regressed_meta)[1]]])
   filtered_seu <- filtered_seu[, cells_with_regressed]
 
+  cells_in_scale <- colnames(GetAssayData(filtered_seu, assay = "SCT", slot = "scale.data"))
+  filtered_seu <- filtered_seu[, intersect(colnames(filtered_seu), cells_in_scale)]
+
   filtered_seu <- find_all_markers(filtered_seu, colnames(regressed_meta))
 
   regressed_cluster <- glue("regressed.{resolution}")
