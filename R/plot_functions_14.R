@@ -85,15 +85,25 @@ drop_mt_cluster <- function(seu, group.by = "integrated_snn_res.0.4"){
 #' @return ggplot2 plot object
 #' @export
 plot_fig_07_08 <- function(figure_input, x_var = "sample_cluster", plot_title = "fig_07", p_adj_threshold = 0.1, plot_path = "results/fig_07.pdf", ...){
-	unfiltered_input <- 
-		unlist(figure_input) |> 
-		set_names(str_extract(unlist(figure_input), "SRR[0-9]*")) |> 
-		map(read_csv) |> 
+	raw_tables <-
+		unlist(figure_input) |>
+		set_names(str_extract(unlist(figure_input), "SRR[0-9]*")) |>
+		map(read_csv)
+
+	non_empty <- purrr::keep(raw_tables, ~nrow(.x) > 0)
+
+	if (length(non_empty) == 0) {
+		message("plot_fig_07_08: all input CSVs are empty, returning NULL")
+		return(invisible(NULL))
+	}
+
+	unfiltered_input <-
+		non_empty |>
 		map(~split(.x, .x$cluster)) |>
 		purrr::list_transpose() |>
 		map(~purrr::compact(.x)) |>
-		map(dplyr::bind_rows, .id = "sample_id") |> 
-		dplyr::bind_rows(.id = "clusters") |> 
+		map(dplyr::bind_rows, .id = "sample_id") |>
+		dplyr::bind_rows(.id = "clusters") |>
 		dplyr::filter(location == "cis")
 	
 	plot_input <- 

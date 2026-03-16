@@ -434,7 +434,7 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
 
   collage_plots <- list(seu_heatmap, facet_cell_cycle_plot, centroid_plot, clone_distribution_plot)
 
-  wrap_plots(collage_plots) +
+  mypatch <- wrap_plots(collage_plots) +
     # plot_layout(widths = c(16, 4)) +
     plot_layout(design = layout) +
     plot_annotation(tag_levels = "A") +
@@ -443,7 +443,9 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
 
   file_slug <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
-  ggsave(glue("results/{file_slug}_{label}heatmap_phase_scatter_patchwork.pdf"), height = height, width = width)
+  plot_path <- glue("results/{file_slug}_{label}heatmap_phase_scatter_patchwork.pdf")
+  ggsave(plot_path, plot = mypatch, height = height, width = width)
+  return(plot_path)
 }
 
 plot_seu_marker_heatmap_by_scna_ara <- function(seu_path = NULL, cluster_order = NULL, nb_paths = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", label = "_filtered_", height = 10, width = 18, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, rb_scna_samples, large_clone_comparisons, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, column_split = "clusters") {

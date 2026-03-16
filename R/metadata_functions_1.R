@@ -134,6 +134,68 @@ read_batch_hashes <- function(filepath = NULL, sqlite_path = "batch_hashes.sqlit
   }
 }
 
+#' Upsert resolution dictionary into SQLite
+#'
+#' @param resolution_df Data frame with columns file_id and resolution.
+#' @param sqlite_path Path to the SQLite database file.
+#' @return Invisibly returns the number of rows written.
+#' @export
+upsert_resolution_dictionary <- function(resolution_df, sqlite_path = "batch_hashes.sqlite") {
+  stopifnot(all(c("file_id", "resolution") %in% colnames(resolution_df)))
+
+  con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  DBI::dbExecute(con, paste0(
+    "CREATE TABLE IF NOT EXISTS resolution_dictionary ",
+    "(file_id TEXT PRIMARY KEY, resolution TEXT, updated_at TEXT)"
+  ))
+
+  for (i in seq_len(nrow(resolution_df))) {
+    DBI::dbExecute(
+      con,
+      paste0(
+        "INSERT OR REPLACE INTO resolution_dictionary ",
+        "(file_id, resolution, updated_at) VALUES (?, ?, ?)"
+      ),
+      params = list(
+        resolution_df$file_id[[i]],
+        as.character(resolution_df$resolution[[i]]),
+        format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+      )
+    )
+  }
+
+  invisible(nrow(resolution_df))
+}
+
+#' Read resolution dictionary from SQLite
+#'
+#' @param sqlite_path Path to the SQLite database file.
+#' @return Named list mapping file_id to resolution.
+#' @export
+read_resolution_dictionary <- function(sqlite_path = "batch_hashes.sqlite") {
+  con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  if (!DBI::dbExistsTable(con, "resolution_dictionary")) {
+    return(list())
+  }
+
+  resolution_df <- DBI::dbGetQuery(
+    con,
+    "SELECT file_id, resolution FROM resolution_dictionary ORDER BY file_id"
+  )
+
+  if (nrow(resolution_df) == 0) {
+    return(list())
+  }
+
+  resolution_list <- as.list(resolution_df$resolution)
+  names(resolution_list) <- resolution_df$file_id
+  resolution_list
+}
+
 encode_cluster_order_to_hash_table <- function(
     cluster_orders, sqlite_path = "batch_hashes.sqlite") {
   con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)

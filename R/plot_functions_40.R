@@ -269,9 +269,9 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
 
   sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
 
-  regressed_seu <- regressed_seu_path
-  
-  
+  regressed_seu <- readRDS(regressed_seu_path)
+
+
   regressed_seu$scna[regressed_seu$scna == ""] <- ".diploid"
   regressed_seu$scna <- factor(regressed_seu$scna)
 
@@ -285,8 +285,8 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
     ) %>%
     identity()
 
-  filtered_seu <- filtered_seu_path
-  
+  filtered_seu <- readRDS(filtered_seu_path)
+
   filtered_seu$scna[filtered_seu$scna == ""] <- ".diploid"
   filtered_seu$scna <- factor(filtered_seu$scna)
 
@@ -464,17 +464,17 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
               CCCEDDDF
               "
   
-  wrap_plots(
+  mypatch <- wrap_plots(
   	plot_list
   ) +
   	plot_layout(design = layout) +
     plot_annotation(title = sample_id)
 
   plot_path <- glue("results/{sample_id}_regression_effects.pdf")
-  mypatch <- ggsave(plot_path, ...)
+  ggsave(plot_path, plot = mypatch, ...)
 
   # markerplot <- plot_seu_marker_heatmap(filtered_seu_path, nb_path = numbat_rds_file, clone_simplifications = large_clone_simplifications, ...)
-  return(mypatch)
+  return(plot_path)
 }
 
 #' Create a plot visualization

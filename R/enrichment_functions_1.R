@@ -241,6 +241,9 @@ make_dotplot <- function(gse, showCategory = 10) {
       mydotplot <- possible_dotplot(gse, showCategory = showCategory)	
     }
   } else if(analysis_method == "ora"){
+    make_dotplot <- function(gse, showCategory = 10) {
+      clusterProfiler::dotplot(gse, showCategory = showCategory, font.size = 12)
+    }
     possible_dotplot <- purrr::possibly(make_dotplot, otherwise = ggplot())
     
     if(!is.null(p_val_cutoff)){

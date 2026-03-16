@@ -19,7 +19,7 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 
   sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
 
-  filtered_seu <- filtered_seu_path
+  filtered_seu <- readRDS(filtered_seu_path)
 
   regressed_seu <- readRDS(regressed_seu_path)
 
@@ -43,7 +43,7 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 
   plot_path <- glue("results/effect_of_regression/enrichment/filtered/{sample_id}_filtered_cluster_enrichment.pdf")
   plot_list["filtered_enrichment"] <- plot_path
-  ggsave(plot_path, height = 32, width = 40)
+  ggsave(plot_path, plot = filtered_ora_plots, height = 32, width = 40)
 
   fs::dir_create(glue("results/effect_of_regression/enrichment"))
   fs::dir_create(glue("results/effect_of_regression/enrichment/regressed"))
@@ -61,7 +61,7 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 
   plot_path <- glue("results/effect_of_regression/enrichment/regressed/{sample_id}_regressed_cluster_enrichment.pdf")
   plot_list["regressed_enrichment"] <- plot_path
-  ggsave(plot_path, height = 32, width = 40)
+  ggsave(plot_path, plot = regressed_ora_plots, height = 32, width = 40)
 
   # diffex ora_analysis ------------------------------
   fs::dir_create(glue("results/effect_of_regression/enrichment"))
@@ -81,7 +81,7 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 
   plot_path <- glue("results/effect_of_regression/enrichment/filtered/{sample_id}_filtered_diffex_enrichment.pdf")
   plot_list["filtered_enrichment"] <- plot_path
-  ggsave(plot_path, height = 32, width = 40)
+  ggsave(plot_path, plot = filtered_ora_plots, height = 32, width = 40)
 
   fs::dir_create(glue("results/effect_of_regression/enrichment"))
   fs::dir_create(glue("results/effect_of_regression/enrichment/regressed"))
@@ -99,7 +99,7 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 
   plot_path <- glue("results/effect_of_regression/enrichment/regressed/{sample_id}_regressed_diffex_enrichment.pdf")
   plot_list["regressed_enrichment"] <- plot_path
-  ggsave(plot_path, height = 32, width = 40)
+  ggsave(plot_path, plot = regressed_ora_plots, height = 32, width = 40)
 
 
   return(plot_list)

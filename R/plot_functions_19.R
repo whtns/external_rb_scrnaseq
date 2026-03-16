@@ -614,11 +614,12 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
   
   message(file_id)
 
-  # cluster_order <- if(is.null(cluster_order[[file_id]])){
-  #   dummy_cluster_order(seu_path, kept_phases = kept_phases)
-  # } else {
-  #   cluster_order[[file_id]]
-  # }
+  cluster_order_list <- if(is.null(cluster_order[[file_id]])){
+    dummy_cluster_order(seu_path, kept_phases = kept_phases)
+  } else {
+    cluster_order[[file_id]]
+  }
+  cluster_order <- cluster_order_list[["0"]] %||% cluster_order_list[[1]]
 
   seu <- readRDS(seu_path)
 

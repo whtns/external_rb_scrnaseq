@@ -134,11 +134,13 @@ plot_corresponding_enrichment <- function(sample_diffex_list, filename, ...){
 		map(dplyr::select, gs_name, entrez_gene) |> 
 		dplyr::bind_rows()
 	
-	enrichments <- sample_diffex_list |> 
-		map("all") |> 
+	enrichments <- sample_diffex_list |>
+		map("all") |>
+		purrr::compact() |>
+		purrr::keep(~ nrow(.x) > 0) |>
 		map(prep_for_enrichment, TERM2GENE = gene_sets)
-	
-	
+
+
 #' Filter data based on specified criteria
 #'
 #' @param enrichment_result Parameter for enrichment result
