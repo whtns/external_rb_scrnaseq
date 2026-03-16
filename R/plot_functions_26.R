@@ -38,9 +38,16 @@ find_diffex_bw_clones_for_each_cluster <- function(seu_path, numbat_rds_files, l
   myclusters <- sort(unique(seu@meta.data[["clusters"]])) %>%
     set_names(.)
 
+  clone_diff_per_cluster <- function(cluster_for_diffex, seu, clone_comparisons, location, mynb) {
+    seu0 <- seu[, seu[["clusters"]] == cluster_for_diffex]
+    Idents(seu0) <- seu0$clone_opt
+    diffex <- imap(clone_comparisons, make_clone_comparison, seu0, mynb, location = location) |>
+      purrr::compact()
+    return(diffex)
+  }
   possible_clone_diff_per_cluster <- possibly(clone_diff_per_cluster)
-  
-  
+
+
   clone_comparisons <- large_clone_comparisons[[tumor_id]]
   
   if(!is.null(scna_of_interest)){

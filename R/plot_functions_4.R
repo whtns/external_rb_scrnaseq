@@ -41,15 +41,28 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
     identity()
   myannot$scna[myannot$scna == ""] <- ".diploid"
   numbat_heatmap <- safe_plot_numbat(mynb, seu, myannot, sample_id, clone_bar = FALSE, p_min = p_min, line_width = line_width)[["result"]]
-  heatmap_no_phylo <- ggsave(tempfile(fileext = ".pdf"), numbat_heatmap, w = 10, h = 5)
-  scna_variability_plot <- 
-    numbat_heatmap[[3]][["data"]] |> 
-    dplyr::left_join(myannot, by = "cell") |> 
-    plot_variability_at_SCNA(p_min = p_min)
-  scna_var_plot <- ggsave(tempfile(fileext = ".pdf"), scna_variability_plot, w = 10, h = 5)
+  if (!is.null(numbat_heatmap) && !identical(numbat_heatmap, NA_real_)) {
+    heatmap_no_phylo_path <- tempfile(fileext = ".pdf")
+    ggsave(heatmap_no_phylo_path, plot = numbat_heatmap, w = 10, h = 5)
+    scna_variability_plot <-
+      numbat_heatmap[[3]][["data"]] |>
+      dplyr::left_join(myannot, by = "cell") |>
+      plot_variability_at_SCNA(p_min = p_min)
+    scna_var_path <- tempfile(fileext = ".pdf")
+    ggsave(scna_var_path, plot = scna_variability_plot, w = 10, h = 5)
+  } else {
+    heatmap_no_phylo_path <- NULL
+    scna_var_path <- NULL
+  }
   numbat_heatmap_w_phylo <- safe_plot_numbat_w_phylo(mynb, seu, myannot, sample_id, clone_bar = FALSE, p_min = p_min)[["result"]]
-  heatmap_w_phylo <- ggsave(tempfile(fileext = ".pdf"), w = 10, h = 5)
+  heatmap_w_phylo_path <- tempfile(fileext = ".pdf")
+  if (!is.null(numbat_heatmap_w_phylo) && !identical(numbat_heatmap_w_phylo, NA_real_)) {
+    ggsave(heatmap_w_phylo_path, plot = numbat_heatmap_w_phylo, w = 10, h = 5)
+  } else {
+    heatmap_w_phylo_path <- NULL
+  }
   plot_path <- glue("results/{numbat_dir}/{sample_id}/{sample_id}{extension}.pdf")
-  qpdf::pdf_combine(list(heatmap_no_phylo, scna_var_plot, heatmap_w_phylo), plot_path)
+  pdf_inputs <- purrr::compact(list(heatmap_no_phylo_path, scna_var_path, heatmap_w_phylo_path))
+  qpdf::pdf_combine(pdf_inputs, plot_path)
   return(plot_path)
 }

@@ -99,7 +99,8 @@ plot_seu_clusters_and_markers <- function(seu_path, cluster_order, phase_levels 
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
 	message(file_id)
-	cluster_order <- cluster_order[[file_id]]
+	cluster_order_list <- cluster_order[[file_id]]
+	cluster_order <- if (!is.null(cluster_order_list)) cluster_order_list[["0"]] %||% cluster_order_list[[1]] else NULL
 
   seu <- readRDS(seu_path)
 

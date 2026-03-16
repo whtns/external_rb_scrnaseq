@@ -30,7 +30,7 @@ find_diffex_clones_between_corresponding_states <- function(seu_path, correspond
 
   mynb <- numbat_rds_files[[tumor_id]]
 
-  seu <- seu_path
+  seu <- readRDS(seu_path)
 
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
 
@@ -77,9 +77,9 @@ find_diffex_clusters_between_corresponding_states <- function(seu_path, correspo
   numbat_rds_files <- numbat_rds_files %>%
     set_names(str_extract(., "SRR[0-9]*"))
 
-  seu <- seu_path
+  seu <- readRDS(seu_path)
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
-  
+
   corresponding_states <-
   	corresponding_states_dictionary[[1]] |>
   	dplyr::mutate(sample = str_remove(file_name, "_filtered_seu.*$")) |>
@@ -117,6 +117,7 @@ find_diffex_clusters_between_corresponding_states <- function(seu_path, correspo
   
   tables_path <- diffex |>
     purrr::list_flatten() |>
+    purrr::compact() |>
     writexl::write_xlsx(glue("results/corresponding_states_diffex_{file_name}.xlsx"))
 
   return(diffex)

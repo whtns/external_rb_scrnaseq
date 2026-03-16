@@ -105,6 +105,7 @@ check_MYCN_mean_expression <- function(seu_path){
 #' @return ggplot2 plot object
 #' @export
 plot_fig_s25 <- function(seu_path = "output/seurat/integrated_1q/integrated_seu_1q_complete.rds", subtype_markers) {
+    seu <- readRDS(seu_path)
     nbin <- floor(length(VariableFeatures(seu)) / 100)
     
     seu <- Seurat::AddModuleScore(seu, features = subtype_markers, name = "subtype", nbin = nbin, ctrl = 100)

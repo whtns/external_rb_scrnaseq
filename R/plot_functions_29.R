@@ -225,19 +225,22 @@ compare_cluster_continuous_var <- function(seu_path, cluster_order = NULL, conti
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
 	message(file_id)
-	cluster_order <- cluster_order[[file_id]]
+	cluster_order_list <- cluster_order[[file_id]]
+	cluster_order <- if (!is.null(cluster_order_list)) cluster_order_list[["0"]] %||% cluster_order_list[[1]] else NULL
 
   seu <- readRDS(seu_path)
 
   heatmap_features <-
     table_cluster_markers(seu, assay = assay)
 
-  group.by <- unique(cluster_order$resolution)
+  if (!is.null(cluster_order)) {
+    group.by <- unique(cluster_order$resolution)
+  }
 
   cluster_order <-
-    cluster_order %>%
+    if (!is.null(cluster_order)) cluster_order %>%
     dplyr::filter(!is.na(clusters)) %>%
-    dplyr::mutate(clusters = as.character(clusters))
+    dplyr::mutate(clusters = as.character(clusters)) else NULL
 
   seu@meta.data$clusters <- seu@meta.data[[group.by]]
 
@@ -274,17 +277,16 @@ compare_cluster_continuous_var <- function(seu_path, cluster_order = NULL, conti
 compare_markers <- function(seu_path, cluster_order = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", mygene = "EZH2", label = "_filtered_", height = 14, width = 22, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star")) {
   #
 	file_id <- fs::path_file(seu_path)
-	
+
 	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
-	
+
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
-	
+
 	message(file_id)
-	cluster_order <- cluster_order[[file_id]]
+	cluster_order_list <- cluster_order[[file_id]]
+	cluster_order <- if (!is.null(cluster_order_list)) cluster_order_list[["0"]] %||% cluster_order_list[[1]] else NULL
 
   seu <- readRDS(seu_path)
-
-  group.by <- unique(cluster_order$resolution)
 
   group.by <- unique(cluster_order$resolution)
 

@@ -57,7 +57,8 @@ annotate_percent_segment_diffex <- function(diffex) {
     total_diffex_clones %>%
     set_names(sample_ids) %>%
     map(bind_rows, .id = "clone_comparison") %>%
-  	purrr::compact() |> 
+    purrr::keep(~ ncol(.x) > 0) %>%
+  	purrr::compact() |>
     map(dplyr::left_join, cc_genes, by = "symbol") %>%
     map(group_by, clone_comparison) %>%
     map(dplyr::filter, p_val_adj < 1) %>%
@@ -91,15 +92,19 @@ annotate_percent_segment_diffex <- function(diffex) {
   write_xlsx(cluster_diffex_clones, cluster_xlsx)
 
   cluster_diffex_clones_by_chr <-
-    cluster_diffex_clones %>%
-    dplyr::bind_rows(.id = "sample_id") %>%
-    dplyr::distinct(sample_id, clone_comparison, cluster, chr, symbol, .keep_all = TRUE) %>%
-    dplyr::group_by(symbol) %>%
-    dplyr::mutate(num_samples = length(unique(sample_id))) %>%
-    dplyr::arrange(desc(num_samples), symbol) %>%
-    dplyr::filter(num_samples > 1) %>%
-    dplyr::filter(!str_detect(chr, "CHR_")) %>%
-    split(.$chr)
+    if (length(cluster_diffex_clones) > 0) {
+      cluster_diffex_clones %>%
+        dplyr::bind_rows(.id = "sample_id") %>%
+        dplyr::distinct(sample_id, clone_comparison, cluster, chr, symbol, .keep_all = TRUE) %>%
+        dplyr::group_by(symbol) %>%
+        dplyr::mutate(num_samples = length(unique(sample_id))) %>%
+        dplyr::arrange(desc(num_samples), symbol) %>%
+        dplyr::filter(num_samples > 1) %>%
+        dplyr::filter(!str_detect(chr, "CHR_")) %>%
+        split(.$chr)
+    } else {
+      list()
+    }
 
   write_xlsx(cluster_diffex_clones_by_chr, cluster_by_chr_xlsx)
 
@@ -113,15 +118,19 @@ annotate_percent_segment_diffex <- function(diffex) {
   write_xlsx(total_diffex_clones, total_xlsx)
 
   total_diffex_clones_by_chr <-
-    total_diffex_clones %>%
-    dplyr::bind_rows(.id = "sample_id") %>%
-    dplyr::distinct(sample_id, clone_comparison, chr, symbol, .keep_all = TRUE) %>%
-    dplyr::group_by(symbol) %>%
-    dplyr::mutate(num_samples = length(unique(sample_id))) %>%
-    dplyr::arrange(desc(num_samples), symbol) %>%
-    dplyr::filter(num_samples > 1) %>%
-    dplyr::filter(!str_detect(chr, "CHR_")) %>%
-    split(.$chr)
+    if (length(total_diffex_clones) > 0) {
+      total_diffex_clones %>%
+        dplyr::bind_rows(.id = "sample_id") %>%
+        dplyr::distinct(sample_id, clone_comparison, chr, symbol, .keep_all = TRUE) %>%
+        dplyr::group_by(symbol) %>%
+        dplyr::mutate(num_samples = length(unique(sample_id))) %>%
+        dplyr::arrange(desc(num_samples), symbol) %>%
+        dplyr::filter(num_samples > 1) %>%
+        dplyr::filter(!str_detect(chr, "CHR_")) %>%
+        split(.$chr)
+    } else {
+      list()
+    }
 
   write_xlsx(total_diffex_clones_by_chr, total_by_chr_xlsx)
 

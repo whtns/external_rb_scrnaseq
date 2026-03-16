@@ -10,9 +10,9 @@ lapply(list.files("./R", full.names = TRUE), source)
 tar_option_set(
   memory = "transient",
   garbage_collection = TRUE,
-  error = "continue"  # "null" silently propagates NULLs; "continue" marks failed targets
-                      # and lets you inspect errors via tar_meta(fields = "error")
-  # controller = crew_controller_local(workers = 4)
+  error = "continue",  # "null" silently propagates NULLs; "continue" marks failed targets
+                       # and lets you inspect errors via tar_meta(fields = "error")
+  controller = crew_controller_local(workers = 4)
 )
 
 output_plot_extensions <- c(
@@ -43,23 +43,49 @@ tar_plan(
   tar_target(
     figures_and_tables,
     list(
-      fig_s02_table_s04, # tcga frequency
-      fig_s03, # gistic plots
-      fig_s04, # study cell stats
-      fig_s05, # smoothed expression
-      fig_s06a, # karyograms,
-      fig_02, # integrated 1q fig for all 1q+ samples thesis fig 4.3
-      fig_s07, # Sample-specific analyses of tumors with 1q+ subclones after integration.
-      fig_s11,
-      fig_s12, # Sample-specific analyses of tumors with 2p+ subclones after integration.
-      fig_s04_08, # Sample-specific analyses of tumors with 16q- subclones after integration.
+      cluster_comparisons_by_phase_for_disctinct_clones,
       clustree_compilation,
       collage_compilation,
-      table_all_diffex_clones,
+      fig_02,     # integrated 1q fig for all 1q+ samples
+      fig_03,     # integrated 16q- alternative resolutions
+      fig_04,     # 2p+ integrated analysis
+      fig_04_07,  # fig 04-07 combined
+      fig_05,     # 6p+ integrated analysis
+      fig_07a,    # 1q+ cluster diffex after integration
+      fig_07b,    # 1q+ cluster diffex without integration
+      fig_08a,    # 16q- cluster diffex after integration
+      fig_08b,    # 16q- cluster diffex without integration
+      fig_09,     # 2p+ corresponding cluster analysis
+      fig_10,     # 6p+ corresponding cluster analysis
+      fig_s02_04,        # regression diagnostics
+      fig_s02_table_s04, # tcga frequency
+      fig_s03,    # gistic plots
+      fig_s03a,   # unfiltered numbat heatmaps
+      fig_s04,    # study cell stats
+      fig_s04_08, # 2p+ sample-specific analyses after integration
+      fig_s04_09, # 2p+ sample-specific analyses without integration
+      fig_s05,    # smoothed expression
+      fig_s06a,   # karyograms
+      fig_s07,    # 1q+ sample-specific analyses after integration
+      fig_s08,    # 1q+ clone diffex within clusters
+      fig_s09,    # 1q+ cluster diffex of interest
+      fig_s10,    # 16q- clone diffex within clusters
+      fig_s12,    # 16q- sample-specific analyses after integration
+      fig_s13,    # filtered numbat heatmaps
+      fig_s20,    # 2p+ clone diffex within clusters
+      fig_s23,    # 6p+ sample-specific analyses after integration
+      fig_s25,    # subtype markers
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
-      oncoprint_plots, 
-      cluster_comparisons_by_phase_for_disctinct_clones
+      oncoprint_plots,
+      table_06,               # rod-rich samples
+      table_all_diffex_clones, # diffex between clones per cluster
+      table_s01, # umi, genes detected, mito %
+      table_s02, # detailed sample metadata
+      table_s03, # clusters removed with marker genes
+      table_s07, # 1q+ clone percentage per cluster
+      table_s09, # 16q- clone percentage per cluster
+      table_s10  # 2p+ clone percentage per cluster
     )
   ),
 
@@ -210,7 +236,7 @@ tar_plan(
   tar_target(fig_s02_table_s04, rb_scna_frequency_in_tcga_by_cancer_type()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
   
   # Purpose: Generate output for fig s03.
-  tar_target(fig_s03, make_gistic_plot()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
+  tar_target(fig_s03, plot_tcga_gistic()), # RB SCNA frequency in TCGA by cancer type (Taylor et al. 2018).
   # Purpose: Generate output for table s07.
   tar_target(table_s07, make_table_s07()), # For each 1q+ sample, percentage of clone in cluster.
   # Purpose: Generate output for table s09.
@@ -369,6 +395,12 @@ tar_plan(
   # Purpose: Build dependency target for cluster orders.
   tar_target(cluster_orders,
     pull_cluster_orders(cluster_file)
+  ),
+
+  # Purpose: Encode cluster orders into SQLite for use by make_clone_distribution_figure.
+  tar_target(cluster_orders_sqlite,
+    encode_cluster_order_to_hash_table(cluster_orders),
+    cue = tar_cue("always")
   ),
   
   # Purpose: Prepare Seurat object path(s) for overall seus.
@@ -544,8 +576,8 @@ tar_plan(
 
   # Purpose: Generate plot set for regression effect plots.
   tar_target(regression_effect_plots,
-    plot_effect_of_regression(final_seus, regressed_seus, w = 18, h = 12),
-    pattern = map(regressed_seus),
+    plot_effect_of_regression(final_seus, regressed_seus, width = 18, height = 12),
+    pattern = map(final_seus, regressed_seus),
     iteration = "list"
   ),
   
@@ -555,7 +587,7 @@ tar_plan(
   # Purpose: Generate plot set for regression ora plots.
   tar_target(regression_ora_plots,
     ora_effect_of_regression(final_seus, regressed_seus),
-    pattern = map(regressed_seus),
+    pattern = map(final_seus, regressed_seus),
     iteration = "list"
   ),
   # Purpose: Generate plot set for cin score plots.
@@ -598,7 +630,7 @@ tar_plan(
   # filtered_numbat_heatmaps
   tar_target(fig_s13,
     make_numbat_heatmaps(final_seus, numbat_rds_files, p_min = 0.5, line_width = 0.1, extension = "_filtered"),
-    pattern = map(numbat_rds_files),
+    pattern = map(final_seus),
     iteration = "list",
     cue = tar_cue("always")  # force re-render each run: heatmap layout depends on
                               # session graphics device state, not captured by hash
@@ -637,23 +669,7 @@ tar_plan(
   # Purpose: Build dependency target for volcano thresholds all.
   tar_target(
     volcano_thresholds_all,
-    list(
-      "SRR13884242" = 4,
-      "SRR13884243" = 4,
-      "SRR13884247" = 4,
-      "SRR13884249" = 4,
-      "SRR14800534" = 2,
-      "SRR14800535" = 3,
-      "SRR14800536" = 3,
-      "SRR14800540" = 4,
-      "SRR14800541" = 3,
-      "SRR14800543" = 3,
-      "SRR17960481" = 3,
-      "SRR17960484" = 3,
-      "SRR27187899" = 3,
-      # "SRR27187900" = 3,
-      "SRR27187902" = 3
-    )
+    yaml::read_yaml(here::here("config/volcano_thresholds_all.yaml"))
   ),
   # Purpose: Build dependency target for volcano all.
   tar_target(
@@ -696,20 +712,7 @@ tar_plan(
   # Purpose: Build dependency target for volcano thresholds in segment.
   tar_target(
     volcano_thresholds_in_segment,
-    list(
-      "SRR13884242" = 4,
-      "SRR13884243" = 4,
-      "SRR13884247" = 4,
-      "SRR13884249" = 4,
-      "SRR14800534" = 2,
-      "SRR14800535" = 3,
-      "SRR14800536" = 3,
-      "SRR14800540" = 4,
-      "SRR14800541" = 3,
-      "SRR14800543" = 3,
-      "SRR17960481" = 3,
-      "SRR17960484" = 3
-    )
+    yaml::read_yaml(here::here("config/volcano_thresholds_in_segment.yaml"))
   ),
   # Purpose: Build dependency target for volcano cis.
   tar_target(
@@ -823,7 +826,7 @@ tar_plan(
   
   # Purpose: Generate plot set for unpaired clone distribution plots.
   tar_target(unpaired_clone_distribution_plots,
-    calculate_clone_distribution(final_seus, cluster_orders, pairwise = FALSE),
+    calculate_clone_distribution(final_seus, cluster_orders, large_clone_comparisons = large_clone_comparisons, pairwise = FALSE),
     pattern = map(final_seus),
     iteration = "list"
   ),
@@ -1067,22 +1070,22 @@ tar_plan(
 
   # Sample-specific analyses of tumors with 1q+ subclones after integration.
   tar_target(fig_s07,
-    sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_1q, cluster_orders, "results/fig_s07.pdf")
+    { force(cluster_orders_sqlite); sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_1q, cluster_orders, "results/fig_s07.pdf") }
   ),
 
   # Sample-specific analyses of tumors with 16q- subclones after integration.
   tar_target(fig_s12,
-    sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_16q, cluster_orders, "results/fig_s12.pdf")
+    { force(cluster_orders_sqlite); sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_16q, cluster_orders, "results/fig_s12.pdf") }
   ),
 
   # Sample-specific analyses of tumors with 2p+ subclones after integration.
   tar_target(fig_s04_08,
-    sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_2p, cluster_orders, "results/fig_s04_08.pdf")
+    { force(cluster_orders_sqlite); sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_2p, cluster_orders, "results/fig_s04_08.pdf") }
   ),
 
   # Purpose: Generate output for fig s23.
   tar_target(fig_s23,
-    sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf")
+    { force(cluster_orders_sqlite); sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_6p, cluster_orders, "results/fig_s23.pdf") }
   ),
 
   # Purpose: Generate output for fig s25.
@@ -1803,26 +1806,9 @@ tar_target(enrichment_6p_g1,
 
 	# Purpose: Build dependency target for resolution dictionary.
 	tar_target(resolution_dictionary,
-						 list("SRR13884246_branch_5_filtered_seu_1q.rds"= "0",
-						 		 "SRR13884249_filtered_seu_1q.rds"= "0",
-						 		 "SRR14800534_filtered_seu_1q.rds"= "0",
-						 		 "SRR14800535_filtered_seu_1q.rds"= "0",
-						 		 "SRR14800536_filtered_seu_1q.rds"= "0",
-						 		 "SRR13884246_branch_5_filtered_seu_2p.rds"= "0",
-						 		 "SRR13884247_branch_6_filtered_seu.rds"= "-1",
-						 		 "SRR13884248_filtered_seu_2p.rds"= "-1",
-						 		 "SRR13884249_filtered_seu_2p.rds"= "-1",
-						 		 "SRR17960481_filtered_seu.rds"= "0",
-						 		 "SRR17960484_filtered_seu_2p.rds"= "-1",
-						 		 "SRR13884247_filtered_seu.rds"= "-1",
-						 		 "SRR13884248_filtered_seu_6p.rds"= "-1",
-						 		 "SRR17960484_filtered_seu_6p.rds"= "0",
-						 		 "SRR27187899_filtered_seu.rds"= "0",
-						 		 "SRR14800534_filtered_seu_16q.rds"= "-1",
-						 		 "SRR14800535_filtered_seu_16q.rds"= "0",
-						 		 "SRR14800536_filtered_seu_16q.rds"= "0"
-						 )
-						 ),
+           read_resolution_dictionary(sqlite_path = "batch_hashes.sqlite"),
+           deployment = "main"
+           ),
 
 	# Purpose: Prepare Seurat object path(s) for chosen resolution seus.
 	tar_target(chosen_resolution_seus,

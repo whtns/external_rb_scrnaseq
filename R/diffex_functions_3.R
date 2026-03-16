@@ -56,6 +56,7 @@ make_oncoprint_diffex <- function(large_filter_expressions, cluster_dictionary, 
 #' @export
 filter_diffex <- function(df, n_slice = 10) {
     #
+    if (nrow(df) == 0 || !"p_val_adj" %in% colnames(df)) return(df)
 
     test0 <-
       df %>%
