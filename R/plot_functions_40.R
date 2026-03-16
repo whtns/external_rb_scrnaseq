@@ -292,6 +292,10 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
 
   filtered_seu <- AddMetaData(filtered_seu, regressed_meta)
 
+  # Drop cells that were not in regressed_seu (AddMetaData gives NA for missing cells)
+  cells_with_regressed <- !is.na(filtered_seu@meta.data[[colnames(regressed_meta)[1]]])
+  filtered_seu <- filtered_seu[, cells_with_regressed]
+
   filtered_seu <- find_all_markers(filtered_seu, colnames(regressed_meta))
 
   regressed_cluster <- glue("regressed.{resolution}")

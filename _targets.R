@@ -811,7 +811,7 @@ tar_plan(
     names  = "scna",
     # Purpose: Compute clone-related output for clone pearls.
     tar_target(clone_pearls,
-      plot_clone_pearls(seus_sym, var_y = var_y),
+      { force(cluster_orders_sqlite); plot_clone_pearls(seus_sym, var_y = var_y) },
       pattern   = map(seus_sym),
       iteration = "list"
     )

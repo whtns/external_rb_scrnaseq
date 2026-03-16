@@ -44,12 +44,16 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
   if (!is.null(numbat_heatmap) && !identical(numbat_heatmap, NA_real_)) {
     heatmap_no_phylo_path <- tempfile(fileext = ".pdf")
     ggsave(heatmap_no_phylo_path, plot = numbat_heatmap, w = 10, h = 5)
-    scna_variability_plot <-
-      numbat_heatmap[[3]][["data"]] |>
-      dplyr::left_join(myannot, by = "cell") |>
-      plot_variability_at_SCNA(p_min = p_min)
-    scna_var_path <- tempfile(fileext = ".pdf")
-    ggsave(scna_var_path, plot = scna_variability_plot, w = 10, h = 5)
+    if (length(numbat_heatmap) >= 3) {
+      scna_variability_plot <-
+        numbat_heatmap[[3]][["data"]] |>
+        dplyr::left_join(myannot, by = "cell") |>
+        plot_variability_at_SCNA(p_min = p_min)
+      scna_var_path <- tempfile(fileext = ".pdf")
+      ggsave(scna_var_path, plot = scna_variability_plot, w = 10, h = 5)
+    } else {
+      scna_var_path <- NULL
+    }
   } else {
     heatmap_no_phylo_path <- NULL
     scna_var_path <- NULL
