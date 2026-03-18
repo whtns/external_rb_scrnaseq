@@ -335,7 +335,7 @@ make_oncoprint_plots <- function(comps, clone_trees, oncoprint_settings, label =
   cis_comps_tables <-
     comps_res[["cis"]] %>%
     map("table") %>%
-    map(dplyr::select, -genes_in_segment) %>%
+    map(~ dplyr::select(.x, -dplyr::any_of("genes_in_segment"))) %>%
     writexl::write_xlsx(in_segment_table_path)
 
   # trans ------------------------------

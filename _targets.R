@@ -43,49 +43,49 @@ tar_plan(
   tar_target(
     figures_and_tables,
     list(
-      cluster_comparisons_by_phase_for_disctinct_clones,
-      clustree_compilation,
-      collage_compilation,
-      fig_02,     # integrated 1q fig for all 1q+ samples
-      fig_03,     # integrated 16q- alternative resolutions
-      fig_04,     # 2p+ integrated analysis
-      fig_04_07,  # fig 04-07 combined
-      fig_05,     # 6p+ integrated analysis
-      fig_07a,    # 1q+ cluster diffex after integration
-      fig_07b,    # 1q+ cluster diffex without integration
-      fig_08a,    # 16q- cluster diffex after integration
-      fig_08b,    # 16q- cluster diffex without integration
-      fig_09,     # 2p+ corresponding cluster analysis
-      fig_10,     # 6p+ corresponding cluster analysis
-      fig_s02_04,        # regression diagnostics
-      fig_s02_table_s04, # tcga frequency
-      fig_s03,    # gistic plots
-      fig_s03a,   # unfiltered numbat heatmaps
-      fig_s04,    # study cell stats
-      fig_s04_08, # 2p+ sample-specific analyses after integration
-      fig_s04_09, # 2p+ sample-specific analyses without integration
-      fig_s05,    # smoothed expression
-      fig_s06a,   # karyograms
-      fig_s07,    # 1q+ sample-specific analyses after integration
-      fig_s08,    # 1q+ clone diffex within clusters
-      fig_s09,    # 1q+ cluster diffex of interest
-      fig_s10,    # 16q- clone diffex within clusters
-      fig_s12,    # 16q- sample-specific analyses after integration
-      fig_s13,    # filtered numbat heatmaps
-      fig_s20,    # 2p+ clone diffex within clusters
-      fig_s23,    # 6p+ sample-specific analyses after integration
-      fig_s25,    # subtype markers
+      cluster_comparisons_by_phase_for_disctinct_clones = cluster_comparisons_by_phase_for_disctinct_clones,
+      clustree_compilation = clustree_compilation,
+      collage_compilation = collage_compilation,
+      fig_02 = fig_02,     # integrated 1q fig for all 1q+ samples
+      fig_03 = fig_03,     # integrated 16q- alternative resolutions
+      fig_04 = fig_04,     # 2p+ integrated analysis
+      fig_04_07 = fig_04_07,  # fig 04-07 combined
+      fig_05 = fig_05,     # 6p+ integrated analysis
+      fig_07a = fig_07a,    # 1q+ cluster diffex after integration
+      fig_07b = fig_07b,    # 1q+ cluster diffex without integration
+      fig_08a = fig_08a,    # 16q- cluster diffex after integration
+      fig_08b = fig_08b,    # 16q- cluster diffex without integration
+      fig_09 = fig_09,     # 2p+ corresponding cluster analysis
+      fig_10 = fig_10,     # 6p+ corresponding cluster analysis
+      fig_s02_04 = fig_s02_04,        # regression diagnostics
+      fig_s02_table_s04 = fig_s02_table_s04, # tcga frequency
+      fig_s03 = fig_s03,    # gistic plots
+      fig_s03a = fig_s03a,   # unfiltered numbat heatmaps
+      fig_s04 = fig_s04,    # study cell stats
+      fig_s04_08 = fig_s04_08, # 2p+ sample-specific analyses after integration
+      fig_s04_09 = fig_s04_09, # 2p+ sample-specific analyses without integration
+      fig_s05 = fig_s05,    # smoothed expression
+      fig_s06a = fig_s06a,   # karyograms
+      fig_s07 = fig_s07,    # 1q+ sample-specific analyses after integration
+      fig_s08 = fig_s08,    # 1q+ clone diffex within clusters
+      fig_s09 = fig_s09,    # 1q+ cluster diffex of interest
+      fig_s10 = fig_s10,    # 16q- clone diffex within clusters
+      fig_s12 = fig_s12,    # 16q- sample-specific analyses after integration
+      fig_s13 = fig_s13,    # filtered numbat heatmaps
+      fig_s20 = fig_s20,    # 2p+ clone diffex within clusters
+      fig_s23 = fig_s23,    # 6p+ sample-specific analyses after integration
+      fig_s25 = fig_s25,    # subtype markers
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
-      oncoprint_plots,
-      table_06,               # rod-rich samples
-      table_all_diffex_clones, # diffex between clones per cluster
-      table_s01, # umi, genes detected, mito %
-      table_s02, # detailed sample metadata
-      table_s03, # clusters removed with marker genes
-      table_s07, # 1q+ clone percentage per cluster
-      table_s09, # 16q- clone percentage per cluster
-      table_s10  # 2p+ clone percentage per cluster
+      oncoprint_plots = oncoprint_plots,
+      table_06 = table_06,               # rod-rich samples
+      table_all_diffex_clones = table_all_diffex_clones, # diffex between clones per cluster
+      table_s01 = table_s01, # umi, genes detected, mito %
+      table_s02 = table_s02, # detailed sample metadata
+      table_s03 = table_s03, # clusters removed with marker genes
+      table_s07 = table_s07, # 1q+ clone percentage per cluster
+      table_s09 = table_s09, # 16q- clone percentage per cluster
+      table_s10 = table_s10  # 2p+ clone percentage per cluster
     )
   ),
 
@@ -582,7 +582,21 @@ tar_plan(
   ),
   
   # regression diagnostics ------------------------------
-  tar_target(fig_s02_04, qpdf::pdf_combine(unlist(regression_effect_plots), "results/fig_s02_04.pdf")),
+  tar_target(fig_s02_04, {
+    plot_paths <- na.omit(unlist(regression_effect_plots))
+    plot_paths <- plot_paths[nzchar(plot_paths)]
+    out_path <- "results/fig_s02_04.pdf"
+
+    if (length(plot_paths) == 0) {
+      pdf(out_path)
+      plot.new()
+      text(0.5, 0.5, "No valid regression effect plots")
+      dev.off()
+      out_path
+    } else {
+      qpdf::pdf_combine(plot_paths, out_path)
+    }
+  }),
   
   # Purpose: Generate plot set for regression ora plots.
   tar_target(regression_ora_plots,

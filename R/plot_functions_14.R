@@ -145,11 +145,18 @@ plot_fig_07_08 <- function(figure_input, x_var = "sample_cluster", plot_title = 
 #' @return ggplot2 plot object
 #' @export
 dotplot_recurrent_genes <- function(diffex_list, x_var = "sample_id", recurrence_threshold = 3, n_genes = 50, p_val_adj_threshold = 0.05){
-	# 
-	
-	gene_list <- 
-		diffex_list |> 
-		map(dplyr::bind_rows, .id = "comparison") |> 
+	#
+	required_cols <- c("symbol", "avg_log2FC", "p_val_adj")
+	valid_diffex <- diffex_list |>
+		map(~ dplyr::bind_rows(.x, .id = "comparison")) |>
+		purrr::keep(~ is.data.frame(.x) && nrow(.x) > 0 && all(required_cols %in% colnames(.x)))
+
+	if (length(valid_diffex) == 0) {
+		return(ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::labs(title = "No valid recurrent diffex input"))
+	}
+
+	gene_list <-
+		valid_diffex |>
 		map(dplyr::filter, p_val_adj <= p_val_adj_threshold) |>
 		dplyr::bind_rows(.id = "sample_id") |>
 		dplyr::group_by(symbol) %>%
@@ -163,6 +170,10 @@ dotplot_recurrent_genes <- function(diffex_list, x_var = "sample_id", recurrence
 		dplyr::mutate(sample_comparison = glue("{sample_id}_{comparison}")) |>
 		dplyr::mutate(neg_log_p_val_adj = -log(p_val_adj, base = 10)) %>%
 		identity()
+
+	if (nrow(gene_list) == 0) {
+		return(ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::labs(title = "No recurrent genes after filtering"))
+	}
 	
 	gene_list$symbol <- factor(gene_list$symbol, levels = unique(gene_list$symbol))
 	
@@ -193,11 +204,18 @@ dotplot_recurrent_genes <- function(diffex_list, x_var = "sample_id", recurrence
 #' @return ggplot2 plot object
 #' @export
 dotplot_diffex <- function(diffex_list, x_var = "sample_id", recurrence_threshold = 3, n_genes = 50, p_val_adj_threshold = 0.05){
-	# 
-	
-	gene_list <- 
-		diffex_list |> 
-		map(dplyr::bind_rows, .id = "comparison") |> 
+	#
+	required_cols <- c("symbol", "avg_log2FC", "p_val_adj")
+	valid_diffex <- diffex_list |>
+		map(~ dplyr::bind_rows(.x, .id = "comparison")) |>
+		purrr::keep(~ is.data.frame(.x) && nrow(.x) > 0 && all(required_cols %in% colnames(.x)))
+
+	if (length(valid_diffex) == 0) {
+		return(ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::labs(title = "No valid diffex input"))
+	}
+
+	gene_list <-
+		valid_diffex |>
 		map(dplyr::filter, p_val_adj <= p_val_adj_threshold) |>
 		dplyr::bind_rows(.id = "sample_id") |>
 		dplyr::group_by(symbol) %>%
@@ -211,6 +229,10 @@ dotplot_diffex <- function(diffex_list, x_var = "sample_id", recurrence_threshol
 		dplyr::mutate(sample_comparison = glue("{sample_id}_{comparison}")) |>
 		dplyr::mutate(neg_log_p_val_adj = -log(p_val_adj, base = 10)) %>%
 		identity()
+
+	if (nrow(gene_list) == 0) {
+		return(ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::labs(title = "No genes after filtering"))
+	}
 	
 	gene_list$symbol <- factor(gene_list$symbol, levels = unique(gene_list$symbol))
 	
