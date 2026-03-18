@@ -191,6 +191,13 @@ inspect_oncoprints <- function(cis_comps, trans_comps, all_comps) {
 plot_recurrence <- function(diffex_input, scna_of_interest, segment_region = "cis", oncoprint_settings, clone_trees, n_genes = 20) {
   #
 
+  required_cols <- c("symbol", "avg_log2FC", "p_val_adj", "sample_id", "description")
+  if (is.null(diffex_input) || !is.data.frame(diffex_input) || nrow(diffex_input) == 0 || !all(required_cols %in% colnames(diffex_input))) {
+    empty_plot <- ggplot() + theme_void() + labs(title = scna_of_interest, subtitle = "No valid recurrence data")
+    empty_table <- tibble::tibble(note = "No valid recurrence data")
+    return(list("table" = empty_table, "plot" = empty_plot))
+  }
+
   region_settings <-
     dplyr::filter(oncoprint_settings, region == segment_region) |>
     dplyr::filter(scna == scna_of_interest)

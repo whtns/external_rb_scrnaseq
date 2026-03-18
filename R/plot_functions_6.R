@@ -198,6 +198,10 @@ plot_several_diffex_clones_in_phase <- function(enrichments, scna_of_interest = 
 }
 
 plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", label = "_filtered_", height = 10, width = 18, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL) {
+  if (is.list(seu_path)) {
+    seu_path <- unlist(seu_path, use.names = FALSE)[[1]]
+  }
+
   kept_phases <- kept_phases %||% phase_levels
 
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")
@@ -350,8 +354,8 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
       group.by = c("G2M.Score", "S.Score", "scna", "clusters"),
       col_arrangement = c("clusters", "scna"),
       cluster_rows = FALSE,
-      column_split = sort(seu@meta.data$clusters),
-      row_split = rev(heatmap_features$Cluster),
+      column_split = as.character(sort(as.character(seu@meta.data$clusters))),
+      row_split = as.character(rev(as.character(heatmap_features$Cluster))),
       row_title_rot = 0,
       # row_split = sort(seu@meta.data$clusters)
     )

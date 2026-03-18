@@ -8,6 +8,7 @@ old_output/*
 cache/*
 results/*
 _targets
+_targets_r431/
 .env
 *.Rproj
 *.pdf
@@ -29,8 +30,5 @@ work
 *.rds
 batch_hashes.sqlite
 doc/table_s01.csv
-batch_hashes.sqlite
-_targets_r431/meta/meta
 doc/kstachelek_rb_scna_tx_effects_2025-10-09.docx
 doc/paper.md
-_targets_r431/meta/meta

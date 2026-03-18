@@ -225,6 +225,13 @@ read_cluster_orders_table <- function(
   con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
   on.exit(DBI::dbDisconnect(con), add = TRUE)
 
+  if (!DBI::dbExistsTable(con, "cluster_orders")) {
+    if (as_list) {
+      return(list())
+    }
+    return(data.frame())
+  }
+
   if (!is.null(file_id)) {
     # Query for specific file_id
     cluster_orders_df <- DBI::dbGetQuery(

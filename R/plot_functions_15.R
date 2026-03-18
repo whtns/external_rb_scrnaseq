@@ -25,29 +25,6 @@ sample_specific_analyses_of_tumors_with_scna_subclones_after_integration <- func
 
 #' Create a plot visualization
 #'
-#' @param seu_list Parameter for seu list
-#' @param cluster_orders Cluster information
-#' @param plot_path File path
-#' @return ggplot2 plot object
-#' @export
-not_sure_what_this_does <- function(seu_list, cluster_orders, plot_path = "results/fig_s07.pdf"){
-  
-  
-	
-	clone_dist_paths <- seu_list |> 
-		imap(~make_clone_distribution_figure(.x, cluster_orders, height = 12, width = 20, plot_path = tempfile(pattern = .y, fileext = ".pdf"), heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch")))
-	
-	possibly_plot_clone_cc_plots <- possibly(plot_clone_cc_plots)
-	fig_2d_cc <- map(seu_list, plot_clone_cc_plots, var_y = "clusters", scna_of_interest = "2p", labeled_values = c("g2_m")) |> 
-		map(~ggsave(tempfile(fileext=".pdf"), .x, w = 5, h = 4))
-	
-	plot_path <- qpdf::pdf_combine(c(clone_dist_paths, fig_2d_cc), plot_path)
-	
-	return(plot_path)
-}
-
-#' Create a plot visualization
-#'
 #' @return ggplot2 plot object
 #' @export
 plot_fig_s09 <- function(){

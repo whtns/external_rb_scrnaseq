@@ -640,7 +640,10 @@ tar_plan(
   tar_target(filtered_numbat_heatmaps_file, qpdf::pdf_combine(map_chr(fig_s13, 1), "results/filtered_heatmaps.pdf")),
   
   # Purpose: Track file path input/output for filtered large scna prob file.
-  tar_target(filtered_large_scna_prob_file, qpdf::pdf_combine(map_chr(fig_s13, 2), "results/filtered_scna_probabilities.pdf")),
+  tar_target(filtered_large_scna_prob_file, {
+    scna_var_paths <- na.omit(map_chr(fig_s13, 2))
+    qpdf::pdf_combine(scna_var_paths, "results/filtered_scna_probabilities.pdf")
+  }),
   
   # Purpose: Create PDF artifact(s) for large montage pdfs.
   tar_target(

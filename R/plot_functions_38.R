@@ -39,7 +39,14 @@ append_clone_nums <- function(diffex, clone_comparison, seu) {
 #' @return Enrichment analysis results
 #' @export
 prep_for_enrichment <- function(df, ...) {
-  #
+  if (is.null(df) || !is.data.frame(df) || nrow(df) == 0) {
+    return(NULL)
+  }
+
+  if (!("symbol" %in% colnames(df))) {
+    return(NULL)
+  }
+
   enrich_table <-
     df %>%
     dplyr::select(any_of(c("symbol", "avg_log2FC", "p_val", "clone_nums", "clone_comparison"))) %>%

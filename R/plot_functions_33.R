@@ -58,6 +58,11 @@ remove_non_tumor_cells <- function(seu) {
 #' @export
 filter_input_by_scna <- function(df, scna_of_interest, p_val_threshold, fc_threshold, n_recur) {
   #
+  required_cols <- c("symbol", "p_val_adj", "avg_log2FC", "sample_id")
+  if (is.null(df) || !is.data.frame(df) || nrow(df) == 0 || !all(required_cols %in% colnames(df))) {
+    return(df)
+  }
+
   filtered_df <-
     df %>%
     dplyr::group_by(symbol) %>%
