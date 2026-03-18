@@ -13,7 +13,12 @@
 make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "", midline_threshold = 0.4) {
   sample_id <- str_extract(seu_path, "SRR[0-9]*")
   names(numbat_rds_files) <- str_extract(numbat_rds_files, "SRR[0-9]*")
-  numbat_rds_file <- numbat_rds_files[[sample_id]]
+  match_idx <- which(names(numbat_rds_files) == sample_id)
+  if (length(match_idx) == 0) {
+    warning("No numbat RDS file found for sample: ", sample_id)
+    return(c(NA_character_, NA_character_))
+  }
+  numbat_rds_file <- numbat_rds_files[[match_idx[[1]]]]
   numbat_dir <- "numbat_sridhar"
   dir_create(glue("results/{numbat_dir}/"))
   dir_create(glue("results/{numbat_dir}/{sample_id}"))
@@ -66,7 +71,18 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
     heatmap_w_phylo_path <- NULL
   }
   plot_path <- glue("results/{numbat_dir}/{sample_id}/{sample_id}{extension}.pdf")
-  pdf_inputs <- purrr::compact(list(heatmap_no_phylo_path, scna_var_path, heatmap_w_phylo_path))
-  qpdf::pdf_combine(pdf_inputs, plot_path)
-  return(plot_path)
+  pdf_inputs <- unlist(purrr::compact(list(heatmap_no_phylo_path, heatmap_w_phylo_path)))
+  if (length(pdf_inputs) > 0) {
+    qpdf::pdf_combine(pdf_inputs, plot_path)
+  } else {
+    plot_path <- NA_character_
+  }
+  scna_var_path_final <- if (!is.null(scna_var_path)) {
+    scna_var_final <- glue("results/{numbat_dir}/{sample_id}/{sample_id}{extension}_scna_var.pdf")
+    file.copy(scna_var_path, scna_var_final, overwrite = TRUE)
+    scna_var_final
+  } else {
+    NA_character_
+  }
+  return(c(plot_path, scna_var_path_final))
 }

@@ -135,10 +135,11 @@ plot_corresponding_enrichment <- function(sample_diffex_list, filename, ...){
 		dplyr::bind_rows()
 	
 	enrichments <- sample_diffex_list |>
-		map("all") |>
+		map(~ if (is.list(.x) && "all" %in% names(.x)) .x[["all"]] else NULL) |>
 		purrr::compact() |>
-		purrr::keep(~ nrow(.x) > 0) |>
-		map(prep_for_enrichment, TERM2GENE = gene_sets)
+		purrr::keep(~ !is.null(.x) && is.data.frame(.x) && nrow(.x) > 0) |>
+		map(prep_for_enrichment, TERM2GENE = gene_sets) |>
+		purrr::compact()
 
 
 #' Filter data based on specified criteria
@@ -147,6 +148,10 @@ plot_corresponding_enrichment <- function(sample_diffex_list, filename, ...){
 #' @return Filtered data
 #' @export
 filter_enrichment_result <- function(enrichment_result){
+		if (is.null(enrichment_result) || !methods::is(enrichment_result, "gseaResult")) {
+			return(NULL)
+		}
+
 		enrichment_result@result[enrichment_result@result$p.adjust < 0.25,] 
 		return(enrichment_result)
 	}
@@ -154,28 +159,35 @@ filter_enrichment_result <- function(enrichment_result){
 	enrichment_plots <- 
 		enrichments |> 
 		map(filter_enrichment_result) |> 
+		purrr::compact() |>
 		map(plot_enrichment) |>
 		imap(~{.x + labs(title = sample_id, subtitle = .y)}) |>
 		map(~{.x + scale_y_discrete(labels = function(x) str_wrap(str_replace_all(str_remove(x, "HALLMARK"), "_", " "), width = 20))}) |>
 		identity()
 	
-	enrichment_plots[[1]] + 
-		scale_y_discrete(labels = function(x) str_wrap(str_replace_all(str_remove(x, "HALLMARK"), "_", " "), width = 10)) +
-		# theme(axis.text.y = element_text(angle = 45, hjust = 1)) + 
-		NULL
-	
 	enrichment_tables <-
 		enrichments |> 
+		map(filter_enrichment_result) |>
+		purrr::compact() |>
 		map(clusterProfiler::setReadable, OrgDb = org.Hs.eg.db::org.Hs.eg.db, keyType = "ENTREZID") |>
 		map(as_tibble) |> 
 		identity()
+
+	if (length(enrichment_tables) == 0) {
+		enrichment_tables <- list("no_results" = tibble::tibble(note = "No valid enrichment results"))
+	}
 	
 	tables_path <- writexl::write_xlsx(enrichment_tables, glue("results/corresponding_states_enrichment_{sample_id}.xlsx"))
 	
 	plot_path <- tempfile(tmpdir = "results", fileext = ".pdf")
 
 	pdf(plot_path)
-	print(enrichment_plots)
+	if (length(enrichment_plots) == 0) {
+		plot.new()
+		text(0.5, 0.5, "No valid enrichment plots")
+	} else {
+		print(enrichment_plots)
+	}
 	dev.off()
 	
 	return(list("plot" = plot_path, "table" = tables_path, "enrichment" = enrichments))

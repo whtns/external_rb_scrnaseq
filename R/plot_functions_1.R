@@ -191,7 +191,11 @@ assign_phase_cluster_at_resolution <- function(seu_path = NULL, cluster_order = 
   return(seu_path)
 }
 
-calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", height = 5, width = 9, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, large_clone_comparisons, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, split_columns = "clusters", pairwise = TRUE) {
+calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, group.by = "SCT_snn_res.0.6", assay = "SCT", height = 5, width = 9, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, large_clone_comparisons = NULL, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, split_columns = "clusters", pairwise = TRUE) {
+  if (is.list(seu_path)) {
+    seu_path <- unlist(seu_path, use.names = FALSE)[[1]]
+  }
+
   kept_phases <- kept_phases %||% phase_levels
 
   file_id <- fs::path_file(seu_path)
@@ -201,7 +205,11 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   
   message(file_id)
-  cluster_order <- cluster_order[[file_id]]
+  if (!is.null(cluster_order) && file_id %in% names(cluster_order)) {
+    cluster_order <- cluster_order[[file_id]]
+  } else {
+    cluster_order <- NULL
+  }
 
   full_seu <- readRDS(seu_path)
 
@@ -209,11 +217,16 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
   full_seu$scna <- factor(full_seu$scna)
 
   # subset by retained clones ------------------------------
-  clone_comparisons <- names(large_clone_comparisons[[sample_id]])
-  clone_comparison <- clone_comparisons[str_detect(clone_comparisons, scna_of_interest)]
-  retained_clones <- clone_comparison %>%
-    str_extract("[0-9]_v_[0-9]") %>%
-    str_split("_v_", simplify = TRUE)
+  retained_clones <- sort(unique(full_seu$clone_opt))
+  if (!is.null(large_clone_comparisons) && sample_id %in% names(large_clone_comparisons)) {
+    clone_comparisons <- names(large_clone_comparisons[[sample_id]])
+    clone_comparison <- clone_comparisons[str_detect(clone_comparisons, scna_of_interest)]
+    if (length(clone_comparison) > 0) {
+      retained_clones <- clone_comparison %>%
+        str_extract("[0-9]_v_[0-9]") %>%
+        str_split("_v_", simplify = TRUE)
+    }
+  }
 
   file_slug <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   plot_path <- tempfile(tmpdir = "results/numbat_sridhar", fileext = ".pdf")
@@ -222,7 +235,9 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
   pdf(plot_path, height = height, width = width)
 
   pairwise_seu_tables <- list()
+  processed_any_resolution <- FALSE
   for (resolution in names(cluster_order)) {
+    processed_any_resolution <- TRUE
     # start loop ------------------------------
 
     seu <- full_seu[, full_seu$clone_opt %in% retained_clones]
@@ -365,7 +380,10 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
     }
   }
 
-  all_seu_plot <- plot_distribution_of_clones_across_clusters(seu, seu_name = sample_id, var_x = "scna", var_y = "clusters", plot_type = "clone")
+  if (!processed_any_resolution) {
+    dev.off()
+    return(list("table" = NA_character_, "plot" = NA_character_))
+  }
 
   dev.off()
 

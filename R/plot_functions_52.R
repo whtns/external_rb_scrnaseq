@@ -304,7 +304,12 @@ plot_clone_pearls <- function(seu_path, phase_levels = c("pm", "g1", "g1_s", "s"
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
 	message(file_id)
-	cluster_order <- read_cluster_orders_table(file_id = file_id)[[1]]
+  cluster_order <- read_cluster_orders_table(file_id = file_id)
+  if (length(cluster_order) > 0) {
+    cluster_order <- cluster_order[[1]]
+  } else {
+    cluster_order <- NULL
+  }
 
   seu <- readRDS(seu_path)
   seu$scna <- factor(seu$scna)

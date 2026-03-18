@@ -296,10 +296,30 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
   cells_with_regressed <- !is.na(filtered_seu@meta.data[[colnames(regressed_meta)[1]]])
   filtered_seu <- filtered_seu[, cells_with_regressed]
 
-  cells_in_scale <- colnames(GetAssayData(filtered_seu, assay = "SCT", slot = "scale.data"))
-  filtered_seu <- filtered_seu[, intersect(colnames(filtered_seu), cells_in_scale)]
+  if (inherits(filtered_seu[["gene"]], "Assay5")) {
+    filtered_seu <- JoinLayers(filtered_seu, assay = "gene")
+  }
 
-  filtered_seu <- find_all_markers(filtered_seu, colnames(regressed_meta))
+  valid_metavars <- colnames(regressed_meta)[
+    sapply(colnames(regressed_meta), function(m) {
+      dplyr::n_distinct(filtered_seu@meta.data[[m]], na.rm = TRUE) > 1
+    })
+  ]
+
+  if (length(valid_metavars) == 0) {
+    return(NA_character_)
+  }
+
+  filtered_seu <- tryCatch({
+    find_all_markers(filtered_seu, valid_metavars)
+  }, error = function(e) {
+    warning("Skipping regression effect plot due to marker calculation failure: ", e$message)
+    return(NULL)
+  })
+
+  if (is.null(filtered_seu)) {
+    return(NA_character_)
+  }
 
   regressed_cluster <- glue("regressed.{resolution}")
   

@@ -84,6 +84,7 @@ filter_ora_result_by_terms <- function(cluster_name, ora_results, terms_list) {
   
   ora_plots <-
     ora_output %>%
+    purrr::discard(~ identical(.x, NA_real_)) %>%
     imap(~ clusterProfiler::dotplot(.x, title = .y, showCategory = 20))
   
   return(list("result" = ora_output, "tables" = ora_tables, "plots" = ora_plots))

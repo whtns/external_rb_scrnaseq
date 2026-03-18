@@ -9,7 +9,7 @@
 # Performance optimizations applied:
 # - long_pipe_chain: Consider breaking into intermediate variables for readability and debugging
 
-filter_input_by_region <- function(df, segment_region) {
+filter_input_by_region <- function(df, segment_region, oncoprint_settings) {
   #
 
   region_settings <-
@@ -27,7 +27,7 @@ filter_input_by_region <- function(df, segment_region) {
 #' @return Filtered data
 #' @export
 filter_oncoprint_diffex <- function(unfiltered_oncoprint_input_by_scna, oncoprint_settings) {
-  oncoprint_input_by_scna <- map(c("cis" = "cis", "trans" = "trans", "all" = "all"), ~ filter_input_by_region(unfiltered_oncoprint_input_by_scna, .x))
+  oncoprint_input_by_scna <- map(c("cis" = "cis", "trans" = "trans", "all" = "all"), ~ filter_input_by_region(unfiltered_oncoprint_input_by_scna, .x, oncoprint_settings))
 
   return(oncoprint_input_by_scna)
 }
@@ -56,14 +56,15 @@ make_oncoprint_diffex <- function(large_filter_expressions, cluster_dictionary, 
 #' @export
 filter_diffex <- function(df, n_slice = 10) {
     #
-    if (nrow(df) == 0 || !"p_val_adj" %in% colnames(df)) return(df)
+  required_cols <- c("p_val_adj", "symbol", "avg_log2FC")
+  if (nrow(df) == 0 || !all(required_cols %in% colnames(df))) return(df)
 
     test0 <-
       df %>%
-      dplyr::arrange(p_val_adj) %>%
-      dplyr::group_by(symbol) %>%
-      dplyr::mutate(neg_log_p_val_adj = -log(p_val_adj, base = 10)) %>%
-      dplyr::mutate(abs_log2FC = abs(avg_log2FC)) %>%
+      dplyr::arrange(.data$p_val_adj) %>%
+      dplyr::group_by(.data$symbol) %>%
+      dplyr::mutate(neg_log_p_val_adj = -log(.data$p_val_adj, base = 10)) %>%
+      dplyr::mutate(abs_log2FC = abs(.data$avg_log2FC)) %>%
       identity()
 
     test1 <-

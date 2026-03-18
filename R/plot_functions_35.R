@@ -19,17 +19,17 @@ enrich_oncoprints <- function(large_filter_expressions, cluster_dictionary, inte
     test0 <-
       df %>%
       # dplyr::arrange(symbol, sample_id) %>%
-      dplyr::arrange(p_val_adj) %>%
-      dplyr::group_by(symbol) %>%
-      dplyr::mutate(neg_log_p_val_adj = -log(p_val_adj, base = 10)) %>%
-      dplyr::mutate(abs_log2FC = abs(avg_log2FC)) %>%
-      dplyr::filter(p_val_adj < 0.05) %>%
-      dplyr::filter(n_distinct(sample_id) >= num_recur) %>%
+      dplyr::arrange(.data$p_val_adj) %>%
+      dplyr::group_by(.data$symbol) %>%
+      dplyr::mutate(neg_log_p_val_adj = -log(.data$p_val_adj, base = 10)) %>%
+      dplyr::mutate(abs_log2FC = abs(.data$avg_log2FC)) %>%
+      dplyr::filter(.data$p_val_adj < 0.05) %>%
+      dplyr::filter(n_distinct(.data$sample_id) >= num_recur) %>%
       identity()
 
     test1 <-
       test0 %>%
-      dplyr::summarize(mean_FC = mean(abs(avg_log2FC))) %>%
+      dplyr::summarize(mean_FC = mean(abs(.data$avg_log2FC))) %>%
       # dplyr::slice_max(abs(mean_FC), n = n_slice) %>%
       dplyr::inner_join(test0, by = "symbol")
 
@@ -213,17 +213,17 @@ enrich_oncoprints_clusters <- function(large_filter_expressions, cluster_diction
     test0 <-
       df %>%
       # dplyr::arrange(symbol, sample_id) %>%
-      dplyr::arrange(p_val_adj) %>%
-      dplyr::group_by(symbol) %>%
-      dplyr::mutate(neg_log_p_val_adj = -log(p_val_adj, base = 10)) %>%
-      dplyr::mutate(abs_log2FC = abs(avg_log2FC)) %>%
-      dplyr::filter(p_val_adj < 0.05) %>%
-      dplyr::filter(n_distinct(sample_id) >= num_recur) %>%
+      dplyr::arrange(.data$p_val_adj) %>%
+      dplyr::group_by(.data$symbol) %>%
+      dplyr::mutate(neg_log_p_val_adj = -log(.data$p_val_adj, base = 10)) %>%
+      dplyr::mutate(abs_log2FC = abs(.data$avg_log2FC)) %>%
+      dplyr::filter(.data$p_val_adj < 0.05) %>%
+      dplyr::filter(n_distinct(.data$sample_id) >= num_recur) %>%
       identity()
 
     test1 <-
       test0 %>%
-      dplyr::summarize(mean_FC = mean(abs(avg_log2FC))) %>%
+      dplyr::summarize(mean_FC = mean(abs(.data$avg_log2FC))) %>%
       # dplyr::slice_max(abs(mean_FC), n = n_slice) %>%
       dplyr::inner_join(test0, by = "symbol")
 

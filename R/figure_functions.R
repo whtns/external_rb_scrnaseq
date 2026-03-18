@@ -246,12 +246,13 @@ plot_fig_07_08 <- function(figure_input, x_var = "sample_cluster", plot_title = 
 		unlist(figure_input) |>
 		set_names(str_extract(unlist(figure_input), "SRR[0-9]*")) |>
 		map(read_csv) |>
+		purrr::keep(~ nrow(.x) > 0 && "location" %in% names(.x)) |>
 		map(~split(.x, .x$cluster)) |>
 		purrr::list_transpose() |>
 		map(~purrr::compact(.x)) |>
 		map(dplyr::bind_rows, .id = "sample_id") |>
 		dplyr::bind_rows(.id = "clusters") |>
-		dplyr::filter(location == "cis")
+		(\(df) if ("location" %in% names(df)) dplyr::filter(df, location == "cis") else df)()
 
 	plot_input <-
 		unfiltered_input |>
