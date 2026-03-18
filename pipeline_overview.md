@@ -215,6 +215,52 @@ flowchart TD
 
 ---
 
+## Execution Contract (crew + callr)
+
+Use the same runtime contract for all pipeline runs to reduce scheduler/metadata race issues.
+
+### Project-level settings
+
+1. Scheduler policy in [_targets.R](_targets.R)
+
+- Keep the controller in `tar_option_set(...)`:
+    - `controller = crew::crew_controller_local(workers = 4)`
+- This defines how `crew` workers are provisioned for the project.
+
+2. Store/script in [_targets.yaml](_targets.yaml)
+
+- Keep:
+    - `main.store: _targets_r431`
+    - `main.script: _targets.R`
+
+3. Process model in [run_targets_bg.R](run_targets_bg.R)
+
+- Run `tar_make(..., callr_function = callr::r_bg)` through this wrapper.
+- This isolates pipeline execution from the interactive R session and helps avoid metadata contention patterns.
+
+### Recommended command
+
+Run the main aggregate target with:
+
+```bash
+/opt/R/4.3.1/bin/Rscript run_targets_bg.R figures_and_tables _targets_r431
+```
+
+### Quick health check
+
+```bash
+/opt/R/4.3.1/bin/Rscript -e 'library(targets); tar_config_set(store = "_targets_r431"); e <- tar_meta(fields = c(name, error), complete_only = FALSE); e <- e[!is.na(e$error) & e$error != "", ]; cat("Total errored:", nrow(e), "\n")'
+```
+
+### Required R packages
+
+- `targets`
+- `crew`
+- `mirai`
+- `callr`
+
+---
+
 ## Key Dependencies (simplified)
 
 ```

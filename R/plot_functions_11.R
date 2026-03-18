@@ -62,12 +62,31 @@ find_cluster_pairwise_distance <- function(seu, group.by) {
 #' @export
 compare_corresponding_enrichments <- function(enrichment_list, common_seus = NULL, plot_path = tempfile(tmpdir = "results", fileext = ".pdf"), ...) {
 
-	enrichment_results <- enrichment_list |> 
-		map("enrichment") |> 
-		map(1) |> 
-		purrr::list_flatten() |>
-		map(clusterProfiler::setReadable, OrgDb = org.Hs.eg.db::org.Hs.eg.db, keyType = "ENTREZID") |>
-		identity()
+	valid_enrichment <- function(x) {
+		methods::is(x, "enrichResult") || methods::is(x, "gseaResult") || methods::is(x, "compareClusterResult")
+	}
+
+	raw_enrichments <- enrichment_list |>
+		map(~ if (is.list(.x) && "enrichment" %in% names(.x)) .x[["enrichment"]] else NULL) |>
+		purrr::compact() |>
+		purrr::flatten()
+
+	enrichment_results <- raw_enrichments |>
+		purrr::keep(valid_enrichment) |>
+		map(~ tryCatch({
+			clusterProfiler::setReadable(.x, OrgDb = org.Hs.eg.db::org.Hs.eg.db, keyType = "ENTREZID")
+		}, error = function(e) {
+			NULL
+		})) |>
+		purrr::compact()
+
+	if (length(enrichment_results) == 0) {
+		pdf(plot_path, ...)
+		plot.new()
+		text(0.5, 0.5, "No valid enrichment results")
+		dev.off()
+		return(plot_path)
+	}
 	
 	enrichment_tables <-
 		enrichment_results |>
@@ -79,11 +98,15 @@ compare_corresponding_enrichments <- function(enrichment_list, common_seus = NUL
 		enrichment_results |> 
 		map(dplyr::filter, p.adjust <= 0.1)
 	
-	common_terms <- enrichment_results[common_seus] |> 
-		map(slot, "result") |> 
-		map("ID") |>
-		purrr::reduce(base::intersect) |> 
-		identity()
+	if (!is.null(common_seus) && length(common_seus) > 0) {
+		matched <- enrichment_results[names(enrichment_results) %in% common_seus]
+		if (length(matched) > 0) {
+			common_terms <- matched |>
+			map(slot, "result") |>
+			map("ID") |>
+			purrr::reduce(base::intersect)
+		}
+	}
 	
 	single_enrichment_plots <-  
 		enrichment_results |> 
@@ -105,10 +128,14 @@ compare_corresponding_enrichments <- function(enrichment_list, common_seus = NUL
 				)
 		})
 	
-	merge_enrichment_plot <- enrichment_results |> 
-		map(dplyr::filter, p.adjust <= 0.1) |> 
-		clusterProfiler::merge_result() |> 
-		plot_enrichment(p_val_cutoff = 0.05, result_slot = "compareClusterResult")
+	merge_enrichment_plot <- tryCatch({
+		enrichment_results |>
+			map(dplyr::filter, p.adjust <= 0.1) |>
+			clusterProfiler::merge_result() |>
+			plot_enrichment(p_val_cutoff = 0.05, result_slot = "compareClusterResult")
+	}, error = function(e) {
+		ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::labs(title = "No mergeable enrichment results")
+	})
 
 	
 	pdf(plot_path, ...)
