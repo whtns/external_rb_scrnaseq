@@ -2,6 +2,7 @@
 
 ## Configuration file
 import os
+import sys
 if len(config) == 0:
   if os.path.isfile("./config.yaml"):
     configfile: "./config.yaml"
@@ -44,6 +45,69 @@ samples['name'] = samples['lane'].str.replace("_S1_L00.*", "", regex = True)
 samples['type'] = config['read_type']
 
 table_samples = pd.read_csv(config["metatsv"], sep = "\t")
+
+
+def normalize_grid_value(value):
+	if pd.isna(value):
+		return ""
+	return str(value).strip()
+
+
+def load_numbat_sweep_grid():
+	grid_cfg = config.get("numbat_sridhar_sweep_grid", None)
+	if grid_cfg in [None, "", "none", "None"]:
+		return None, []
+
+	grid_path = os.path.abspath(os.path.normpath(grid_cfg))
+	if not os.path.isfile(grid_path):
+		sys.exit("Sweep grid file does not exist: " + grid_path)
+
+	grid_sep = ","
+	if grid_path.lower().endswith(".tsv"):
+		grid_sep = "\t"
+	grid_df = pd.read_csv(grid_path, sep = grid_sep, dtype = str)
+	required_cols = ["run_id", "sample", "numbat_t", "gamma", "max_entropy", "min_LLR", "max_iter", "read_prop", "tau", "cell_ceiling"]
+	missing_cols = [c for c in required_cols if c not in grid_df.columns]
+	if len(missing_cols) > 0:
+		sys.exit("Sweep grid missing required columns: " + ", ".join(missing_cols))
+
+	rows = []
+	for _, row in grid_df.iterrows():
+		rec = {k: normalize_grid_value(row[k]) for k in required_cols}
+		if rec["run_id"] == "" and rec["sample"] == "":
+			continue
+		rows.append(rec)
+
+	if len(rows) == 0:
+		sys.exit("Sweep grid is empty: " + grid_path)
+
+	return grid_path, rows
+
+
+sweep_grid_file, numbat_sweep_rows = load_numbat_sweep_grid()
+sweep_lookup = {(r["sample"], r["run_id"]): r for r in numbat_sweep_rows}
+
+
+def sweep_param(wildcards, key):
+	entry = sweep_lookup.get((wildcards.sample, wildcards.run_id), None)
+	if entry is None:
+		raise ValueError("No sweep row found for sample=" + wildcards.sample + ", run_id=" + wildcards.run_id)
+	return entry[key]
+
+
+def sweep_rds_targets(wildcards):
+	if len(numbat_sweep_rows) == 0:
+		return []
+	return [
+		numbat_sweep_dir + r["sample"] + "/" + r["run_id"] + "/" + r["sample"] + "_numbat.rds"
+		for r in numbat_sweep_rows
+	]
+
+
+def require_sweep_grid_file(wildcards):
+	if sweep_grid_file is None:
+		raise ValueError("Set config['numbat_sridhar_sweep_grid'] to run sweep summary.")
+	return sweep_grid_file
 
 def parse_bool(value, default=True):
 	if value is None:
@@ -92,6 +156,8 @@ FASTQdir = getpath(config["FASTQ"])
 datadir = os.path.abspath(os.path.normpath(getpath(config["proj_dir"]))) + "/data/"
 numbat_sridhar_dirname = config.get("numbat_sridhar_dirname", "numbat_sridhar")
 numbat_sridhar_dir = outputdir + getpath(numbat_sridhar_dirname)
+numbat_sweep_dirname = config.get("numbat_sridhar_sweep_dirname", "numbat_sridhar_sweeps")
+numbat_sweep_dir = outputdir + getpath(numbat_sweep_dirname)
 
 clones_filename = "bulk_clones_final.png"
 
@@ -1276,6 +1342,83 @@ rule numbat_sridhar_rds:
 		script = "scripts/process_numbat_rds.R"
 	shell:
 		'''{Rbin} CMD BATCH --no-restore --no-save "--args done_file='{input.done_file}'" {params.script} {log}'''
+
+rule numbat_sridhar_sweep:
+	input:
+		allele_df = outputdir + "numbat/{sample}_allele_counts.tsv.gz",
+		matrix_file = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/matrix.mtx.gz",
+		seu_path = outputdir + "seurat/{sample}_seu.rds",
+		script = "scripts/run_numbat.R"
+	output:
+		done_file = numbat_sweep_dir + "{sample}/{run_id}/{sample}/done.txt"
+	log:
+		numbat_sweep_dir + "{sample}/{run_id}/{sample}/snakemake_numbat.log"
+	benchmark:
+		numbat_sweep_dir + "{sample}/{run_id}/{sample}/benchmark_numbat.txt"
+	threads:
+		config["ncores"]
+	params:
+		num_clones = lambda wildcards: table_samples[table_samples.Run == wildcards.sample].num_clone.values[0],
+		subset_bad_cell_types = subset_bad_cell_types_for_sample,
+		numbat_t = lambda wildcards: sweep_param(wildcards, "numbat_t"),
+		gamma = lambda wildcards: sweep_param(wildcards, "gamma"),
+		numbatdir = numbat_sweep_dir + "{sample}/{run_id}",
+		max_entropy = lambda wildcards: sweep_param(wildcards, "max_entropy"),
+		min_LLR = lambda wildcards: sweep_param(wildcards, "min_LLR"),
+		max_iter = lambda wildcards: sweep_param(wildcards, "max_iter"),
+		read_prop = lambda wildcards: sweep_param(wildcards, "read_prop"),
+		tau = lambda wildcards: sweep_param(wildcards, "tau"),
+		cell_ceiling = lambda wildcards: sweep_param(wildcards, "cell_ceiling"),
+		prof = numbat_sweep_dir + "{sample}/{run_id}/{sample}/log.prof",
+		ref_path = config["sridhar_ref_path"]
+	shell:
+		'''
+		/opt/R/4.2.0/bin/R CMD BATCH --no-restore --no-save \
+		"--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
+		t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
+		init_k='{params.num_clones}' read_prop='{params.read_prop}' \
+		subset_bad_cell_types='{params.subset_bad_cell_types}' \
+		max_iter='{params.max_iter}' min_LLR='{params.min_LLR}' \
+		cell_ceiling='{params.cell_ceiling}' max_entropy='{params.max_entropy}' \
+		allele_df='{input.allele_df}' matrix_file='{input.matrix_file}' \
+		out_dir='{params.numbatdir}/{wildcards.sample}' ncores='{threads}' \
+		rprof_out='{params.prof}'" {input.script} {log}
+		'''
+
+rule numbat_sridhar_sweep_rds:
+	input:
+		done_file = numbat_sweep_dir + "{sample}/{run_id}/{sample}/done.txt"
+	output:
+		numbat_sweep_dir + "{sample}/{run_id}/{sample}_numbat.rds"
+	log:
+		numbat_sweep_dir + "{sample}/{run_id}/{sample}/snakemake_numbat_rds.log"
+	benchmark:
+		numbat_sweep_dir + "{sample}/{run_id}/{sample}/benchmark_numbat_rds.txt"
+	threads:
+		config["ncores"]
+	params:
+		script = "scripts/process_numbat_rds.R"
+	shell:
+		'''{Rbin} CMD BATCH --no-restore --no-save "--args done_file='{input.done_file}'" {params.script} {log}'''
+
+rule numbat_sridhar_sweep_summary:
+	input:
+		grid = require_sweep_grid_file,
+		rds = sweep_rds_targets,
+		script = "scripts/summarize_numbat_sweep.py"
+	output:
+		tsv = numbat_sweep_dir + "summary.tsv",
+		csv = numbat_sweep_dir + "summary.csv"
+	params:
+		sweep_root = numbat_sweep_dir
+	shell:
+		'''
+		python {input.script} \
+			--grid {input.grid} \
+			--sweep-root {params.sweep_root} \
+			--output-tsv {output.tsv} \
+			--output-csv {output.csv}
+		'''
 
 rule numbat_sridhar_filtered_rds:
 	input:
