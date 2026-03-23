@@ -146,6 +146,9 @@ tau: 0.3
 numbat_t: 1e-2
 cell_ceiling: 2e4
 gamma: 20
+subset_bad_cell_types_default: true
+subset_bad_cell_types_by_sample:
+  SRR13633760: false
 sridhar_ref_path: /dataVolume/storage/Homo_sapiens/numbat/sridhar_ref.rds
 wu_ref_path: /dataVolume/storage/Homo_sapiens/numbat/wu_ref.rds
 yang_ref_path: /dataVolume/storage/Homo_sapiens/numbat/yang_ref.rds

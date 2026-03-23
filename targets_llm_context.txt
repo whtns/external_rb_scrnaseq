@@ -19,7 +19,7 @@ graph LR
   subgraph Graph
     direction LR
     x3c4f4d60fad7fe7a>"read_seu_path"]:::uptodate --> x489c25a9e014de64>"plot_integrated_1q_fig_low_hypoxia"]:::uptodate
-    x3596c06a08404377>"drop_y_axis"]:::uptodate --> x20f10262dd1d3b2f>"plot_fig_02_afterall"]:::uptodate
+    x3596c06a08404377>"drop_y_axis"]:::uptodate --> x20f10262dd1d3b2f>"plot_fig_04_afterall"]:::uptodate
     x3596c06a08404377>"drop_y_axis"]:::uptodate --> x59905ca04aab6466>"plot_integrated_1q_fig"]:::uptodate
     x3596c06a08404377>"drop_y_axis"]:::uptodate --> x2a0aea09a055c4d7>"plot_fig_03"]:::uptodate
     x3596c06a08404377>"drop_y_axis"]:::uptodate --> x4658e5acc4c63136>"plot_fig_03_afterall"]:::uptodate
@@ -67,7 +67,7 @@ graph LR
     xe74500f98f5f759f>"get_chr_arms"]:::uptodate --> xb16376dd4fead0e6>"make_gistic_plot"]:::uptodate
     xd9b8ccc7084313c9>"simplify_gt_col"]:::uptodate --> xdce7316403ada8d6>"filter_cluster_save_seu"]:::uptodate
     xd9b8ccc7084313c9>"simplify_gt_col"]:::uptodate --> x1336df26c3675775>"prep_unfiltered_seu"]:::uptodate
-    xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x20f10262dd1d3b2f>"plot_fig_02_afterall"]:::uptodate
+    xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x20f10262dd1d3b2f>"plot_fig_04_afterall"]:::uptodate
     xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x7f0038addfb08900>"not_sure_what_this_does"]:::uptodate
     xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x8027f0b587128b70>"plot_fig_04_07"]:::uptodate
     xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x59905ca04aab6466>"plot_integrated_1q_fig"]:::uptodate
@@ -75,7 +75,7 @@ graph LR
     xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x4658e5acc4c63136>"plot_fig_03_afterall"]:::uptodate
     xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x8b16a90c5b6ef760>"sample_specific_analyses_of_tumors_with_scna_subclones_after_integration"]:::uptodate
     xa8cc3efe6ece7901>"make_clone_distribution_figure"]:::uptodate --> x489c25a9e014de64>"plot_integrated_1q_fig_low_hypoxia"]:::uptodate
-    x426406248c3dbc84>"plot_clone_cc_plots"]:::uptodate --> x20f10262dd1d3b2f>"plot_fig_02_afterall"]:::uptodate
+    x426406248c3dbc84>"plot_clone_cc_plots"]:::uptodate --> x20f10262dd1d3b2f>"plot_fig_04_afterall"]:::uptodate
     x426406248c3dbc84>"plot_clone_cc_plots"]:::uptodate --> x7f0038addfb08900>"not_sure_what_this_does"]:::uptodate
     x426406248c3dbc84>"plot_clone_cc_plots"]:::uptodate --> xe460f746da6f1b2c>"plot_fig_04_05"]:::uptodate
     x426406248c3dbc84>"plot_clone_cc_plots"]:::uptodate --> x59905ca04aab6466>"plot_integrated_1q_fig"]:::uptodate
@@ -1565,7 +1565,7 @@ plot_enrichment_recurrence	function	NA	NA	NA
 plot_enrichment_recurrence_by_cluster	function	NA	NA	NA
 plot_feature_across_seus	function	NA	NA	NA
 plot_feature_in_seu	function	NA	NA	NA
-plot_fig_02_afterall	function	NA	NA	NA
+plot_fig_04_afterall	function	NA	NA	NA
 plot_fig_03	function	NA	NA	NA
 plot_fig_03_09	function	NA	NA	NA
 plot_fig_03_afterall	function	NA	NA	NA
@@ -4967,7 +4967,7 @@ compare_infercnv <- function(myseus, sample_id) {
 #' @param plot_path File path
 #' @return ggplot2 plot object
 #' @export
-plot_fig_02_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
+plot_fig_04_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
     integrated_1q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SRR[0-9].*_1q_filtered_seu.rds") |> as.character()
 
     batch_corrected_seu <- "output/seurat/integrated_1q_16q/integrated_seu_1q_afterall.rds"
@@ -9136,7 +9136,7 @@ plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 #' @param plot_path File path
 #' @return ggplot2 plot object
 #' @export
-plot_fig_02_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
+plot_fig_04_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
     integrated_1q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SRR[0-9].*_1q_filtered_seu.rds") |> as.character()
     
     batch_corrected_seu <- "output/seurat/integrated_1q_16q/integrated_seu_1q_afterall.rds"

@@ -49,6 +49,10 @@ bad_cell_types = c("RPCs", "Late RPCs", c("Red Blood Cells", "Microglia", "Mulle
 
 myseu <- readRDS(seu_path)
 
+if (!("type" %in% colnames(myseu@meta.data))) {
+	warning("Metadata column 'type' not found; proceeding without type-based filtering.")
+}
+
 count_mat <- count_mat[,colnames(count_mat) %in% colnames(myseu)]
 
 # num_out_cells <- sum(myseu$type %in% bad_cell_types)

@@ -9,7 +9,7 @@ if len(config) == 0:
     sys.exit("Make sure there is a config.yaml file in " + os.getcwd() + " or specify one with the --configfile commandline parameter.")
 
 ## Make sure that all expected variables from the config file are in the config dictionary
-configvars = ['annotation', 'organism', 'build', 'release', 'txome', 'genome', 'gtf', 'salmonindex', 'salmonk', 'STARindex', 'HISAT2index', 'readlength', 'fldMean', 'fldSD', 'metatsv', 'design', 'contrast', 'genesets', 'ncores', 'FASTQ', 'fqext1', 'fqext2', 'fqsuffix', 'output', 'useCondaR', 'Rbin', 'run_trimming', 'run_STAR', 'run_HISAT2', 'run_DRIMSeq', 'run_camera']
+configvars = ['annotation', 'organism', 'build', 'release', 'txome', 'genome', 'gtf', 'salmonindex', 'salmonk', 'STARindex', 'HISAT2index', 'readlength', 'fldMean', 'fldSD', 'metatsv', 'design', 'contrast', 'genesets', 'ncores', 'FASTQ', 'fqext1', 'fqext2', 'fqsuffix', 'output', 'useCondaR', 'Rbin', 'run_trimming', 'run_STAR', 'run_HISAT2', 'run_DRIMSeq', 'run_camera', 'subset_bad_cell_types_default', 'subset_bad_cell_types_by_sample']
 for k in configvars:
 	if k not in config:
 		config[k] = None
@@ -45,6 +45,31 @@ samples['type'] = config['read_type']
 
 table_samples = pd.read_csv(config["metatsv"], sep = "\t")
 
+def parse_bool(value, default=True):
+	if value is None:
+		return default
+	if isinstance(value, bool):
+		return value
+	if isinstance(value, (int, float)):
+		return value != 0
+	value_str = str(value).strip().lower()
+	if value_str in ["true", "t", "1", "yes", "y"]:
+		return True
+	if value_str in ["false", "f", "0", "no", "n"]:
+		return False
+	return default
+
+def subset_bad_cell_types_for_sample(wildcards):
+	default_value = parse_bool(config.get("subset_bad_cell_types_default", True), True)
+	per_sample = config.get("subset_bad_cell_types_by_sample", {})
+	if isinstance(per_sample, dict) and wildcards.sample in per_sample:
+		return parse_bool(per_sample[wildcards.sample], default_value)
+	if "subset_bad_cell_types" in table_samples.columns:
+		sample_rows = table_samples[table_samples.Run == wildcards.sample]
+		if len(sample_rows) > 0:
+			return parse_bool(sample_rows.subset_bad_cell_types.values[0], default_value)
+	return default_value
+
 # if not set(['names','type']).issubset(samples.columns):
 #   sys.exit("Make sure 'names' and 'type' are columns in " + config["metatsv"])
 
@@ -65,6 +90,8 @@ proj_dir = os.path.abspath(os.path.normpath(getpath(config["proj_dir"])))
 outputdir = os.path.abspath(getpath(config["output"])) + "/"
 FASTQdir = getpath(config["FASTQ"])
 datadir = os.path.abspath(os.path.normpath(getpath(config["proj_dir"]))) + "/data/"
+numbat_sridhar_dirname = config.get("numbat_sridhar_dirname", "numbat_sridhar")
+numbat_sridhar_dir = outputdir + getpath(numbat_sridhar_dirname)
 
 clones_filename = "bulk_clones_final.png"
 
@@ -115,13 +142,21 @@ def cellranger_output(wildcards):
   input.extend(expand(outputdir + "cellranger/{sample}/outs/possorted_genome_bam.bam", sample = samples.name[samples.type == 'PE'].values.tolist()))
   return input
 
-def numbat_output(wildcards):
+def numbat_allele_counts_output(wildcards):
   input = []
   input.extend(expand(outputdir + "numbat/{sample}_allele_counts.tsv.gz", sample = samples.name[samples.type == 'PE'].values.tolist()))
-#   input.extend(expand(outputdir + "numbat_sridhar/{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
-#   input.extend(expand(outputdir + "numbat_sridhar/{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
-  input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
-  input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  return input
+
+def numbat_done_output(wildcards):
+  input = []
+	input.extend(expand(numbat_sridhar_dir + "{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  #   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  return input
+
+def numbat_rds_output(wildcards):
+  input = []
+	input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
+#   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
   return input
   
 def seurat_output(wildcards):
@@ -151,7 +186,9 @@ rule all:
 	input:
 		# outputdir + "MultiQC/multiqc_report.html",
 		# cellranger_output,
-		numbat_output,
+		# numbat_allele_counts_output,
+		# numbat_done_output,
+		# numbat_rds_output,
 		# velocyto_output,
 		# velocyto_output,
 		# infercnv_output,
@@ -999,6 +1036,8 @@ rule pileup_and_phasing:
 		outputdir + "logs/pileup_and_phase_{sample}.log"
 	benchmark:
 		outputdir + "benchmarks/pileup_and_phase_{sample}.txt"
+	conda:
+		"numbat"
 	threads:
 		config["ncores"]
 	params:
@@ -1059,7 +1098,7 @@ rule seurat_cellbender:
 rule seurat_embeddings:
 	input:
 		seu_path = outputdir + "seurat/{sample}_seu.rds",
-		nb_path = outputdir + "numbat_sridhar/{sample}_numbat.rds",
+		nb_path = numbat_sridhar_dir + "{sample}_numbat.rds",
 		script = "scripts/save_seurat_embeddings.R"
 	output:
 		seurat_embeddings = outputdir + "seurat/{sample}_embeddings.csv"
@@ -1119,7 +1158,7 @@ rule seurat_embeddings:
 
 rule filter_non_tumor_cells_from_seu:
 	input:
-	  numbat_rds = outputdir + "numbat_sridhar/{sample}_numbat.rds",
+	  numbat_rds = numbat_sridhar_dir + "{sample}_numbat.rds",
 		seu_path = outputdir + "seurat/{sample}_seu.rds"
 	output:
 		seu_path_out = outputdir + "seurat/{sample}_filtered_seu.rds"
@@ -1145,25 +1184,26 @@ rule numbat_sridhar:
 		seu_path = outputdir + "seurat/{sample}_seu.rds",
 		script = "scripts/run_numbat.R"
 	output:
-		done_file = outputdir + "numbat_sridhar/{sample}/done.txt"
+		done_file = numbat_sridhar_dir + "{sample}/done.txt"
 	log:
-		outputdir + "logs/numbat_sridhar_{sample}.log"
+		numbat_sridhar_dir + "{sample}/snakemake_numbat.log"
 	benchmark:
-		outputdir + "benchmarks/numbat_sridhar_{sample}.txt"
+		numbat_sridhar_dir + "{sample}/benchmark_numbat.txt"
 	threads:
 		config["ncores"]
 	params:
 	  num_clones = lambda wildcards: table_samples[table_samples.Run == wildcards.sample].num_clone.values[0],
+		subset_bad_cell_types = subset_bad_cell_types_for_sample,
 		numbat_t = config["numbat_t"],
 		gamma = config["gamma"],
-		numbatdir = outputdir + "numbat_sridhar/",
+		numbatdir = numbat_sridhar_dir,
 		max_entropy = config["max_entropy"],
 		min_LLR = config["min_LLR"],
 		max_iter = config["max_iter"],
 		read_prop = config["read_prop"],
 		tau = config["tau"],
 		cell_ceiling = config["cell_ceiling"],
-		prof= outputdir + "numbat_sridhar/{sample}/log.prof",
+		prof= numbat_sridhar_dir + "{sample}/log.prof",
 		ref_path = config["sridhar_ref_path"]
 	shell:
 		'''
@@ -1171,6 +1211,7 @@ rule numbat_sridhar:
 		"--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
 		t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
 		init_k='{params.num_clones}' read_prop='{params.read_prop}' \
+		subset_bad_cell_types='{params.subset_bad_cell_types}' \
 		max_iter='{params.max_iter}' min_LLR='{params.min_LLR}' \
 		cell_ceiling='{params.cell_ceiling}' max_entropy='{params.max_entropy}' \
 		allele_df='{input.allele_df}' matrix_file='{input.matrix_file}' \
@@ -1222,13 +1263,13 @@ rule numbat_sridhar_filtered:
 rule numbat_sridhar_rds:
 	input:
 		# numbat_dir = outputdir + "numbat_sridhar/{sample}"
-		done_file = outputdir + "numbat_sridhar/{sample}/done.txt"
+		done_file = numbat_sridhar_dir + "{sample}/done.txt"
 	output:
-		outputdir + "numbat_sridhar/{sample}_numbat.rds"
+		numbat_sridhar_dir + "{sample}_numbat.rds"
 	log:
-		outputdir + "logs/numbat_sridhar_rds_{sample}.log"
+		numbat_sridhar_dir + "{sample}/snakemake_numbat_rds.log"
 	benchmark:
-		outputdir + "benchmarks/numbat_sridhar_rds_{sample}.txt"
+		numbat_sridhar_dir + "{sample}/benchmark_numbat_rds.txt"
 	threads:
 		config["ncores"]
 	params:
@@ -1269,6 +1310,7 @@ rule numbat_sridhar_mini:
 	params:
 	  num_clones = lambda wildcards: table_samples[table_samples.Run == wildcards.sample].num_clone.values[0],
 	  # num_clones = 3,
+		subset_bad_cell_types = subset_bad_cell_types_for_sample,
 		numbatdir = outputdir + "numbat_sridhar_mini/",
 		max_entropy = config["max_entropy"],
 		min_LLR = config["min_LLR"],
@@ -1286,6 +1328,7 @@ rule numbat_sridhar_mini:
 		seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
 		tau='{params.tau}' init_k='{params.num_clones}' \
 		read_prop='{params.read_prop}' max_iter='{params.max_iter}' \
+		subset_bad_cell_types='{params.subset_bad_cell_types}' \
 		min_LLR='{params.min_LLR}' t='{params.numbat_t}' \
 		cell_ceiling='{params.cell_ceiling}' \
 		max_entropy='{params.max_entropy}' allele_df='{input.allele_df}' \
@@ -1326,6 +1369,7 @@ rule numbat_sridhar_cone:
 		config["ncores"]
 	params:
 	  num_clones = lambda wildcards: table_samples[table_samples.Run == wildcards.sample].num_clone.values[0],
+		subset_bad_cell_types = subset_bad_cell_types_for_sample,
 		numbat_t = config["numbat_t"],
 		gamma = config["gamma"],
 		numbatdir = outputdir + "numbat_sridhar_cone/",
@@ -1340,7 +1384,7 @@ rule numbat_sridhar_cone:
 		expression_only = False,
 		script = "scripts/run_numbat.R"
 	shell:
-		'''{Rbin} CMD BATCH --no-restore --no-save "--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' expression_only='{params.expression_only}' t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' init_k='{params.num_clones}' read_prop='{params.read_prop}' max_iter='{params.max_iter}' min_LLR='{params.min_LLR}' cell_ceiling='{params.cell_ceiling}' max_entropy='{params.max_entropy}' allele_df='{input.allele_df}' matrix_file='{input.matrix_file}' out_dir='{params.numbatdir}/{wildcards.sample}' ncores='{threads}' rprof_out='{params.prof}'" {params.script} {log}'''
+		'''{Rbin} CMD BATCH --no-restore --no-save "--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' expression_only='{params.expression_only}' t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' init_k='{params.num_clones}' read_prop='{params.read_prop}' subset_bad_cell_types='{params.subset_bad_cell_types}' max_iter='{params.max_iter}' min_LLR='{params.min_LLR}' cell_ceiling='{params.cell_ceiling}' max_entropy='{params.max_entropy}' allele_df='{input.allele_df}' matrix_file='{input.matrix_file}' out_dir='{params.numbatdir}/{wildcards.sample}' ncores='{threads}' rprof_out='{params.prof}'" {params.script} {log}'''
 
 # rule numbat_sridhar_cone_rds:
 # 	input:
