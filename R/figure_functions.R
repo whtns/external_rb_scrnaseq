@@ -10,7 +10,7 @@
 #' @param plot_path File path
 #' @return ggplot2 plot object
 #' @export
-plot_fig_02_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
+plot_fig_04_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
     integrated_1q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SRR[0-9].*_1q_filtered_seu.rds") |> as.character()
 
     batch_corrected_seu <- "output/seurat/integrated_1q_16q/integrated_seu_1q_afterall.rds"
@@ -1524,4 +1524,95 @@ plot_venn_w_genes <- function(diffex_list, mytitle = NULL, selected_phase = NULL
 		NULL
 
 	return(list("plot" = venn_plot, "genes" = myregion))
+}
+
+plot_fig_01 <- function(seu_path, plot_path = "results/fig_01.pdf") {
+	seu <- readRDS(seu_path)
+	seu$scna <- factor(seu$scna, levels = c("", "16q-", "16q- 1q+"))
+	seu$scna_status <- factor(
+		ifelse(str_detect(seu$scna, "1q"), "w/ 1q+", "w/o 1q+"),
+		levels = c("w/o 1q+", "w/ 1q+")
+	)
+	seu$clusters <- factor(seu$clusters)
+
+	labels <- data.frame(
+		clusters = unique(seu[[]][["clusters"]]),
+		label    = unique(seu[[]][["clusters"]])
+	)
+
+	cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna"))
+
+	centroid_data <-
+		cc_data %>%
+		dplyr::group_by(clusters) %>%
+		dplyr::summarise(mean_x = mean(S.Score), mean_y = mean(G2M.Score)) %>%
+		dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters))) %>%
+		dplyr::mutate(centroid = "centroids")
+
+	dot_colors <- c("clusters", "Phase", "scna")
+
+	centroid_plots <- list()
+	ccplots        <- list()
+	for (dot_color in dot_colors) {
+		ccplots[[dot_color]] <-
+			cc_data %>%
+			ggplot(aes(
+				x = `S.Score`, y = `G2M.Score`,
+				group = .data[["clusters"]], color = .data[[dot_color]]
+			)) +
+			geom_point(size = 0.1) +
+			geom_point(
+				data = centroid_data,
+				aes(x = mean_x, y = mean_y, fill = .data[["clusters"]]),
+				size = 6, alpha = 0.7, shape = 23, colour = "black"
+			) +
+			facet_wrap(~ .data[["clusters"]], nrow = 2) +
+			theme_light() +
+			geom_label(
+				data        = labels,
+				aes(label   = label),
+				x           = max(cc_data$S.Score) + 0.05,
+				y           = max(cc_data$G2M.Score) - 0.1,
+				hjust       = 1, vjust = 1,
+				inherit.aes = FALSE
+			) +
+			theme(strip.background = element_blank(), strip.text.x = element_blank())
+
+		centroid_plots[[dot_color]] <-
+			cc_data %>%
+			ggplot(aes(
+				x = `S.Score`, y = `G2M.Score`,
+				group = .data[["clusters"]], color = .data[[dot_color]]
+			)) +
+			geom_point(size = 0.1) +
+			theme_light() +
+			theme(strip.background = element_blank(), strip.text.x = element_blank()) +
+			geom_point(
+				data = centroid_data,
+				aes(x = mean_x, y = mean_y, fill = .data[["clusters"]]),
+				size = 6, alpha = 0.7, shape = 23, colour = "black"
+			) +
+			guides(fill = "none", color = "none")
+	}
+
+	path_d <- "results/fig_01d.pdf"
+	path_e <- "results/fig_01e.pdf"
+	path_f <- "results/fig_01f.pdf"
+
+	pdf(path_d, h = 3, w = 4)
+	print(centroid_plots)
+	dev.off()
+
+	pdf(path_e, h = 4, w = 12)
+	print(ccplots)
+	dev.off()
+
+	clone_distribution_plot <- plot_distribution_of_clones_across_clusters(
+		seu,
+		seu_name  = glue::glue("asdf"), var_x = "scna", var_y = "clusters",
+		signif    = FALSE, plot_type = "clone"
+	)
+	ggsave(path_f, plot = clone_distribution_plot, w = 3.5, h = 3)
+
+	qpdf::pdf_combine(c(path_d, path_e, path_f), plot_path)
 }

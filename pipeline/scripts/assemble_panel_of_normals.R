@@ -25,7 +25,12 @@ bad_cell_types = c("RPCs", "Late RPCs", c("Red Blood Cells", "Microglia", "Mulle
 filter_to_bad_cells <- function(seu_path, bad_cell_types){
 	# browser()
 	seu <- readRDS(seu_path)
-	
+
+	if (!("type" %in% colnames(seu@meta.data))) {
+		warning(glue("Metadata column 'type' missing in {seu_path}; returning empty Seurat object."))
+		return(seu[, FALSE])
+	}
+
 	seu <- seu[,seu$type %in% bad_cell_types]
 	
 	return(seu)

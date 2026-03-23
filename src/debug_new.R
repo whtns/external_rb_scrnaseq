@@ -141,7 +141,7 @@ tar_load("cluster_orders")
 
 fig_03_afterall <- plot_fig_03_afterall(cluster_orders)
 
-fig_02_afterall <- plot_fig_02_afterall(cluster_orders)
+fig_04_afterall <- plot_fig_04_afterall(cluster_orders)
 
 
 # assign_phase_clusters ------------------------------

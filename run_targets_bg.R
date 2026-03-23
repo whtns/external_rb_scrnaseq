@@ -15,21 +15,24 @@ log_msg <- function(...) {
 
 args <- commandArgs(trailingOnly = TRUE)
 
-target_name <- if (length(args) >= 1 && nzchar(args[[1]])) args[[1]] else "figures_and_tables"
-store_path <- if (length(args) >= 2 && nzchar(args[[2]])) args[[2]] else "_targets_r431"
+# Any arg starting with "_targets" is the store path; all others are target names.
+is_store <- grepl("^_targets", args)
+store_path <- if (any(is_store)) args[is_store][[1]] else "_targets_r431"
+target_names <- args[!is_store]
+if (length(target_names) == 0) target_names <- "figures_and_tables"
 
 log_msg("Starting targets run")
-log_msg("Target: ", target_name)
+log_msg("Targets: ", paste(target_names, collapse = ", "))
 log_msg("Store: ", store_path)
 log_msg("Working directory: ", getwd())
 
 runner <- callr::r_bg(
-  func = function(target_name, store_path) {
+  func = function(target_names, store_path) {
     suppressPackageStartupMessages(library(targets))
     tar_config_set(store = store_path)
-    tar_make(names = target_name, reporter = "timestamp")
+    tar_make(names = all_of(target_names), reporter = "timestamp")
   },
-  args = list(target_name, store_path),
+  args = list(target_names, store_path),
   stdout = "|",
   stderr = "2>&1",
   supervise = TRUE

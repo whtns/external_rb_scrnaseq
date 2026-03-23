@@ -9,6 +9,22 @@ if(!exists("expression_only")){
   expression_only <- FALSE
 }
 
+if(!exists("subset_bad_cell_types")){
+  subset_bad_cell_types <- TRUE
+}
+
+parse_bool <- function(x, default = TRUE) {
+	if (is.logical(x)) return(x)
+	if (is.numeric(x)) return(x != 0)
+	if (is.null(x)) return(default)
+	x <- tolower(trimws(as.character(x)))
+	if (x %in% c("true", "t", "1", "yes", "y")) return(TRUE)
+	if (x %in% c("false", "f", "0", "no", "n")) return(FALSE)
+	default
+}
+
+subset_bad_cell_types <- parse_bool(subset_bad_cell_types, TRUE)
+
 # Rprof(rprof_out)
 
 print(paste0("num_clones: ", init_k))
@@ -28,10 +44,30 @@ count_mat <- Seurat::Read10X(matrix_dir)
 
 myseu <- readRDS(seu_path)
 
-myseu <- myseu[,!myseu$type %in% bad_cell_types]
+seu_cells <- rownames(myseu@meta.data)
+if (is.null(seu_cells) || length(seu_cells) == 0) {
+	stop("No cell IDs found in Seurat metadata rownames.")
+}
 
-# drop cells absent from seurat object
-count_mat <- count_mat[,colnames(count_mat) %in% colnames(myseu)]
+# Filter known non-tumor cell types only when requested and available.
+if (subset_bad_cell_types && "type" %in% colnames(myseu@meta.data)) {
+	cell_type <- myseu@meta.data[["type"]]
+	names(cell_type) <- seu_cells
+	keep_cells <- !(cell_type %in% bad_cell_types)
+	keep_cells[is.na(keep_cells)] <- TRUE
+	seu_cells <- names(keep_cells)[keep_cells]
+	if (length(seu_cells) == 0) {
+		warning("Type-based filtering removed all cells; falling back to all metadata cells.")
+		seu_cells <- rownames(myseu@meta.data)
+	}
+} else if (!subset_bad_cell_types) {
+	warning("Skipping bad_cell_types filtering because subset_bad_cell_types is FALSE.")
+} else {
+	warning("Metadata column 'type' not found; skipping bad_cell_types filtering.")
+}
+
+# drop cells absent from metadata-filtered set
+count_mat <- count_mat[,colnames(count_mat) %in% seu_cells]
 
 # subset count matrix by cell to ease tree construction ------------------------------
 # cell_ceiling <- as.numeric(cell_ceiling)
@@ -49,7 +85,7 @@ if(!as.numeric(read_prop) == 1){
 
 allele_df = data.table::fread(allele_df) |> 
 	tidyr::drop_na(CHROM) |> # drop X chromosome values
-	dplyr::filter(cell %in% colnames(myseu)) |> # drop cells absent from filtered seurat object
+	dplyr::filter(cell %in% seu_cells) |> # drop cells absent from metadata-filtered set
 	identity()
 
 # assemble a normal reference from non-RB cell types ------------------------------
