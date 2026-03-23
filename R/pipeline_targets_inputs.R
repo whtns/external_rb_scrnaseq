@@ -5,11 +5,12 @@ pipeline_targets_inputs <- c(
 
   # --- numbat / seurat file tracking ---
 
-  tarchetypes::tar_files(all_numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/"), format = "file"),
-  tarchetypes::tar_files(all_seus, retrieve_seus("output/seurat/"), format = "file"),
+  tarchetypes::tar_files(numbat_rds_all, retrieve_numbat_rds_files("output/numbat_sridhar/"), format = "file"),
+  tarchetypes::tar_files(seus_all, retrieve_seus("output/seurat/"), format = "file"),
   tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples), format = "file"),
   tarchetypes::tar_files(numbat_rds_filtered_files, retrieve_numbat_rds_files("output/numbat_sridhar_filtered/", interesting_samples), format = "file"),
-  tarchetypes::tar_files(seus, retrieve_seus("output/seurat/", interesting_samples), format = "file"),
+  # Subset of Seurat files for interesting_samples; entries are named by SRR ID.
+  tarchetypes::tar_files(seus_interesting, retrieve_seus("output/seurat/", interesting_samples), format = "file"),
 
   list(
 

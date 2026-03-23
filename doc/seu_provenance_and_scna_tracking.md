@@ -204,3 +204,209 @@ Note: Some samples carry multiple SCNA types (e.g., SRR13884246 has both 1q and 
 - **chosen_resolution_seus**: Phase cluster assignments per scna stratum
 - **scna_seus**: Union of all SCNA-stratified objects, used for database population
 - **filtering_recurrent_heatmaps**, **regressed_recurrent_heatmaps**: Group by scna for visualization
+
+## Annotated Guide To pipeline_targets_seurat.R
+
+This section documents the structure of [R/pipeline_targets_seurat.R](R/pipeline_targets_seurat.R) in execution order, with the intent of making maintenance and dependency tracing easier.
+
+### 1. File-Tracked SCNA Seurat Inputs
+
+These targets use tar_files so file changes invalidate downstream targets:
+
+- debranched_seus_1q
+- debranched_seus_2p
+- debranched_seus_6p
+- debranched_seus_16q
+
+Purpose:
+- Define per-SCNA debranched Seurat object paths.
+- Serve as the canonical SCNA-stratified Seurat inputs for analysis and database population.
+
+### 2. File-Tracked Integrated Seurat Inputs
+
+Also tracked with tar_files:
+
+- integrated_seus_1q
+- integrated_seus_16q
+- integrated_seus_2p
+- integrated_seus_6p
+
+Purpose:
+- Register integrated Seurat objects used in integration-level figures and downstream comparison targets.
+
+### 3. Per-Sample Seurat Processing Core
+
+Core processing and preparation targets:
+
+- filtered_large_plot_files
+- unfiltered_seus
+- filtered_seus
+- final_seus
+- cc_plots_wo_arms
+
+Purpose:
+- Build sample-level Seurat derivatives.
+- Apply filtering and metadata augmentation.
+- Materialize final sample set used by most downstream targets.
+
+SCNA metadata note:
+- scna is first added during unfiltered_seus and filtered_seus generation through functions documented in [R/plot_functions_3.R](R/plot_functions_3.R).
+
+### 4. Debranched Aggregation And SCNA Collections
+
+Aggregation and mapping targets:
+
+- debranched_seu_files
+- debranched_seus
+- overall_seus
+- scna_seus
+
+Purpose:
+- Establish path-level and named-vector abstractions over debranched Seurat objects.
+- Build the combined SCNA collection consumed by sqlite extraction and many plotting targets.
+
+### 5. SQLite Metadata Layer
+
+Database and resolution metadata targets:
+
+- seu_metadata_db
+- resolution_dictionary
+- chosen_resolution_seus
+
+Purpose:
+- Persist Seurat metadata summaries to sqlite.
+- Retrieve and apply resolution mappings for phase cluster assignment.
+
+Database write behavior:
+- seu_metadata_db and resolution_dictionary run with deployment = main to avoid worker-level sqlite write contention.
+
+### 6. Recurrent Marker Heatmap Track
+
+Marker recurrence and heatmap targets:
+
+- filtered_recurrent_genes
+- filtered_recurrent_heatmaps
+- filtered_recurrent_heatmap_file
+- combined_recurrent_filtered_heatmap
+- regressed_recurrent_genes
+- regressed_recurrent_heatmaps
+- regressed_recurrent_heatmap_file
+
+Purpose:
+- Produce recurrent marker outputs under filtered and regressed workflows.
+- Emit merged PDF artifacts for figure assembly.
+
+### 7. Regression Diagnostics Track
+
+Regression-focused targets:
+
+- regressed_seus
+- effect_of_filtering
+- regression_effect_plots
+- fig_03_05
+- regression_ora_plots
+- cin_score_plots
+
+Purpose:
+- Quantify effects of filtering and regression.
+- Generate diagnostics and enrichment views.
+
+### 8. QC And Numbat Heatmap Track
+
+QC/heatmap targets:
+
+- fig_s03a_plots
+- fig_s03a
+- fig_s13
+- filtered_numbat_heatmaps_file
+- filtered_large_scna_prob_file
+
+Purpose:
+- Generate unfiltered and filtered Numbat heatmap outputs.
+- Build merged artifacts used in supplemental reporting.
+
+### 9. Heatmap Collage Track
+
+Collage targets:
+
+- heatmap_collages
+- heatmap_collages_6p
+- annotated_heatmap_collages
+- collage_compilation
+- collage_compilation_all_resolutions
+
+Purpose:
+- Produce per-sample and merged heatmap collage outputs across resolutions and SCNA strata.
+
+### 10. Hypoxia Track
+
+Hypoxia-oriented targets:
+
+- hypoxia_seus
+- hypoxia_score_plots
+- seus_low_hypoxia
+- seus_high_hypoxia
+- heatmap_collages_hypoxia
+- hypoxia_effect_plots
+- silhouette_plots
+
+Purpose:
+- Score hypoxia, subset by hypoxia state, and visualize hypoxia-linked structure.
+
+### 11. Integrated Seurat Objects And Integrated Collages
+
+Integrated object/collage targets:
+
+- integrated_seu_16q
+- integrated_seus
+- annotated_integrated_heatmap_collages
+
+Purpose:
+- Provide integrated objects used by integration-level visual outputs.
+
+### 12. Static Branching For Clustrees
+
+Static branching block:
+
+- clustree_map via tar_map over debranched_map_values
+- clustrees via tar_combine
+- clustree_compilation
+
+Purpose:
+- Build per-sample clustree outputs as static branches.
+- Merge branch outputs into a single clustree compilation artifact.
+
+### 13. SCNA-Mapped Hypoxia Branching
+
+Branching targets via tar_map over SCNA labels:
+
+- hypoxia_seus_1q
+- hypoxia_seus_2p
+- hypoxia_seus_6p
+- hypoxia_seus_16q
+
+Purpose:
+- Derive SCNA-specific low-hypoxia Seurat subsets from the global low-hypoxia set.
+
+### 14. SCNA-Mapped Low-Hypoxia Integration
+
+Branching targets via tar_map over SCNA labels:
+
+- integrated_seu_low_hypoxia_1q
+- integrated_seu_low_hypoxia_2p
+- integrated_seu_low_hypoxia_6p
+- integrated_seu_low_hypoxia_16q
+
+Plus summary targets:
+
+- hypoxia_low_integrated_heatmap_collages
+- hypoxia_low_integrated_heatmap_collages0
+
+Purpose:
+- Perform and visualize SCNA-specific integration constrained to low-hypoxia cells.
+
+### 15. Maintenance Notes
+
+- The file mixes tar_files, tar_target, tar_map, and tar_combine patterns; this is expected and intentional.
+- scna-sensitive outputs depend on the correctness of metadata augmentation in the preprocessing stage.
+- sqlite outputs reflect tracked file dependencies; manual edits outside tracked paths will not invalidate targets unless upstream files/commands change.

@@ -84,19 +84,22 @@ pipeline_targets_seurat <- c(
     # --- per-sample Seurat processing ---
 
     tar_target(filtered_large_plot_files,
-      make_numbat_plot_files(seus, numbat_rds_files, cluster_dictionary, large_filter_expressions, large_clone_simplifications, extension = "_filtered"),
-      pattern = map(seus, numbat_rds_files),
+      # Build filtered large-format Numbat plot bundles per sample.
+      make_numbat_plot_files(seus_interesting, numbat_rds_files, cluster_dictionary, large_filter_expressions, large_clone_simplifications, extension = "_filtered"),
+      pattern = map(seus_interesting, numbat_rds_files),
       iteration = "list"
     ),
 
     tar_target(unfiltered_seus,
+      # First stage where scna metadata is injected into Seurat objects.
       prep_unfiltered_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, extension = "_unfiltered"),
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
 
     tar_target(filtered_seus,
-      filter_cluster_save_seu(numbat_rds_files, seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
+      # Filtered counterpart also computes/adds scna metadata at cell level.
+      filter_cluster_save_seu(numbat_rds_files, seus_interesting, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
@@ -152,6 +155,7 @@ pipeline_targets_seurat <- c(
     # --- scna-stratified seu collections ---
 
     tar_target(scna_seus,
+      # Canonical union of SCNA-stratified Seurat paths used by DB extraction.
       unlist(list(
         "1q"  = debranched_seus_1q,
         "2p"  = debranched_seus_2p,
@@ -169,11 +173,13 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(resolution_dictionary,
+      # Read/write from sqlite on main process to avoid DB worker contention.
       read_resolution_dictionary(sqlite_path = "batch_hashes.sqlite"),
       deployment = "main"
     ),
 
     tar_target(chosen_resolution_seus,
+      # Attach designated phase cluster resolutions pulled from sqlite metadata.
       assign_designated_phase_clusters(scna_seus, cluster_orders, resolution_dictionary),
       pattern = map(scna_seus),
       iteration = "list"
@@ -303,6 +309,7 @@ pipeline_targets_seurat <- c(
     tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_plots), "results/unfiltered_heatmaps.pdf")),
 
     tar_target(fig_s13,
+      # Always re-render: output layout can depend on graphics device/session state.
       make_numbat_heatmaps(final_seus, numbat_rds_files, p_min = 0.5, line_width = 0.1, extension = "_filtered"),
       pattern = map(final_seus),
       iteration = "list",
@@ -350,6 +357,7 @@ pipeline_targets_seurat <- c(
     # --- hypoxia ---
 
     tar_target(hypoxia_seus,
+      # Persist hypoxia-scored Seurat objects for downstream thresholded analyses.
       load_and_save_hypoxia_score(filtered_seus),
       pattern = map(filtered_seus),
       iteration = "list"
@@ -363,6 +371,7 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(seus_low_hypoxia,
+      # Low-hypoxia partition is later remapped into SCNA-specific subsets.
       subset_seu_by_expression(hypoxia_seus, run_hypoxia_clustering = TRUE, hypoxia_expr = "hypoxia_score <= 0.5", slug = "hypoxia_low"),
       pattern = map(hypoxia_seus),
       iteration = "list"
@@ -435,6 +444,7 @@ pipeline_targets_seurat <- c(
       )
     )
     .clustree_combined <- tarchetypes::tar_combine(
+      # Combine static per-sample clustree branches into a single clustrees target.
       clustrees,
       .clustree_map[["clustree"]],
       command = list(!!!.x)
@@ -452,6 +462,7 @@ pipeline_targets_seurat <- c(
 
   # hypoxia_seus_1q/2p/6p/16q — subset seus_low_hypoxia to each SCNA's samples
   tarchetypes::tar_map(
+    # Expand hypoxia_seus_<scna> targets from shared low-hypoxia Seurat set.
     values = scna_map_values[, "scna", drop = FALSE],
     names  = "scna",
     tar_target(hypoxia_seus,
@@ -461,6 +472,7 @@ pipeline_targets_seurat <- c(
 
   # integrated_seu_low_hypoxia_1q/2p/6p/16q — integration within each SCNA at low hypoxia
   tarchetypes::tar_map(
+    # Integrate low-hypoxia Seurat objects separately for each SCNA stratum.
     values = tibble::tibble(
       scna        = c("1q", "2p", "6p", "16q"),
       hypoxia_sym = rlang::syms(c("hypoxia_seus_1q", "hypoxia_seus_2p",
