@@ -296,8 +296,8 @@ list(
   ),
 
   tar_target(clone_trees,
-    plot_clone_tree_from_path(seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(seus),
+    plot_clone_tree_from_path(seus_interesting, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(seus_interesting),
     iteration = "list"
   ),
 

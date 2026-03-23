@@ -98,6 +98,10 @@ make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionar
 
   seu <- Seurat::AddMetaData(seu, scna_per_cell)
 
+  # Drop unused factor levels from seurat_clusters after cell filtering to avoid
+  # wilcoxauc dimension mismatch ("number of columns of X does not match length of y")
+  seu$seurat_clusters <- droplevels(seu$seurat_clusters)
+
   phylo_heatmap_data <- mynb$clone_post %>%
     dplyr::select(cell, clone_opt) %>%
     dplyr::left_join(mynb$joint_post, by = "cell")
@@ -119,7 +123,7 @@ make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionar
 
 
   ## clone distribution ------------------------------
-  plot_distribution_of_clones_across_clusters(seu, sample_id, var_y = "gene_snn_res.0.6")
+  plot_distribution_of_clones_across_clusters(seu, sample_id, var_y = "seurat_clusters")
   ggsave(glue("results/{numbat_dir}/{sample_id}/{sample_id}_clone_distribution{extension}.pdf"), width = 8, height = 4)
 
   ## clone tree ------------------------------
