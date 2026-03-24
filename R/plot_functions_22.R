@@ -53,12 +53,13 @@ table_cluster_markers <- function(seu, assay = "SCT") {
 #' @return ggplot2 plot object
 #' @export
 make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionary, filter_expressions = NULL, clone_simplifications = NULL, extension = "") {
-  #
 
   output_plots <- list()
 
   sample_id <- str_extract(seu_path, "SRR[0-9]*")
-  
+
+  tryCatch({
+
   names(numbat_rds_files) <- str_extract(numbat_rds_files, "SRR[0-9]*")
   numbat_rds_file <- numbat_rds_files[[sample_id]]
 
@@ -149,4 +150,8 @@ make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionar
     set_names(plot_types)
 
   return(plot_files)
+
+  }, error = function(e) {
+    stop(paste0("[", sample_id, "] ", conditionMessage(e)), call. = FALSE)
+  })
 }

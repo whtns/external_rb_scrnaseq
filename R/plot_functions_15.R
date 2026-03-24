@@ -244,6 +244,7 @@ simplify_gt_col <- function(gt_val, scna_key) {
         dplyr::mutate(scna = paste(scna, collapse = ",")) %>%
         dplyr::pull(scna) %>%
         unique()
+      if (length(gt_vals) == 0) gt_vals <- ""
     } else {
       gt_vals <- ""
     }

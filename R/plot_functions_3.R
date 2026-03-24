@@ -121,7 +121,7 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
   dir_create(glue("results/{numbat_dir}/{sample_id}"))
   seu <- readRDS(glue("output/seurat/{sample_id}_seu.rds"))
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
-  mynb <- numbat_rds_file
+  mynb <- readRDS(numbat_rds_file)
   nb_clone_post <- mynb[["clone_post"]][, c("cell", "clone_opt", "GT_opt")] %>%
     dplyr::mutate(cell = str_replace(cell, "\\.", "-")) %>%
     tibble::column_to_rownames("cell")

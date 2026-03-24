@@ -32,4 +32,9 @@ batch_hashes.sqlite
 doc/table_s01.csv
 doc/kstachelek_rb_scna_tx_effects_2025-10-09.docx
 doc/paper.md
-/dataVolume/storage/single_cell_projects/resources/external_rb_scrnaseq_proj/doc/targets_rulegraph_files/
+doc/targets_rulegraph_files/
+doc/targets_rulegraph_hierarchical_ud_files/
+doc/targets_rulegraph_compact_files/
+.R_libs/
+tmp/
+Rb_object
