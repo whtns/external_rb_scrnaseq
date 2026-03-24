@@ -3,6 +3,7 @@
 ## Configuration file
 import os
 import sys
+import shlex
 if len(config) == 0:
   if os.path.isfile("./config.yaml"):
     configfile: "./config.yaml"
@@ -10,7 +11,7 @@ if len(config) == 0:
     sys.exit("Make sure there is a config.yaml file in " + os.getcwd() + " or specify one with the --configfile commandline parameter.")
 
 ## Make sure that all expected variables from the config file are in the config dictionary
-configvars = ['annotation', 'organism', 'build', 'release', 'txome', 'genome', 'gtf', 'salmonindex', 'salmonk', 'STARindex', 'HISAT2index', 'readlength', 'fldMean', 'fldSD', 'metatsv', 'design', 'contrast', 'genesets', 'ncores', 'FASTQ', 'fqext1', 'fqext2', 'fqsuffix', 'output', 'useCondaR', 'Rbin', 'run_trimming', 'run_STAR', 'run_HISAT2', 'run_DRIMSeq', 'run_camera', 'subset_bad_cell_types_default', 'subset_bad_cell_types_by_sample']
+configvars = ['annotation', 'organism', 'build', 'release', 'txome', 'genome', 'gtf', 'salmonindex', 'salmonk', 'STARindex', 'HISAT2index', 'readlength', 'fldMean', 'fldSD', 'metatsv', 'design', 'contrast', 'genesets', 'ncores', 'FASTQ', 'fqext1', 'fqext2', 'fqsuffix', 'output', 'useCondaR', 'Rbin', 'R_LIBS_USER', 'run_trimming', 'run_STAR', 'run_HISAT2', 'run_DRIMSeq', 'run_camera', 'subset_bad_cell_types_default', 'subset_bad_cell_types_by_sample']
 for k in configvars:
 	if k not in config:
 		config[k] = None
@@ -170,6 +171,12 @@ else:
 ## Define the R binary
 Rbin = config["Rbin"]
 
+## Optional project-local R library path that shadows system-wide packages.
+RlibsUser = config.get("R_LIBS_USER", None)
+if RlibsUser not in [None, "", "None", "none"]:
+	RlibsUser = os.path.abspath(os.path.normpath(getpath(RlibsUser)))
+	shell.prefix("export R_LIBS_USER=" + shlex.quote(RlibsUser) + "; ")
+
 # The config.yaml files determines which steps should be performed
 	
 def dbtss_output(wildcards):
@@ -215,13 +222,13 @@ def numbat_allele_counts_output(wildcards):
 
 def numbat_done_output(wildcards):
   input = []
-	input.extend(expand(numbat_sridhar_dir + "{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  input.extend(expand(numbat_sridhar_dir + "{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
   #   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
   return input
 
 def numbat_rds_output(wildcards):
   input = []
-	input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
 #   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
   return input
   
@@ -1273,7 +1280,7 @@ rule numbat_sridhar:
 		ref_path = config["sridhar_ref_path"]
 	shell:
 		'''
-		/opt/R/4.2.0/bin/R CMD BATCH --no-restore --no-save \
+		{Rbin} CMD BATCH --no-restore --no-save \
 		"--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
 		t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
 		init_k='{params.num_clones}' read_prop='{params.read_prop}' \
@@ -1373,7 +1380,7 @@ rule numbat_sridhar_sweep:
 		ref_path = config["sridhar_ref_path"]
 	shell:
 		'''
-		/opt/R/4.2.0/bin/R CMD BATCH --no-restore --no-save \
+		{Rbin} CMD BATCH --no-restore --no-save \
 		"--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
 		t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
 		init_k='{params.num_clones}' read_prop='{params.read_prop}' \

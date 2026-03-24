@@ -115,7 +115,9 @@ output: ../output/
 ## Specify "True" if R should be installed in a conda environment or "False" if you want to use
 ## your own R installation (then you have to set the path to your library in the .Renviron file)
 useCondaR: False
-Rbin: "/usr/bin/R"
+Rbin: "/opt/R/4.3.1/bin/R"
+# Project-local R library searched before system libraries.
+R_LIBS_USER: ../.rlib
 ##---------------------------------------------------------------------------------------------
 
 ## Scenic
