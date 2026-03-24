@@ -214,6 +214,8 @@ list(
     qpdf::pdf_combine(large_numbat_expression, "results/numbat_expression.pdf")
   ),
 
+  tar_target(fig_s06a, plot_fig_s06a()),
+
   tar_target(clone_trees_old,
     retrieve_numbat_plot_type(filtered_large_plot_files, "tree_filtered.pdf")
   ),
