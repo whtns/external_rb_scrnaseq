@@ -255,10 +255,21 @@ make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL
 			
 			seu@meta.data <- seu_meta[rownames(seu@meta.data), ]
 			
-			seu <-
-				seu[, seu$phase_level %in% kept_phases] %>%
-				find_all_markers(metavar = "clusters", seurat_assay = "SCT") %>%
-				identity()
+			seu <- seu[, seu$phase_level %in% kept_phases]
+			seu <- tryCatch(
+				seu %>%
+					find_all_markers(metavar = "clusters", seurat_assay = "SCT") %>%
+					identity(),
+				error = function(e) {
+					# seuratTools::find_all_markers uses JoinLayers on the assay and can fail on SCTAssay.
+					if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+						warning("SCT marker JoinLayers failed; using stash_marker_features fallback.")
+						seu@misc$markers[["clusters"]] <- seuratTools:::stash_marker_features("clusters", seu, seurat_assay = "SCT")
+						return(seu)
+					}
+					stop(e)
+				}
+			)
 			
 			seu@meta.data$clusters <- forcats::fct_drop(seu@meta.data$clusters)
 			
