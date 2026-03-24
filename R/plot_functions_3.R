@@ -48,7 +48,8 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
     unlist()
   large_clone_simplifications <-
     tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
-    tidyr::unnest(seg)
+    tidyr::unnest(seg) %>%
+    dplyr::mutate(seg = as.character(seg))
 
   scna_metadata <-
     nb_clone_post %>%
@@ -139,7 +140,8 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
     dplyr::left_join(mynb$joint_post, by = "cell")
   large_clone_simplifications <-
     tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
-    tidyr::unnest(seg)
+    tidyr::unnest(seg) %>%
+    dplyr::mutate(seg = as.character(seg))
   scna_metadata <-
     nb_clone_post %>%
     tibble::rownames_to_column("cell") %>%

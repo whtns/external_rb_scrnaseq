@@ -384,7 +384,7 @@ plot_clone_cc_plots <- function(seu_path, large_clone_comparisons = NULL, scna_o
   seu$scna[seu$scna == ""] <- ".diploid"
   seu$scna <- factor(seu$scna)
 
-  if(any(large_clone_comparisons)){
+  if(!is.null(large_clone_comparisons)){
   	clone_comparisons <- names(large_clone_comparisons[[sample_id]])
   	clone_comparison <- clone_comparisons[str_detect(clone_comparisons, scna_of_interest)]
   	retained_clones <- clone_comparison %>%

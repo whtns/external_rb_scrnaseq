@@ -77,16 +77,19 @@ if (is.null(seu_cells) || length(seu_cells) == 0) {
 	stop("No cell IDs found in Seurat metadata rownames.")
 }
 
+# Normalize barcode suffix format: Seurat may use ".1"/".2" while 10X uses "-1"/"-2"
+seu_cells <- sub("\\.(\\d+)$", "-\\1", seu_cells)
+
 # Filter known non-tumor cell types only when requested and available.
 if (subset_bad_cell_types && "type" %in% colnames(myseu@meta.data)) {
 	cell_type <- myseu@meta.data[["type"]]
 	names(cell_type) <- seu_cells
 	keep_cells <- !(cell_type %in% bad_cell_types)
 	keep_cells[is.na(keep_cells)] <- TRUE
-	seu_cells <- names(keep_cells)[keep_cells]
+	seu_cells <- seu_cells[keep_cells]
 	if (length(seu_cells) == 0) {
 		warning("Type-based filtering removed all cells; falling back to all metadata cells.")
-		seu_cells <- rownames(myseu@meta.data)
+		seu_cells <- sub("\\.(\\d+)$", "-\\1", rownames(myseu@meta.data))
 	}
 } else if (!subset_bad_cell_types) {
 	warning("Skipping bad_cell_types filtering because subset_bad_cell_types is FALSE.")

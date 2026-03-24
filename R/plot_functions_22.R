@@ -84,7 +84,8 @@ make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionar
 
   # Compute scna per cell from GT_opt + clone_simplifications (not stored in *_seu.rds)
   rb_scnas_lookup <- tibble::enframe(clone_simplifications[[sample_id]], "scna", "seg") %>%
-    tidyr::unnest(seg)
+    tidyr::unnest(seg) %>%
+    dplyr::mutate(seg = as.character(seg))
 
   scna_per_cell <- seu@meta.data %>%
     tibble::rownames_to_column("cell") %>%
@@ -107,11 +108,15 @@ make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionar
     dplyr::select(cell, clone_opt) %>%
     dplyr::left_join(mynb$joint_post, by = "cell")
 
-  plot_markers(seu, metavar = "seurat_clusters", marker_method = "presto", return_plotly = FALSE, hide_technical = "all", seurat_assay = "gene") +
-    ggplot2::scale_y_discrete(position = "left") +
-    labs(title = sample_id)
+  if (length(levels(seu$seurat_clusters)) > 1 && ncol(seu) > 0) {
+    plot_markers(seu, metavar = "seurat_clusters", marker_method = "presto", return_plotly = FALSE, hide_technical = "all", seurat_assay = "gene") +
+      ggplot2::scale_y_discrete(position = "left") +
+      labs(title = sample_id)
 
-  ggsave(glue("results/{numbat_dir}/{sample_id}/{sample_id}_sample_marker{extension}.pdf"))
+    ggsave(glue("results/{numbat_dir}/{sample_id}/{sample_id}_sample_marker{extension}.pdf"))
+  } else {
+    warning("Skipping marker plot for ", sample_id, ": insufficient clusters or cells")
+  }
 
   # output_plots[["merged_marker"]] + output_plots[["sample_marker"]]
   # ggsave(glue("results/{numbat_dir}/{sample_id}_combined_marker{extension}.pdf"))

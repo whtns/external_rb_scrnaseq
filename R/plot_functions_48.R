@@ -30,6 +30,11 @@ save_cc_space_plot_from_path <- function(seu_path, clone_simplifications, label 
 #' @return ggplot2 plot object
 #' @export
 plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL, sample_id = NULL, ...) {
+  if (!"clone_opt" %in% colnames(seu@meta.data)) {
+    warning("clone_opt not found in Seurat object for ", tumor_id, "; skipping clone tree")
+    return(NULL)
+  }
+
   mynb <- readRDS(nb_path)
 
   mynb$mut_graph <-
