@@ -276,36 +276,6 @@ make_rb_scna_ideograms_old <- function(consensus_file) {
 	return(plot_path)
 }
 
-#' Create a plot visualization
-#'
-#' @param plot_path File path
-#' @param table_path File path
-#' @return ggplot2 plot object
-#' @export
-plot_fig_s06a <- function(plot_path = "results/fig_s06a.pdf", table_path = "results/table_s12.xlsx"){
-	
-	nb_paths <- dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> 
-		sort()
-	
-	ideogram_res <- map(nb_paths, make_rb_scna_ideograms)
-	
-	ideogram_tables <- 
-		ideogram_res |> 
-		map("table")
-	
-	ideogram_tables |> 
-		set_names(str_extract(names(ideogram_tables), "SRR[0-9]*")) |> 
-		writexl::write_xlsx(path = table_path)
-	
-	ideogram_plots <-
-		ideogram_res |>
-		map("plot") |>
-		qpdf::pdf_combine(plot_path)
-	
-	return(list(plot_path, table_path))
-	
-}
-
 make_volcano_plots <- function(myres, mysubtitle, sample_id, color_by_chrom = TRUE, force_genes = c("MYCN")) {
   diffex_comparison <- str_split(unique(myres[["diffex_comparison"]]), "_", simplify = TRUE)
 

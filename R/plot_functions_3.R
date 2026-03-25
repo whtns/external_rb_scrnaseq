@@ -19,7 +19,6 @@
 
 filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv") {
   
-  output_plots <- list()
   sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
   dir_create(glue("results/{numbat_dir}"))
@@ -41,32 +40,32 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
     dplyr::select("cell", "abbreviation") %>%
     tibble::column_to_rownames("cell")
   seu <- AddMetaData(seu, test0)
-  phylo_heatmap_data <- mynb$clone_post %>%
-    dplyr::select(cell, clone_opt) %>%
-    dplyr::left_join(mynb$joint_post, by = "cell")
-  low_numbat_prob_cells <- map(filter_expressions[[sample_id]], pull_cells_matching_expression, phylo_heatmap_data) %>%
-    unlist()
   large_clone_simplifications <-
     tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
     tidyr::unnest(seg) %>%
     dplyr::mutate(seg = as.character(seg))
 
-  scna_metadata <-
-    nb_clone_post %>%
-    tibble::rownames_to_column("cell") %>%
-    dplyr::rowwise() %>%
-    # dplyr::mutate(scna = simplify_gt_col(GT_opt, large_clone_simplifications)) %>%
-    dplyr::mutate(scna = list(simplify_gt_col(GT_opt, large_clone_simplifications))) %>%
-    dplyr::mutate(scna = list(wrap_scna_labels(scna))) %>%
-    tidyr::unnest(scna)  |> 
-    dplyr::distinct(cell, .keep_all = TRUE)  |> 
-    tibble::column_to_rownames("cell") %>%
-    dplyr::mutate(scna = as.character(scna))  |> 
-    identity()
+  scna_labels <- vapply(
+    nb_clone_post$GT_opt,
+    function(gt_opt) {
+      wrapped <- wrap_scna_labels(simplify_gt_col(gt_opt, large_clone_simplifications))
+      if (length(wrapped) == 0) {
+        return(NA_character_)
+      }
+      as.character(wrapped[[1]])
+    },
+    FUN.VALUE = character(1)
+  )
 
-    scna_metadata <- scna_metadata[colnames(seu),]
+  scna_metadata <- data.frame(
+    scna = scna_labels,
+    row.names = rownames(nb_clone_post),
+    stringsAsFactors = FALSE
+  )
 
-    seu <- Seurat::AddMetaData(seu, scna_metadata)
+  scna_metadata <- scna_metadata[colnames(seu), , drop = FALSE]
+
+  seu <- Seurat::AddMetaData(seu, scna_metadata)
 
 
   scna_meta <- seu@meta.data
@@ -78,12 +77,19 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
     cluster_dictionary[[sample_id]] %>%
     dplyr::filter(remove == "1") %>%
     dplyr::pull(`gene_snn_res.0.2`)
-  seu <- seu[, !(seu$gene_snn_res.0.2 %in% clusters_to_remove)]
-  mysample <- sample_id
-  if ("MALAT1" %in% unique(seu$abbreviation)) {
-    seu <- seu[, seu$abbreviation != "MALAT1"]
+  cells_to_drop <- cells_to_remove[[sample_id]][["cell"]]
+  if (is.null(cells_to_drop)) {
+    cells_to_drop <- character(0)
   }
-  seu <- seu[, !colnames(seu) %in% cells_to_remove[[sample_id]][["cell"]]]
+
+  keep_cells <- !(seu$gene_snn_res.0.2 %in% clusters_to_remove)
+  if ("MALAT1" %in% unique(seu$abbreviation)) {
+    keep_cells <- keep_cells & seu$abbreviation != "MALAT1"
+  }
+  if (length(cells_to_drop) > 0) {
+    keep_cells <- keep_cells & !(colnames(seu) %in% cells_to_drop)
+  }
+  seu <- seu[, keep_cells]
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
   seu <- RunPCA(seu, verbose = FALSE)
   seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
@@ -92,7 +98,18 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
     seu = seu, resolution = seq(0.2, 1.0, by = 0.2),
     reduction = "pca"
   )
-  seu <- find_all_markers(seu, seurat_assay = "SCT")
+  seu <- tryCatch(
+    find_all_markers(seu, seurat_assay = "SCT"),
+    error = function(e) {
+      if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+        warning("SCT marker JoinLayers failed for ", sample_id, "; using FindAllMarkers fallback.")
+        seu <- PrepSCTFindMarkers(seu)
+        seu@misc$markers[["clusters"]] <- FindAllMarkers(seu, assay = "SCT", verbose = FALSE)
+        return(seu)
+      }
+      stop(e)
+    }
+  )
   filtered_seu_path <- glue("output/seurat/{sample_id}_filtered_seu2.rds")
   Project(seu) <- sample_id
   add_hash_metadata(seu = seu, filepath = filtered_seu_path)
@@ -114,8 +131,6 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
 #' @export
 prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, extension = "") {
   
-  
-  output_plots <- list()
   sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
   dir_create(glue("results/{numbat_dir}"))
@@ -135,23 +150,32 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
     dplyr::select("cell", "abbreviation") %>%
     tibble::column_to_rownames("cell")
   seu <- AddMetaData(seu, test0)
-  phylo_heatmap_data <- mynb$clone_post %>%
-    dplyr::select(cell, clone_opt) %>%
-    dplyr::left_join(mynb$joint_post, by = "cell")
   large_clone_simplifications <-
     tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
     tidyr::unnest(seg) %>%
     dplyr::mutate(seg = as.character(seg))
-  scna_metadata <-
-    nb_clone_post %>%
-    tibble::rownames_to_column("cell") %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(scna = simplify_gt_col(GT_opt, large_clone_simplifications)) %>%
-    dplyr::mutate(scna = wrap_scna_labels(scna)) %>%
-    tibble::column_to_rownames("cell") %>%
-    identity()
+
+  scna_labels <- vapply(
+    nb_clone_post$GT_opt,
+    function(gt_opt) {
+      wrapped <- wrap_scna_labels(simplify_gt_col(gt_opt, large_clone_simplifications))
+      if (length(wrapped) == 0) {
+        return(NA_character_)
+      }
+      as.character(wrapped[[1]])
+    },
+    FUN.VALUE = character(1)
+  )
+
+  scna_metadata <- data.frame(
+    scna = scna_labels,
+    row.names = rownames(nb_clone_post),
+    stringsAsFactors = FALSE
+  )
+
+  scna_metadata <- scna_metadata[colnames(seu), , drop = FALSE]
   seu <- Seurat::AddMetaData(seu, scna_metadata)
-  mysample <- sample_id
+
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
   seu <- RunPCA(seu, verbose = FALSE)
   seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
@@ -160,7 +184,18 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
     seu = seu, resolution = c(0.2, 0.4, 0.6),
     reduction = "pca"
   )
-  seu <- find_all_markers(seu, seurat_assay = "SCT")
+  seu <- tryCatch(
+    find_all_markers(seu, seurat_assay = "SCT"),
+    error = function(e) {
+      if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+        warning("SCT marker JoinLayers failed for ", sample_id, "; using FindAllMarkers fallback.")
+        seu <- PrepSCTFindMarkers(seu)
+        seu@misc$markers[["clusters"]] <- FindAllMarkers(seu, assay = "SCT", verbose = FALSE)
+        return(seu)
+      }
+      stop(e)
+    }
+  )
   unfiltered_seu_path <- glue("output/seurat/{sample_id}_unfiltered_seu.rds")
 
   add_hash_metadata(seu = seu, filepath = unfiltered_seu_path)
@@ -176,8 +211,7 @@ regress_filtered_seu <- function(filtered_seu_path) {
   
   
   regressed_seu_path <- str_replace(filtered_seu_path, "_filtered", "_regressed")
-  filtered_seu <- readRDS(filtered_seu_path)
-  regressed_seu <- filtered_seu
+  regressed_seu <- readRDS(filtered_seu_path)
   regressed_seu <- PercentageFeatureSet(regressed_seu, pattern = "^MT-", col.name = "percent.mt")
   regressed_seu <- SCTransform(regressed_seu, assay = "gene", vars.to.regress = c("percent.mt", "S.Score", "G2M.Score"), verbose = FALSE)
   regressed_seu <- RunPCA(regressed_seu, verbose = FALSE)
@@ -187,7 +221,19 @@ regress_filtered_seu <- function(filtered_seu_path) {
     seu = regressed_seu, resolution = seq(0.2, 1.0, by = 0.2),
     reduction = "pca"
   )
-  regressed_seu <- find_all_markers(regressed_seu, seurat_assay = "SCT")
+  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
+  regressed_seu <- tryCatch(
+    find_all_markers(regressed_seu, seurat_assay = "SCT"),
+    error = function(e) {
+      if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+        warning("SCT marker JoinLayers failed for ", sample_id, "; using FindAllMarkers fallback.")
+        regressed_seu <- PrepSCTFindMarkers(regressed_seu)
+        regressed_seu@misc$markers[["clusters"]] <- FindAllMarkers(regressed_seu, assay = "SCT", verbose = FALSE)
+        return(regressed_seu)
+      }
+      stop(e)
+    }
+  )
   add_hash_metadata(seu = regressed_seu, filepath = regressed_seu_path)
   return(regressed_seu_path)
 }
@@ -197,9 +243,7 @@ filter_sample_qc <- function(seu, mito_threshold = 5, nCount_threshold = 500, nF
   #
   seu <-
     seu %>%
-    subset(subset = percent.mt < mito_threshold) %>%
-    subset(subset = nFeature_gene > nFeature_threshold) %>%
-    subset(subset = nCount_gene > nCount_threshold) %>%
+    subset(subset = percent.mt < mito_threshold & nFeature_gene > nFeature_threshold & nCount_gene > nCount_threshold) %>%
     identity()
 }
 

@@ -45,6 +45,7 @@ list(
       fig_s20 = fig_s20,    # 2p+ clone diffex within clusters
       fig_s23 = fig_s23,    # 6p+ sample-specific analyses after integration
       fig_s25 = fig_s25,    # subtype markers
+      clone_trees_segments = clone_trees_segments, # clone trees annotated by raw NUMBAT segments (GT_opt)
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
       oncoprint_plots = oncoprint_plots,
@@ -210,6 +211,11 @@ list(
     retrieve_numbat_plot_type(large_numbat_pdfs, "exp_roll_clust.pdf")
   ),
 
+  tar_target(
+      large_numbat_bulk_clones,
+      retrieve_numbat_plot_type(large_numbat_pdfs, "bulk_clones_final.pdf")
+  ),
+
   tar_target(fig_s05,
     qpdf::pdf_combine(large_numbat_expression, "results/numbat_expression.pdf")
   ),
@@ -298,10 +304,25 @@ list(
   ),
 
   tar_target(clone_trees,
-    plot_clone_tree_from_path(seus_interesting, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(seus_interesting),
+    plot_clone_tree_from_path(debranched_seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(debranched_seus),
     iteration = "list"
   ),
+
+  tar_target(filtered_clone_tree_files,
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
+    iteration = "list"
+  ),
+
+  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
+  tar_target(clone_trees_segments,
+    plot_clone_tree_from_path(debranched_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(debranched_seus),
+    iteration = "list"
+  ),
+
+  
 
   tar_target(
     debranched_clone_trees_file,
@@ -397,6 +418,20 @@ list(
 
   tar_target(fig_s20,  # Differential expression between integrated 2p clones within clusters
     plot_fig_s20()
+  ),
+
+  # --- per-sample summary collation ---
+
+  tar_target(sample_summaries,
+    collate_sample_summary(
+      interesting_samples,
+      filtered_clone_tree_files,
+      fig_s03a_plots,
+      large_numbat_expression,
+      large_numbat_bulk_clones
+    ),
+    pattern = map(interesting_samples),
+    iteration = "list"
   ),
 
   # --- pipeline notification ---
