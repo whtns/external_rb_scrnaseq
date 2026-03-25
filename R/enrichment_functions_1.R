@@ -268,8 +268,7 @@ make_dotplot <- function(gse, showCategory = 10) {
 #' @export
 make_cell_cycle_plot <- function(sample_id, myseus) {
   
-  
-  output_plots <- list()
+
   seu <- myseus[[sample_id]]
   DimPlot(seu, group.by = c("Phase")) +
     plot_annotation(title = sample_id)

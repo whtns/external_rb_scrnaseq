@@ -14,7 +14,6 @@
 # - multiple_joins: Combine multiple joins into single join operation where possible
 
 make_filtered_numbat_plots <- function(output_file, sample_id, myseus, mynbs, merged_metadata, myexpressions) {
-  output_plots <- list()
   seu <- readRDS(myseus[[sample_id]])
 
   merged_metadata_transfer <-

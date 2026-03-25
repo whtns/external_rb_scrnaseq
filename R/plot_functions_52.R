@@ -620,3 +620,111 @@ montage_images <- function(plot_files, sample_id, numbat_dir = "numbat_sridhar",
 make_table_s09 <- make_table_s07
 
 make_table_s10 <- make_table_s07
+
+
+#' Collate per-sample summary PDFs from multiple figure targets
+#'
+#' @param sample_id SRR sample identifier
+#' @param clone_tree_files Character vector of debranched clone tree PDF paths
+#' @param fig_s03a_files Character vector of unfiltered numbat heatmap PDF paths
+#' @param numbat_expression_files Character vector of numbat expression PDF paths
+#' @param numbat_bulk_clone_files Character vector of numbat bulk clone PDF paths
+#' @param tile magick montage tile layout (default "4x")
+#' @param density Render density in DPI (default 300)
+#' @return Path to the combined per-sample PDF
+#' @export
+collate_sample_summary <- function(sample_id,
+                                   clone_tree_files,
+                                   fig_s03a_files,
+                                   numbat_expression_files,
+                                   numbat_bulk_clone_files,
+                                   tile = "4x",
+                                   density = 300) {
+
+  clone_tree_files <- unlist(clone_tree_files)
+  fig_s03a_files <- unlist(fig_s03a_files)
+  numbat_expression_files <- unlist(numbat_expression_files)
+  numbat_bulk_clone_files <- unlist(numbat_bulk_clone_files)
+
+  karyogram <- glue("results/{sample_id}_karyogram.pdf")
+  clone_trees <- clone_tree_files[str_detect(clone_tree_files, sample_id)]
+  s03a <- fig_s03a_files[str_detect(fig_s03a_files, sample_id)]
+  expression <- numbat_expression_files[str_detect(numbat_expression_files, sample_id)]
+  bulk_clones <- numbat_bulk_clone_files[str_detect(numbat_bulk_clone_files, sample_id)]
+
+  # Fallback: if no fig_s03a, use unfiltered numbat heatmaps directly from disk
+  if (length(s03a) == 0) {
+    nb_dir <- glue("results/numbat_sridhar/{sample_id}")
+    fallback <- c(
+      glue("{nb_dir}/{sample_id}_unfiltered.pdf"),
+      glue("{nb_dir}/{sample_id}_unfiltered_scna_var.pdf"),
+      glue("{nb_dir}/{sample_id}_filtered.pdf"),
+      glue("{nb_dir}/{sample_id}_filtered_scna_var.pdf")
+    )
+    s03a <- fallback[file.exists(fallback)]
+  }
+
+  # Build named file list for panel labels
+  panel_files <- c()
+  panel_labels <- c()
+
+  if (file.exists(karyogram)) {
+    panel_files <- c(panel_files, karyogram)
+    panel_labels <- c(panel_labels, "Karyogram")
+  }
+  if (length(clone_trees) > 0) {
+    panel_files <- c(panel_files, clone_trees)
+    panel_labels <- c(panel_labels,
+      paste0("Clone tree", if (length(clone_trees) > 1)
+        paste0(" (", seq_along(clone_trees), ")") else ""))
+  }
+  if (length(s03a) > 0) {
+    panel_files <- c(panel_files, s03a)
+    s03a_labels <- basename(s03a) |>
+      str_remove(paste0(sample_id, "_")) |>
+      str_remove("\\.pdf$") |>
+      str_replace_all("_", " ") |>
+      stringr::str_to_title()
+    panel_labels <- c(panel_labels, s03a_labels)
+  }
+  if (length(expression) > 0) {
+    panel_files <- c(panel_files, expression)
+    panel_labels <- c(panel_labels, "Expression")
+  }
+  if (length(bulk_clones) > 0) {
+    panel_files <- c(panel_files, bulk_clones)
+    panel_labels <- c(panel_labels, "Bulk clones")
+  }
+
+  if (length(panel_files) == 0) {
+    warning("No files found for sample ", sample_id)
+    return(NULL)
+  }
+
+  # Read and annotate each panel
+  annotated <- list()
+  for (i in seq_along(panel_files)) {
+    img <- magick::image_read_pdf(panel_files[i], density = density)
+    img <- magick::image_annotate(img, panel_labels[i],
+                                  size = 40, color = "black",
+                                  gravity = "north", weight = 700,
+                                  boxcolor = "white")
+    annotated[[i]] <- img
+  }
+  plot_images <- do.call(c, annotated)
+
+  summary_montage <- magick::image_montage(plot_images, tile = tile,
+                                           geometry = "800x800+10+10",
+                                           shadow = FALSE)
+
+  # Add sample ID as title
+  summary_montage <- magick::image_annotate(summary_montage, sample_id,
+                                            size = 60, color = "black",
+                                            gravity = "north", weight = 700,
+                                            boxcolor = "white")
+
+  out_path <- glue("results/{sample_id}_summary.pdf")
+  magick::image_write(summary_montage, format = "pdf", path = out_path)
+
+  return(out_path)
+}

@@ -54,8 +54,6 @@ table_cluster_markers <- function(seu, assay = "SCT") {
 #' @export
 make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionary, filter_expressions = NULL, clone_simplifications = NULL, extension = "") {
 
-  output_plots <- list()
-
   sample_id <- str_extract(seu_path, "SRR[0-9]*")
 
   tryCatch({
@@ -87,26 +85,31 @@ make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionar
     tidyr::unnest(seg) %>%
     dplyr::mutate(seg = as.character(seg))
 
-  scna_per_cell <- seu@meta.data %>%
-    tibble::rownames_to_column("cell") %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(scna = list(simplify_gt_col(GT_opt, rb_scnas_lookup))) %>%
-    dplyr::mutate(scna = list(wrap_scna_labels(scna))) %>%
-    tidyr::unnest(scna) %>%
-    dplyr::distinct(cell, .keep_all = TRUE) %>%
-    tibble::column_to_rownames("cell") %>%
-    dplyr::mutate(scna = as.character(scna)) %>%
-    dplyr::select(scna)
+  scna_labels <- vapply(
+    seu@meta.data$GT_opt,
+    function(gt_opt) {
+      wrapped <- wrap_scna_labels(simplify_gt_col(gt_opt, rb_scnas_lookup))
+      if (length(wrapped) == 0) {
+        return(NA_character_)
+      }
+      as.character(wrapped[[1]])
+    },
+    FUN.VALUE = character(1)
+  )
+
+  scna_per_cell <- data.frame(
+    scna = scna_labels,
+    row.names = rownames(seu@meta.data),
+    stringsAsFactors = FALSE
+  )
+
+  scna_per_cell <- scna_per_cell[colnames(seu), , drop = FALSE]
 
   seu <- Seurat::AddMetaData(seu, scna_per_cell)
 
   # Drop unused factor levels from seurat_clusters after cell filtering to avoid
   # wilcoxauc dimension mismatch ("number of columns of X does not match length of y")
   seu$seurat_clusters <- droplevels(seu$seurat_clusters)
-
-  phylo_heatmap_data <- mynb$clone_post %>%
-    dplyr::select(cell, clone_opt) %>%
-    dplyr::left_join(mynb$joint_post, by = "cell")
 
   if (length(levels(seu$seurat_clusters)) > 1 && ncol(seu) > 0) {
     plot_markers(seu, metavar = "seurat_clusters", marker_method = "presto", return_plotly = FALSE, hide_technical = "all", seurat_assay = "gene") +
