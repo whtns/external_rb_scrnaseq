@@ -115,7 +115,7 @@ plot_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications,
 #' @param clone_simplifications Parameter for clone simplifications
 #' @param label Character string (default: "_clone_tree")
 #' @param ... Additional arguments passed to other functions
-#' @return ggplot2 plot object
+#' @return path to a ggplot pdf file
 #' @export
 save_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications, label = "_clone_tree", ...) {
 

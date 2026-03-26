@@ -7,13 +7,14 @@
 #' @param myannot Parameter for myannot
 #' @param mytitle Plot title
 #' @param sort_by Character string (default: "scna")
+#' @param show_segment_names_on_x Logical; if TRUE, keep x-axis labels visible on the numbat heatmap panel.
 #' @param ... Additional arguments passed to other functions
 #' @return ggplot2 plot object
 #' @export
 # Performance optimizations applied:
 # - repeated_file_reads: Cache file reads to avoid redundant I/O
 
-plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", ...) {
+plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", show_segment_names_on_x = FALSE, ...) {
   
   clone_levels <- sort(unique(nb$clone_post$clone_opt))
   clone_pal <- setNames(scales::hue_pal()(length(clone_levels)), clone_levels)
@@ -31,7 +32,57 @@ plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", ...) {
   ) +
     labs(title = mytitle) +
     theme(legend.position = "none")
-  myheatmap[[2]] <- myheatmap[[2]] + theme(legend.position = "none", axis.text.x = element_blank())
+
+  .add_segment_labels_to_heatmap <- function(heatmap_obj, show_labels) {
+    if (!isTRUE(show_labels)) {
+      if (length(heatmap_obj) >= 2) {
+        heatmap_obj[[2]] <- heatmap_obj[[2]] + theme(legend.position = "none", axis.text.x = element_blank())
+      }
+      return(heatmap_obj)
+    }
+
+    heatmap_obj <- heatmap_obj &
+      theme(
+        legend.position = "none",
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()
+      )
+
+    if (length(heatmap_obj) >= 3 && !is.null(heatmap_obj[[3]]$data) && all(c("seg", "seg_start", "seg_end") %in% colnames(heatmap_obj[[3]]$data))) {
+      seg_labels <- heatmap_obj[[3]]$data %>%
+        dplyr::distinct(CHROM, seg, seg_start, seg_end) %>%
+        dplyr::mutate(x = (seg_start + seg_end) / 2) %>%
+        dplyr::arrange(x)
+
+      heatmap_obj[[3]] <- heatmap_obj[[3]] +
+        theme(
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.x = element_blank()
+        ) +
+        geom_text(
+          data = seg_labels,
+          aes(x = x, y = -0.03, label = seg),
+          inherit.aes = FALSE,
+          size = 2.8,
+          angle = 90,
+          vjust = 0.5,
+          hjust = 1,
+          check_overlap = TRUE
+        ) +
+        theme(
+          strip.text = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.x = element_blank(),
+          plot.margin = margin(5.5, 5.5, 24, 5.5)
+        ) +
+        coord_cartesian(clip = "off")
+    }
+
+    heatmap_obj
+  }
+  myheatmap <- .add_segment_labels_to_heatmap(myheatmap, show_segment_names_on_x)
   return(myheatmap)
 }
 
@@ -41,21 +92,59 @@ plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", ...) {
 #' @param myseu Seurat object
 #' @param myannot Parameter for myannot
 #' @param mytitle Plot title
+#' @param show_segment_names_on_x Logical; if TRUE, keep segment labels on applicable genomic regions.
 #' @param ... Additional arguments passed to other functions
 #' @return ggplot2 plot object
 #' @export
-plot_numbat_w_phylo <- function(nb, myseu, myannot, mytitle, ...) {
+plot_numbat_w_phylo <- function(nb, myseu, myannot, mytitle, show_segment_names_on_x = FALSE, ...) {
   
   celltypes <- tibble::tibble(cell = gsub("\\.", "-", rownames(myseu@meta.data)), type = myseu@meta.data$type)
   myannot <- dplyr::left_join(myannot, celltypes, by = "cell")
   mypal <- c("1" = "gray", "2" = "#377EB8", "3" = "#4DAF4A", "4" = "#984EA3")
-  nb$plot_phylo_heatmap(
+  myheatmap <- nb$plot_phylo_heatmap(
     pal_clone = mypal,
     annot = myannot,
     show_phylo = TRUE,
     annot_bar_width = 1,
     ...
   ) + labs(title = mytitle)
+
+  if (isTRUE(show_segment_names_on_x)) {
+    myheatmap <- myheatmap &
+      theme(
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()
+      )
+
+    if (length(myheatmap) >= 3 && !is.null(myheatmap[[3]]$data) && all(c("seg", "seg_start", "seg_end") %in% colnames(myheatmap[[3]]$data))) {
+      seg_labels <- myheatmap[[3]]$data %>%
+        dplyr::distinct(CHROM, seg, seg_start, seg_end) %>%
+        dplyr::mutate(x = (seg_start + seg_end) / 2) %>%
+        dplyr::arrange(x)
+
+      myheatmap[[3]] <- myheatmap[[3]] +
+        geom_text(
+          data = seg_labels,
+          aes(x = x, y = -0.03, label = seg),
+          inherit.aes = FALSE,
+          size = 2.8,
+          angle = 90,
+          vjust = 0.5,
+          hjust = 1,
+          check_overlap = TRUE
+        ) +
+        theme(
+          strip.text = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.x = element_blank(),
+          plot.margin = margin(5.5, 5.5, 24, 5.5)
+        ) +
+        coord_cartesian(clip = "off")
+    }
+  }
+
+  return(myheatmap)
 }
 
 safe_plot_numbat <- safely(plot_numbat, otherwise = NA_real_)
@@ -102,6 +191,7 @@ plot_variability_at_SCNA <- function(phylo_plot_output, chrom = "1", p_min = 0.9
       axis.text.x = element_blank()
     ) +
     guides(color = guide_legend(override.aes = list(size = 5, alpha = 1)))
+
   return(p_cnv_plot)
 }
 
