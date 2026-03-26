@@ -30,6 +30,7 @@ runner <- callr::r_bg(
   func = function(target_names, store_path) {
     suppressPackageStartupMessages(library(targets))
     tar_config_set(store = store_path)
+    options(targets.ask = FALSE)
     tar_make(names = all_of(target_names), reporter = "timestamp")
   },
   args = list(target_names, store_path),

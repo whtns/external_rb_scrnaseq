@@ -12,7 +12,8 @@
 # - multiple_joins: Combine multiple joins into single join operation where possible
 
 append_clone_nums <- function(diffex, clone_comparison, seu) {
-  
+  if (nrow(diffex) == 0) return(diffex)
+
   idents <-
     clone_comparison %>%
     str_extract("[0-9]_v_[0-9]") %>%

@@ -29,7 +29,7 @@ save_cc_space_plot_from_path <- function(seu_path, clone_simplifications, label 
 #' @param ... Additional arguments passed to other functions
 #' @return ggplot2 plot object
 #' @export
-plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL, sample_id = NULL, ...) {
+plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL, sample_id = NULL, show_distance = FALSE, ...) {
   if (!"clone_opt" %in% colnames(seu@meta.data)) {
     warning("clone_opt not found in Seurat object for ", tumor_id, "; skipping clone tree")
     return(NULL)
@@ -55,20 +55,28 @@ plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL
 
   mypal <- scales::hue_pal()(nclones) %>%
     set_names(1:nclones)
-  
+
   if(!is.null(clone_simplifications)){
   	rb_scnas <- clone_simplifications[[tumor_id]]
   	mynb <- simplify_gt(mynb, rb_scnas)
-  	
+
   }
 
   plot_title <- ifelse(is.null(sample_id), tumor_id, sample_id)
 
-  clone_plot <- mynb$plot_mut_history(pal = mypal, ...) +
+  clone_plot <- mynb$plot_mut_history(pal = mypal, show_distance = show_distance, ...) +
     labs(title = plot_title) +
     theme(plot.title = element_text(hjust = 0.5))
 
   clone_plot$data$clone <- clone_plot$data$id
+
+  # Center edge labels on the edge rather than above-right of it
+  for (i in seq_along(clone_plot$layers)) {
+    if ("vjust" %in% names(clone_plot$layers[[i]]$aes_params)) {
+      clone_plot$layers[[i]]$aes_params$vjust <- 0.5
+      clone_plot$layers[[i]]$aes_params$hjust <- 0.5
+    }
+  }
 
   return(clone_plot)
 }
