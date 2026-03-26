@@ -431,18 +431,20 @@ make_numbat_heatmaps_old <- function(numbat_rds_file, filter_expressions = NULL,
 
     excluded_cells <- map(filter_expressions[[sample_id]], pull_cells_matching_expression, phylo_heatmap_data) %>%
       unlist()
-
-    seu <- seu[, !colnames(seu) %in% excluded_cells]
   }
 
-  seu <- seu[, colnames(seu) %in% myannot$cell]
+	keep_cells <- colnames(seu) %in% myannot$cell
+	if (exists("excluded_cells")) {
+		keep_cells <- keep_cells & !(colnames(seu) %in% excluded_cells)
+	}
 
   clusters_to_remove <-
     cluster_dictionary[[sample_id]] %>%
     dplyr::filter(remove == "1") %>%
     dplyr::pull(`gene_snn_res.0.2`)
 
-  seu <- seu[, !seu$gene_snn_res.0.2 %in% clusters_to_remove]
+	keep_cells <- keep_cells & !(seu$gene_snn_res.0.2 %in% clusters_to_remove)
+	seu <- seu[, keep_cells]
 
   myannot <-
     seu@meta.data %>%

@@ -130,8 +130,7 @@ plot_enrichment_recurrence <- function(enrichment_tables, num_recur = 2, mytitle
     dplyr::select(Description, symbol) %>%
     dplyr::group_by(Description) %>%
     dplyr::summarize(genes = list(symbol), set_size = n_distinct(symbol)) %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(genes = paste(unique(genes), collapse = ",")) %>%
+    dplyr::mutate(genes = purrr::map_chr(genes, ~ paste(unique(.x), collapse = ","))) %>%
     dplyr::left_join(test0, by = "Description") %>%
     dplyr::select(-c("set_size", "setSize")) %>%
     identity()
@@ -238,8 +237,7 @@ plot_enrichment_recurrence_by_cluster <- function(enrichment_tables, num_recur =
     dplyr::select(Description, symbol) %>%
     dplyr::group_by(Description) %>%
     dplyr::summarize(genes = list(symbol), set_size = n_distinct(symbol)) %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(genes = paste(unique(genes), collapse = ",")) %>%
+    dplyr::mutate(genes = purrr::map_chr(genes, ~ paste(unique(.x), collapse = ","))) %>%
     dplyr::left_join(test0, by = "Description") %>%
     dplyr::select(-c("set_size", "setSize")) %>%
     identity()
