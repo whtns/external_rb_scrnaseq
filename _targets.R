@@ -9,8 +9,8 @@ tar_option_set(
   memory = "transient",
   garbage_collection = TRUE,
   error = "continue",
-  workspace_on_error = TRUE
-  # controller = crew_controller_local(workers = 4)  # temporarily disabled to debug
+  workspace_on_error = TRUE,
+  controller = crew_controller_local(workers = 4)
 )
 
 ## _targets.R must return a list of tar_target objects.

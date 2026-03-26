@@ -265,10 +265,18 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
 
     seu@meta.data <- seu_meta[rownames(seu@meta.data), ]
 
-    seu <-
-      seu[, seu$phase_level %in% kept_phases] %>%
-      find_all_markers(metavar = "clusters", seurat_assay = "SCT") %>%
-      identity()
+    seu <- seu[, seu$phase_level %in% kept_phases]
+    seu <- tryCatch(
+      find_all_markers(seu, metavar = "clusters", seurat_assay = "SCT"),
+      error = function(e) {
+        if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+          warning("SCT marker JoinLayers failed; using stash_marker_features fallback.")
+          seu@misc$markers[["clusters"]] <- seuratTools:::stash_marker_features("clusters", seu, seurat_assay = "SCT")
+          return(seu)
+        }
+        stop(e)
+      }
+    )
 
     seu@meta.data$clusters <- forcats::fct_drop(seu@meta.data$clusters)
 

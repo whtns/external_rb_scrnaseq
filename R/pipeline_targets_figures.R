@@ -220,7 +220,30 @@ list(
     qpdf::pdf_combine(large_numbat_expression, "results/numbat_expression.pdf")
   ),
 
-  tar_target(fig_s06a, plot_fig_s06a()),
+  tar_target(
+    nb_paths_s06a,
+    dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
+  ),
+
+  tar_target(
+    ideogram_res_s06a,
+    make_rb_scna_ideograms(nb_paths_s06a),
+    pattern = map(nb_paths_s06a)
+  ),
+
+  tar_target(
+    fig_s06a,
+    {
+      # targets flattens named list branch results: odd = plot paths, even = tables
+      odd_idx <- seq(1, length(ideogram_res_s06a), by = 2)
+      plot_paths <- as.character(ideogram_res_s06a[odd_idx])
+      tables <- ideogram_res_s06a[odd_idx + 1] |>
+        set_names(str_extract(plot_paths, "SRR[0-9]*"))
+      writexl::write_xlsx(tables, "results/table_s12.xlsx")
+      qpdf::pdf_combine(plot_paths, "results/fig_s06a.pdf")
+      list("results/fig_s06a.pdf", "results/table_s12.xlsx")
+    }
+  ),
 
   tar_target(clone_trees_old,
     retrieve_numbat_plot_type(filtered_large_plot_files, "tree_filtered.pdf")
@@ -317,8 +340,14 @@ list(
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
   tar_target(clone_trees_segments,
-    plot_clone_tree_from_path(debranched_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(debranched_seus),
+    plot_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
+    iteration = "list"
+  ),
+
+  tar_target(clone_trees_segments_files,
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
     iteration = "list"
   ),
 
@@ -344,11 +373,11 @@ list(
 
   # integrated 1q fig for all 1q+ samples (thesis fig 4.3)
   tar_target(fig_04,
-    plot_integrated_1q_fig(cluster_orders)
+    { force(cluster_orders_sqlite); plot_integrated_1q_fig(cluster_orders) }
   ),
 
   tar_target(fig_04_v2,
-    plot_fig_04_afterall(cluster_orders)
+    { force(cluster_orders_sqlite); plot_fig_04_afterall(cluster_orders) }
   ),
 
   # Sample-specific analyses of tumors with 1q+ subclones after integration.
@@ -412,6 +441,10 @@ list(
     plot_fig_s08()
   ),
 
+  tar_target(fig_s09,  # 1q+ cluster diffex of interest
+    plot_fig_s09()
+  ),
+
   tar_target(fig_s10,  # Differential expression between integrated 16q clones within clusters
     plot_fig_s10()
   ),
@@ -426,6 +459,7 @@ list(
     collate_sample_summary(
       interesting_samples,
       filtered_clone_tree_files,
+      clone_trees_segments_files,
       fig_s03a_plots,
       large_numbat_expression,
       large_numbat_bulk_clones

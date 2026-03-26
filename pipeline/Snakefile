@@ -228,8 +228,10 @@ def numbat_done_output(wildcards):
 
 def numbat_rds_output(wildcards):
   input = []
-  input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
-#   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
+#   input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  filtered_samples = [s for s in samples.name[samples.type == 'PE'].values.tolist()
+                      if os.path.exists(outputdir + f"seurat/{s}_filtered_seu2.rds")]
+  input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = filtered_samples))
   return input
   
 def seurat_output(wildcards):
@@ -261,7 +263,7 @@ rule all:
 		# cellranger_output,
 		# numbat_allele_counts_output,
 		# numbat_done_output,
-		# numbat_rds_output,
+		numbat_rds_output,
 		# velocyto_output,
 		# velocyto_output,
 		# infercnv_output,

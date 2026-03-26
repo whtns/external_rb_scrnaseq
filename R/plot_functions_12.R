@@ -142,7 +142,7 @@ plot_integrated_1q_fig <- function(cluster_orders, plot_path = "results/fig_02.p
 																						 height = 12, width = 20, plot_path = "results/fig_2a_c_trio.pdf", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch"))
 	
 	fig_2a_c <- make_clone_distribution_figure(batch_corrected_seu, cluster_orders,
-																						 height = 12, width = 20, plot_path = "results/fig_2a_c.pdf", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch"))
+																						 height = 12, width = 20, plot_path = "results/fig_2a_c_fig04.pdf", heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters", "batch"), heatmap_arrangement = c("clusters", "scna", "batch"))
 	
 	possibly_plot_clone_cc_plots <- possibly(plot_clone_cc_plots)
 	fig_2d_cc <- map(c(batch_corrected_seu, integrated_1q_seus), plot_clone_cc_plots, var_y = "clusters", scna_of_interest = "1q", labeled_values = c("g2_m"))

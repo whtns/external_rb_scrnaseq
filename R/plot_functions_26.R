@@ -208,7 +208,8 @@ make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL
 	plot_path <- ifelse(is.null(plot_path), glue("results/{file_slug}_{str_extract(scna_of_interest, '[0-9][a-z]')}_heatmap_phase_scatter_patchwork.pdf"), plot_path)
 	
 	pdf(plot_path, height = height, width = width)
-	
+	on.exit(dev.off(), add = TRUE)
+
 	if(!is.null(cluster_order) & length(cluster_order) > 0){
 		iterative <- names(cluster_order)
 		} else {
@@ -558,8 +559,6 @@ make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL
 		print(plot_collage)
 		# end loop------------------------------
 		}
-	
-	dev.off()
 	
 	return(plot_path)
 }

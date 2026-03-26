@@ -35,6 +35,7 @@ doc/paper.md
 doc/targets_rulegraph_files/
 doc/targets_rulegraph_hierarchical_ud_files/
 doc/targets_rulegraph_compact_files/
+.R_libs:/
 .R_libs/
 tmp/
 Rb_object

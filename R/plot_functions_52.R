@@ -635,6 +635,7 @@ make_table_s10 <- make_table_s07
 #' @export
 collate_sample_summary <- function(sample_id,
                                    clone_tree_files,
+                                   segment_tree_files,
                                    fig_s03a_files,
                                    numbat_expression_files,
                                    numbat_bulk_clone_files,
@@ -642,12 +643,14 @@ collate_sample_summary <- function(sample_id,
                                    density = 300) {
 
   clone_tree_files <- unlist(clone_tree_files)
+  segment_tree_files <- unlist(segment_tree_files)
   fig_s03a_files <- unlist(fig_s03a_files)
   numbat_expression_files <- unlist(numbat_expression_files)
   numbat_bulk_clone_files <- unlist(numbat_bulk_clone_files)
 
   karyogram <- glue("results/{sample_id}_karyogram.pdf")
   clone_trees <- clone_tree_files[str_detect(clone_tree_files, sample_id)]
+  segment_trees <- segment_tree_files[str_detect(segment_tree_files, sample_id)]
   s03a <- fig_s03a_files[str_detect(fig_s03a_files, sample_id)]
   expression <- numbat_expression_files[str_detect(numbat_expression_files, sample_id)]
   bulk_clones <- numbat_bulk_clone_files[str_detect(numbat_bulk_clone_files, sample_id)]
@@ -677,6 +680,12 @@ collate_sample_summary <- function(sample_id,
     panel_labels <- c(panel_labels,
       paste0("Clone tree", if (length(clone_trees) > 1)
         paste0(" (", seq_along(clone_trees), ")") else ""))
+  }
+  if (length(segment_trees) > 0) {
+    panel_files <- c(panel_files, segment_trees)
+    panel_labels <- c(panel_labels,
+      paste0("Segment tree", if (length(segment_trees) > 1)
+        paste0(" (", seq_along(segment_trees), ")") else ""))
   }
   if (length(s03a) > 0) {
     panel_files <- c(panel_files, s03a)

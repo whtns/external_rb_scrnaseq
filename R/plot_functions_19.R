@@ -309,10 +309,18 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
 
       seu@meta.data <- seu_meta[rownames(seu@meta.data), ]
 
-      seu <-
-        seu[, seu$phase_level %in% kept_phases] %>%
-        find_all_markers(metavar = "clusters", seurat_assay = "SCT") %>%
-        identity()
+      seu <- seu[, seu$phase_level %in% kept_phases]
+      seu <- tryCatch(
+        find_all_markers(seu, metavar = "clusters", seurat_assay = "SCT"),
+        error = function(e) {
+          if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+            warning("SCT marker JoinLayers failed; using stash_marker_features fallback.")
+            seu@misc$markers[["clusters"]] <- seuratTools:::stash_marker_features("clusters", seu, seurat_assay = "SCT")
+            return(seu)
+          }
+          stop(e)
+        }
+      )
 
       seu@meta.data$clusters <- forcats::fct_drop(seu@meta.data$clusters)
 
@@ -680,10 +688,18 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
 
     seu@meta.data <- seu_meta[rownames(seu@meta.data), ]
 
-    seu <-
-      seu[, seu$phase_level %in% kept_phases] %>%
-      find_all_markers(metavar = "clusters", seurat_assay = "SCT") %>%
-      identity()
+    seu <- seu[, seu$phase_level %in% kept_phases]
+    seu <- tryCatch(
+      find_all_markers(seu, metavar = "clusters", seurat_assay = "SCT"),
+      error = function(e) {
+        if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+          warning("SCT marker JoinLayers failed; using stash_marker_features fallback.")
+          seu@misc$markers[["clusters"]] <- seuratTools:::stash_marker_features("clusters", seu, seurat_assay = "SCT")
+          return(seu)
+        }
+        stop(e)
+      }
+    )
 
     seu@meta.data$clusters <- forcats::fct_drop(seu@meta.data$clusters)
 

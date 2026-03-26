@@ -301,12 +301,12 @@ pipeline_targets_seurat <- c(
     # --- QC / numbat heatmaps ---
 
     tar_target(fig_s03a_plots,
-      make_numbat_heatmaps(original_seus, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "_unfiltered"),
-      pattern = map(original_seus),
+      make_numbat_heatmaps(filtered_seus, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "_filtered"),
+      pattern = map(filtered_seus),
       iteration = "list"
     ),
 
-    tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_plots), "results/unfiltered_heatmaps.pdf")),
+    tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_plots), "results/filtered_heatmaps.pdf")),
 
     tar_target(fig_s13,
       # Always re-render: output layout can depend on graphics device/session state.
