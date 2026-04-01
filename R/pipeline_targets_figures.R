@@ -45,7 +45,7 @@ list(
       fig_s20 = fig_s20,    # 2p+ clone diffex within clusters
       fig_s23 = fig_s23,    # 6p+ sample-specific analyses after integration
       fig_s25 = fig_s25,    # subtype markers
-      clone_trees_segments = clone_trees_segments, # clone trees annotated by raw NUMBAT segments (GT_opt)
+      clone_trees_segments = clone_trees_segments_files, # clone trees annotated by raw NUMBAT segments (GT_opt)
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
       oncoprint_plots = oncoprint_plots,
@@ -220,6 +220,24 @@ list(
     qpdf::pdf_combine(large_numbat_expression, "results/numbat_expression.pdf")
   ),
 
+  # --- filtered numbat plots ---
+
+  tar_target(filtered_numbat_pdfs,
+    convert_numbat_pngs(numbat_rds_filtered_files),
+    pattern = map(numbat_rds_filtered_files),
+    iteration = "list"
+  ),
+
+  tar_target(
+    filtered_numbat_expression,
+    retrieve_numbat_plot_type(filtered_numbat_pdfs, "exp_roll_clust.pdf")
+  ),
+
+  tar_target(
+    filtered_numbat_bulk_clones,
+    retrieve_numbat_plot_type(filtered_numbat_pdfs, "bulk_clones_final.pdf")
+  ),
+
   tar_target(
     nb_paths_s06a,
     dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
@@ -303,7 +321,7 @@ list(
 
   tar_target(
     cluster_scorecard,
-    score_clusters_up_down(paired_clone_distribution_plots, interesting_samples)
+    score_clusters_up_down(paired_clone_distribution_plots)
   ),
 
   tar_target(clusters_and_markers,
@@ -339,12 +357,6 @@ list(
   ),
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
-  tar_target(clone_trees_segments,
-    plot_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus),
-    iteration = "list"
-  ),
-
   tar_target(clone_trees_segments_files,
     save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(filtered_seus),
@@ -457,14 +469,16 @@ list(
 
   tar_target(sample_summaries,
     collate_sample_summary(
-      interesting_samples,
       filtered_clone_tree_files,
       clone_trees_segments_files,
       fig_s03a_plots,
+      fig_s03a_unfiltered_plots,
       large_numbat_expression,
-      large_numbat_bulk_clones
+      large_numbat_bulk_clones,
+      filtered_numbat_expression,
+      filtered_numbat_bulk_clones
     ),
-    pattern = map(interesting_samples),
+    pattern = map(filtered_clone_tree_files),
     iteration = "list"
   ),
 

@@ -9,6 +9,10 @@ if(!exists("expression_only")){
   expression_only <- FALSE
 }
 
+if(!exists("max_nni")){
+  max_nni <- 100
+}
+
 # Rprof(rprof_out)
 
 print(paste0("num_clones: ", init_k))
@@ -110,6 +114,7 @@ out = numbat::run_numbat(
 	out_dir = out_dir,
 	tau = as.numeric(tau),
 	skip_nj = TRUE,
+	max_nni = as.integer(max_nni),
 	# expression_only = expression_only
 	)
 

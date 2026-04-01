@@ -633,107 +633,204 @@ make_table_s10 <- make_table_s07
 #' @param density Render density in DPI (default 300)
 #' @return Path to the combined per-sample PDF
 #' @export
-collate_sample_summary <- function(sample_id,
-                                   clone_tree_files,
+collate_sample_summary <- function(clone_tree_file,
                                    segment_tree_files,
                                    fig_s03a_files,
+                                   fig_s03a_unfiltered_files,
                                    numbat_expression_files,
                                    numbat_bulk_clone_files,
-                                   tile = "4x",
+                                   filtered_numbat_expression_files,
+                                   filtered_numbat_bulk_clone_files,
                                    density = 300) {
 
-  clone_tree_files <- unlist(clone_tree_files)
-  segment_tree_files <- unlist(segment_tree_files)
-  fig_s03a_files <- unlist(fig_s03a_files)
-  numbat_expression_files <- unlist(numbat_expression_files)
-  numbat_bulk_clone_files <- unlist(numbat_bulk_clone_files)
+  sample_id <- str_extract(unlist(clone_tree_file)[1], "SRR[0-9]*")
+
+  clone_trees   <- unlist(clone_tree_file)
+  segment_trees <- unlist(segment_tree_files)
+  segment_trees <- segment_trees[str_detect(segment_trees, sample_id)]
+
+  # keep filtered/unfiltered separate for parallel layout
+  s03a_filt   <- unlist(fig_s03a_files)
+  s03a_filt   <- s03a_filt[str_detect(s03a_filt, sample_id)]
+  s03a_unfilt <- unlist(fig_s03a_unfiltered_files)
+  s03a_unfilt <- s03a_unfilt[str_detect(s03a_unfilt, sample_id)]
+
+  expr_unfilt <- unlist(numbat_expression_files)
+  expr_unfilt <- expr_unfilt[str_detect(expr_unfilt, sample_id)]
+  expr_filt   <- unlist(filtered_numbat_expression_files)
+  expr_filt   <- expr_filt[str_detect(expr_filt, sample_id)]
+
+  bulk_unfilt <- unlist(numbat_bulk_clone_files)
+  bulk_unfilt <- bulk_unfilt[str_detect(bulk_unfilt, sample_id)]
+  bulk_filt   <- unlist(filtered_numbat_bulk_clone_files)
+  bulk_filt   <- bulk_filt[str_detect(bulk_filt, sample_id)]
 
   karyogram <- glue("results/{sample_id}_karyogram.pdf")
-  clone_trees <- clone_tree_files[str_detect(clone_tree_files, sample_id)]
-  segment_trees <- segment_tree_files[str_detect(segment_tree_files, sample_id)]
-  s03a <- fig_s03a_files[str_detect(fig_s03a_files, sample_id)]
-  expression <- numbat_expression_files[str_detect(numbat_expression_files, sample_id)]
-  bulk_clones <- numbat_bulk_clone_files[str_detect(numbat_bulk_clone_files, sample_id)]
 
-  # Fallback: if no fig_s03a, use unfiltered numbat heatmaps directly from disk
-  if (length(s03a) == 0) {
+  # Fallback: if no fig_s03a, use numbat heatmaps directly from disk
+  if (length(s03a_filt) == 0 && length(s03a_unfilt) == 0) {
     nb_dir <- glue("results/numbat_sridhar/{sample_id}")
-    fallback <- c(
+    cands_unfilt <- c(
       glue("{nb_dir}/{sample_id}_unfiltered.pdf"),
-      glue("{nb_dir}/{sample_id}_unfiltered_scna_var.pdf"),
+      glue("{nb_dir}/{sample_id}_unfiltered_scna_var.pdf")
+    )
+    cands_filt <- c(
       glue("{nb_dir}/{sample_id}_filtered.pdf"),
       glue("{nb_dir}/{sample_id}_filtered_scna_var.pdf")
     )
-    s03a <- fallback[file.exists(fallback)]
+    s03a_unfilt <- cands_unfilt[file.exists(cands_unfilt)]
+    s03a_filt   <- cands_filt[file.exists(cands_filt)]
   }
 
-  # Build named file list for panel labels
-  panel_files <- c()
-  panel_labels <- c()
-
-  if (file.exists(karyogram)) {
-    panel_files <- c(panel_files, karyogram)
-    panel_labels <- c(panel_labels, "Karyogram")
-  }
-  if (length(clone_trees) > 0) {
-    panel_files <- c(panel_files, clone_trees)
-    panel_labels <- c(panel_labels,
-      paste0("Clone tree", if (length(clone_trees) > 1)
-        paste0(" (", seq_along(clone_trees), ")") else ""))
-  }
-  if (length(segment_trees) > 0) {
-    panel_files <- c(panel_files, segment_trees)
-    panel_labels <- c(panel_labels,
-      paste0("Segment tree", if (length(segment_trees) > 1)
-        paste0(" (", seq_along(segment_trees), ")") else ""))
-  }
-  if (length(s03a) > 0) {
-    panel_files <- c(panel_files, s03a)
-    s03a_labels <- basename(s03a) |>
-      str_remove(paste0(sample_id, "_")) |>
-      str_remove("\\.pdf$") |>
-      str_replace_all("_", " ") |>
-      stringr::str_to_title()
-    panel_labels <- c(panel_labels, s03a_labels)
-  }
-  if (length(expression) > 0) {
-    panel_files <- c(panel_files, expression)
-    panel_labels <- c(panel_labels, "Expression")
-  }
-  if (length(bulk_clones) > 0) {
-    panel_files <- c(panel_files, bulk_clones)
-    panel_labels <- c(panel_labels, "Bulk clones")
+  # Read a PDF and attach a compact label strip above it
+  annotate_panel <- function(path, label) {
+    img <- magick::image_read_pdf(path, density = density)[1]
+    img_info <- magick::image_info(img)[1, ]
+    label_strip_height <- max(50L, as.integer(round(img_info$height * 0.05)))
+    label_strip <- magick::image_blank(img_info$width, label_strip_height, color = "white")
+    label_strip <- magick::image_annotate(label_strip, label,
+                                          size = 36, color = "black",
+                                          gravity = "center", weight = 700)
+    magick::image_append(c(label_strip, img), stack = TRUE)
   }
 
-  if (length(panel_files) == 0) {
+  # Scale a list of annotated images to a common height, then place side by side
+  make_row <- function(imgs, target_height) {
+    scaled <- lapply(imgs, function(img)
+      magick::image_scale(img, paste0("x", target_height)))
+    do.call(c, scaled) |> magick::image_append(stack = FALSE)
+  }
+
+  # Build an unfiltered | filtered parallel row
+  make_parallel_row <- function(unfilt_paths, filt_paths,
+                                unfilt_label, filt_label,
+                                target_height = 700L) {
+    imgs <- c(
+      lapply(unfilt_paths, annotate_panel, label = unfilt_label),
+      lapply(filt_paths,   annotate_panel, label = filt_label)
+    )
+    if (length(imgs) == 0) return(NULL)
+    make_row(imgs, target_height)
+  }
+
+  rows <- list()
+
+  # helper: stack annotated images vertically into a column, padding widths to match
+  make_col <- function(img_list) {
+    w <- max(vapply(img_list, function(img) magick::image_info(img)$width[1L], integer(1L)))
+    padded <- lapply(img_list, function(img) {
+      info <- magick::image_info(img)[1L, ]
+      if (info$width < w)
+        magick::image_extent(img, glue("{w}x{info$height}"), gravity = "West", color = "white")
+      else img
+    })
+    do.call(c, padded) |> magick::image_append(stack = TRUE)
+  }
+
+  # helper: pad two columns to the same height then place side by side
+  side_by_side <- function(left, right) {
+    lh <- magick::image_info(left)$height[1L]
+    rh <- magick::image_info(right)$height[1L]
+    max_h <- max(lh, rh)
+    if (lh < max_h)
+      left  <- magick::image_extent(left,  glue("{magick::image_info(left)$width[1L]}x{max_h}"),  gravity = "North", color = "white")
+    if (rh < max_h)
+      right <- magick::image_extent(right, glue("{magick::image_info(right)$width[1L]}x{max_h}"), gravity = "North", color = "white")
+    magick::image_append(c(left, right), stack = FALSE)
+  }
+
+  has_unfilt_hm <- length(s03a_unfilt) > 0
+  has_filt_hm   <- length(s03a_filt) > 0
+  has_karyo     <- file.exists(karyogram)
+
+  # --- Row 1: clone trees + segment trees (left) | karyogram (right) ---
+  tree_imgs <- list()
+  for (i in seq_along(clone_trees)) {
+    lbl <- if (length(clone_trees) > 1) paste0("Clone tree (", i, ")") else "Clone tree"
+    tree_imgs <- c(tree_imgs, list(annotate_panel(clone_trees[i], lbl)))
+  }
+  for (i in seq_along(segment_trees)) {
+    lbl <- if (length(segment_trees) > 1) paste0("Segment tree (", i, ")") else "Segment tree"
+    tree_imgs <- c(tree_imgs, list(annotate_panel(segment_trees[i], lbl)))
+  }
+  if (length(tree_imgs) > 0 || has_karyo) {
+    trees_row <- if (length(tree_imgs) > 0) make_row(tree_imgs, target_height = 650L) else NULL
+    if (has_karyo) {
+      karyo_img <- annotate_panel(karyogram, "Karyogram") |>
+        magick::image_rotate(90) |>
+        magick::image_scale("x650")
+      trees_row <- if (!is.null(trees_row)) magick::image_append(c(trees_row, karyo_img), stack = FALSE) else karyo_img
+    }
+    rows[[length(rows) + 1L]] <- trees_row
+  }
+
+  # --- Rows 2+: unfiltered column (left) | filtered column (right) ---
+  # Build each column by stacking: heatmap → expression → bulk clones
+  build_content_col <- function(hm_paths, hm_label, expr_paths, bulk_paths,
+                                expr_label, bulk_label, target_height = 700L) {
+    imgs <- list()
+    if (length(hm_paths) > 0) {
+      hm_imgs <- lapply(hm_paths, annotate_panel, label = hm_label)
+      imgs <- c(imgs, lapply(hm_imgs, function(img)
+        magick::image_scale(img, paste0("x", target_height))))
+    }
+    if (length(expr_paths) > 0) {
+      expr_imgs <- lapply(expr_paths, annotate_panel, label = expr_label)
+      imgs <- c(imgs, lapply(expr_imgs, function(img)
+        magick::image_scale(img, paste0("x", target_height))))
+    }
+    if (length(bulk_paths) > 0) {
+      bulk_imgs <- lapply(bulk_paths, annotate_panel, label = bulk_label)
+      imgs <- c(imgs, lapply(bulk_imgs, function(img)
+        magick::image_scale(img, paste0("x", target_height))))
+    }
+    if (length(imgs) == 0) return(NULL)
+    make_col(imgs)
+  }
+
+  unfilt_col <- build_content_col(s03a_unfilt, "Unfiltered heatmap",
+                                  expr_unfilt, bulk_unfilt,
+                                  "Unfiltered expression", "Unfiltered bulk clones")
+  filt_col   <- build_content_col(s03a_filt,   "Filtered heatmap",
+                                  expr_filt,   bulk_filt,
+                                  "Filtered expression",   "Filtered bulk clones")
+
+  if (!is.null(unfilt_col) && !is.null(filt_col)) {
+    rows[[length(rows) + 1L]] <- side_by_side(unfilt_col, filt_col)
+  } else if (!is.null(unfilt_col)) {
+    rows[[length(rows) + 1L]] <- unfilt_col
+  } else if (!is.null(filt_col)) {
+    rows[[length(rows) + 1L]] <- filt_col
+  }
+
+  if (length(rows) == 0) {
     warning("No files found for sample ", sample_id)
     return(NULL)
   }
 
-  # Read and annotate each panel
-  annotated <- list()
-  for (i in seq_along(panel_files)) {
-    img <- magick::image_read_pdf(panel_files[i], density = density)
-    img <- magick::image_annotate(img, panel_labels[i],
-                                  size = 40, color = "black",
-                                  gravity = "north", weight = 700,
-                                  boxcolor = "white")
-    annotated[[i]] <- img
-  }
-  plot_images <- do.call(c, annotated)
+  # Pad all rows to the same width, then stack vertically
+  max_width <- max(vapply(rows, function(r) magick::image_info(r)$width[1L], integer(1L)))
+  padded <- lapply(rows, function(r) {
+    info <- magick::image_info(r)[1L, ]
+    if (info$width < max_width)
+      magick::image_extent(r, glue("{max_width}x{info$height}"),
+                           gravity = "West", color = "white")
+    else r
+  })
+  summary_img <- do.call(c, padded) |> magick::image_append(stack = TRUE)
 
-  summary_montage <- magick::image_montage(plot_images, tile = tile,
-                                           geometry = "800x800+10+10",
-                                           shadow = FALSE)
-
-  # Add sample ID as title
-  summary_montage <- magick::image_annotate(summary_montage, sample_id,
-                                            size = 60, color = "black",
-                                            gravity = "north", weight = 700,
-                                            boxcolor = "white")
+  # Add sample ID title at the top
+  montage_info <- magick::image_info(summary_img)[1L, ]
+  title_strip_height <- max(70L, as.integer(round(montage_info$height * 0.03)))
+  title_strip <- magick::image_blank(montage_info$width, title_strip_height, color = "white")
+  title_strip <- magick::image_annotate(title_strip, sample_id,
+                                        size = 60, color = "black",
+                                        gravity = "north", weight = 700,
+                                        location = "+0+14")
+  summary_img <- magick::image_append(c(title_strip, summary_img), stack = TRUE)
 
   out_path <- glue("results/{sample_id}_summary.pdf")
-  magick::image_write(summary_montage, format = "pdf", path = out_path)
+  magick::image_write(summary_img, format = "pdf", path = out_path)
 
   return(out_path)
 }

@@ -135,6 +135,28 @@ def subset_bad_cell_types_for_sample(wildcards):
 			return parse_bool(sample_rows.subset_bad_cell_types.values[0], default_value)
 	return default_value
 
+
+def cell_ceiling_for_sample(wildcards):
+	default_value = config.get("cell_ceiling", 20000)
+	per_sample = config.get("cell_ceiling_by_sample", {})
+	if isinstance(per_sample, dict) and wildcards.sample in per_sample:
+		return per_sample[wildcards.sample]
+	return default_value
+
+def max_iter_for_sample(wildcards):
+	default_value = config.get("max_iter", 2)
+	per_sample = config.get("max_iter_by_sample", {})
+	if isinstance(per_sample, dict) and wildcards.sample in per_sample:
+		return per_sample[wildcards.sample]
+	return default_value
+
+def max_nni_for_sample(wildcards):
+	default_value = config.get("max_nni", 100)
+	per_sample = config.get("max_nni_by_sample", {})
+	if isinstance(per_sample, dict) and wildcards.sample in per_sample:
+		return per_sample[wildcards.sample]
+	return default_value
+
 # if not set(['names','type']).issubset(samples.columns):
 #   sys.exit("Make sure 'names' and 'type' are columns in " + config["metatsv"])
 
@@ -223,12 +245,14 @@ def numbat_allele_counts_output(wildcards):
 def numbat_done_output(wildcards):
   input = []
   input.extend(expand(numbat_sridhar_dir + "{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
   #   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}/done.txt", sample = samples.name[samples.type == 'PE'].values.tolist()))
   return input
 
-def numbat_rds_output(wildcards):
+
+def numbat_filtered_rds_output(wildcards):
   input = []
-#   input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
+  input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
   filtered_samples = [s for s in samples.name[samples.type == 'PE'].values.tolist()
                       if os.path.exists(outputdir + f"seurat/{s}_filtered_seu2.rds")]
   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = filtered_samples))
@@ -262,8 +286,8 @@ rule all:
 		# outputdir + "MultiQC/multiqc_report.html",
 		# cellranger_output,
 		# numbat_allele_counts_output,
-		# numbat_done_output,
-		numbat_rds_output,
+		numbat_done_output,
+		numbat_filtered_rds_output,
 		# velocyto_output,
 		# velocyto_output,
 		# infercnv_output,
@@ -1313,10 +1337,11 @@ rule numbat_sridhar_filtered:
 		numbatdir = outputdir + "numbat_sridhar_filtered/",
 		max_entropy = config["max_entropy"],
 		min_LLR = config["min_LLR"],
-		max_iter = config["max_iter"],
+		max_iter = max_iter_for_sample,
+		max_nni = max_nni_for_sample,
 		read_prop = config["read_prop"],
 		tau = config["tau"],
-		cell_ceiling = config["cell_ceiling"],
+		cell_ceiling = cell_ceiling_for_sample,
 		prof= outputdir + "numbat_sridhar_filtered/{sample}/log.prof",
 		ref_path = config["sridhar_ref_path"],
 		script = "scripts/run_numbat_filtered.R",
@@ -1327,7 +1352,7 @@ rule numbat_sridhar_filtered:
 		seu_path='{params.seu_path}' ref_path='{params.ref_path}' \
 		t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
 		init_k='{params.num_clones}' read_prop='{params.read_prop}' \
-		max_iter='{params.max_iter}' min_LLR='{params.min_LLR}' \
+		max_iter='{params.max_iter}' max_nni='{params.max_nni}' min_LLR='{params.min_LLR}' \
 		cell_ceiling='{params.cell_ceiling}' max_entropy='{params.max_entropy}' \
 		allele_df='{input.allele_df}' matrix_file='{input.matrix_file}' \
 		out_dir='{params.numbatdir}/{wildcards.sample}' \

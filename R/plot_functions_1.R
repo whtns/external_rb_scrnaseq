@@ -487,12 +487,12 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
 
   if (!processed_any_resolution) {
     dev.off()
-    return(list("table" = NA_character_, "plot" = NA_character_))
+    return(list("table" = NA_character_, "plot" = NA_character_, "sample_id" = sample_id))
   }
 
   dev.off()
 
   table_path <- writexl::write_xlsx(pairwise_seu_tables, table_path)
 
-  return(list("table" = table_path, "plot" = plot_path))
+  return(list("table" = table_path, "plot" = plot_path, "sample_id" = sample_id))
 }
