@@ -64,19 +64,50 @@ plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL
 
   plot_title <- ifelse(is.null(sample_id), tumor_id, sample_id)
 
-  clone_plot <- mynb$plot_mut_history(pal = mypal, show_distance = show_distance, ...) +
+  clone_plot <- mynb$plot_mut_history(
+    pal = mypal,
+    show_distance = show_distance,
+    ...
+  ) +
     labs(title = plot_title) +
     theme(plot.title = element_text(hjust = 0.5))
 
-  clone_plot$data$clone <- clone_plot$data$id
+  # Add background to edge labels using geom_label at edge midpoints
+  # Extract edge data from ggplot_build, calculate midpoints, and wrap label text
+  edge_data <- ggplot2::ggplot_build(clone_plot)$data[[1]]
+  edge_labels <- edge_data %>%
+    group_by(group) %>%
+    summarise(
+      x = mean(x),
+      y = mean(y),
+      label = unique(label)
+    ) %>%
+    mutate(label = str_wrap(sub('.*-> *', '', label), width = 10)) %>%
+    filter(label != "")
 
-  # Center edge labels on the edge rather than above-right of it
+  clone_plot <- clone_plot +
+    geom_label(
+      data = edge_labels,
+      aes(x = x, y = y, label = label),
+      fill = "white",
+      color = "black",
+      label.size = 0.2,
+      label.padding = unit(0.15, "lines"),
+      size = 3,
+      na.rm = TRUE
+    )
+
+  # Remove the original label mapping from edge layers to avoid double labels
   for (i in seq_along(clone_plot$layers)) {
-    if ("vjust" %in% names(clone_plot$layers[[i]]$aes_params)) {
-      clone_plot$layers[[i]]$aes_params$vjust <- 0.5
-      clone_plot$layers[[i]]$aes_params$hjust <- 0.5
+    if (inherits(clone_plot$layers[[i]]$geom, "GeomEdgePath")) {
+      mapping <- clone_plot$layers[[i]]$mapping
+      if (is.list(mapping)) {
+        clone_plot$layers[[i]]$mapping <- mapping[base::setdiff(names(mapping), "label")]
+      }
     }
   }
+
+  clone_plot$data$clone <- clone_plot$data$id
 
   return(clone_plot)
 }

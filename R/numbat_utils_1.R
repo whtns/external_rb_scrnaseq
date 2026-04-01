@@ -11,7 +11,7 @@ retrieve_numbat_rds_files <- function(numbat_dir, kept_samples = NULL) {
   if (!is.null(kept_samples)) {
     numbat_rds_files <- numbat_rds_files[names(numbat_rds_files) %in% kept_samples]
   }
-  return(numbat_rds_files)
+  return(sort(numbat_rds_files))
 }
 
 #' Perform retrieve seus operation
@@ -26,7 +26,7 @@ retrieve_seus <- function(seu_dir, kept_samples = NULL) {
   if (!is.null(kept_samples)) {
     seus <- seus[names(seus) %in% kept_samples]
   }
-  return(seus)
+  return(sort(seus))
 }
 
 #' Create a numbat-related plot visualization

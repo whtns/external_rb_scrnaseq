@@ -94,14 +94,16 @@ pipeline_targets_seurat <- c(
       # First stage where scna metadata is injected into Seurat objects.
       prep_unfiltered_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, extension = "_unfiltered"),
       pattern = map(numbat_rds_files),
-      iteration = "list"
+      iteration = "list",
+      deployment = "main"
     ),
 
     tar_target(filtered_seus,
       # Filtered counterpart also computes/adds scna metadata at cell level.
       filter_cluster_save_seu(numbat_rds_files, seus_interesting, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
       pattern = map(numbat_rds_files),
-      iteration = "list"
+      iteration = "list",
+      deployment = "main"
     ),
 
     tar_target(
@@ -300,8 +302,24 @@ pipeline_targets_seurat <- c(
 
     # --- QC / numbat heatmaps ---
 
+    tar_target(fig_s03a_unfiltered_plots,
+      make_numbat_heatmaps(
+        unfiltered_seus, numbat_rds_files,
+        p_min = 0.9, line_width = 0.1, extension = "_unfiltered",
+        show_segment_names_on_x = TRUE
+      ),
+      pattern = map(unfiltered_seus),
+      iteration = "list"
+    ),
+
+    tar_target(fig_s03a_unfiltered, qpdf::pdf_combine(unlist(fig_s03a_unfiltered_plots), "results/unfiltered_heatmaps.pdf")),
+
     tar_target(fig_s03a_plots,
-      make_numbat_heatmaps(filtered_seus, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "_filtered"),
+      make_numbat_heatmaps(
+        filtered_seus, numbat_rds_files,
+        p_min = 0.9, line_width = 0.1, extension = "_filtered",
+        show_segment_names_on_x = TRUE
+      ),
       pattern = map(filtered_seus),
       iteration = "list"
     ),
@@ -310,7 +328,11 @@ pipeline_targets_seurat <- c(
 
     tar_target(fig_s13,
       # Always re-render: output layout can depend on graphics device/session state.
-      make_numbat_heatmaps(final_seus, numbat_rds_files, p_min = 0.5, line_width = 0.1, extension = "_filtered"),
+      make_numbat_heatmaps(
+        final_seus, numbat_rds_files,
+        p_min = 0.5, line_width = 0.1, extension = "_filtered",
+        show_segment_names_on_x = TRUE
+      ),
       pattern = map(final_seus),
       iteration = "list",
       cue = tar_cue("always")  # force re-render each run: heatmap layout depends on

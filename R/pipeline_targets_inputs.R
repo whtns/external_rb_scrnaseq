@@ -15,17 +15,51 @@ pipeline_targets_inputs <- c(
   list(
 
     # --- sample definitions ---
-
     tar_target(interesting_samples,
       c(
-        "SRR13884242", "SRR13884243", "SRR13884244", "SRR13884245",
-        "SRR13884246", "SRR13884247", "SRR13884248", "SRR13884249",
-        "SRR14800534", "SRR14800535", "SRR14800536",
-        "SRR14800540", "SRR14800541", "SRR14800543",
-        "SRR17960481", "SRR17960484",
-        "SRR27187899", "SRR27187900", "SRR27187901", "SRR27187902"
+        "SRR13884242", 
+        "SRR13884243", 
+        "SRR13884244", 
+        "SRR13884245",
+        "SRR13884246", 
+        "SRR13884247", 
+        "SRR13884248", 
+        "SRR13884249",
+        "SRR14800534", 
+        "SRR14800535", 
+        "SRR14800536",
+        "SRR14800540", 
+        "SRR14800541", 
+        "SRR14800543",
+        "SRR17960481", 
+        "SRR17960484",
+        "SRR27187899", 
+        "SRR27187900", 
+        "SRR27187901", 
+        "SRR27187902",
+        # "SRR14800538",  # no numbat output; needs full pipeline re-run
+        "SRR14800539",
+        "SRR17960482",
+        "SRR17960483",
+        "SRR17960480",
+        # "SRR14800542",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
+        # "SRR13633760",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
+        "SRR13633762",
+        "SRR13884240",
+        "SRR13884241"
       )
     ),
+
+    # tar_target(interesting_samples,
+    #   c(
+    #     "SRR13884242", "SRR13884243", "SRR13884244", "SRR13884245",
+    #     "SRR13884246", "SRR13884247", "SRR13884248", "SRR13884249",
+    #     "SRR14800534", "SRR14800535", "SRR14800536",
+    #     "SRR14800540", "SRR14800541", "SRR14800543",
+    #     "SRR17960481", "SRR17960484",
+    #     "SRR27187899", "SRR27187900", "SRR27187901", "SRR27187902"
+    #   )
+    # ),
 
     tar_target(original_seus,
       c(

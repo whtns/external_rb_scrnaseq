@@ -47,13 +47,14 @@ collate_clone_distribution_tables <- function(clone_distribution_plots, interest
 #' @param csv_file File path
 #' @return Numeric scores or scored data
 #' @export
-score_clusters_up_down <- function(clone_distribution_plots, interesting_samples, csv_file = "results/cluster_up_down_scorecard.csv") {
-  
-  
+score_clusters_up_down <- function(clone_distribution_plots, csv_file = "results/cluster_up_down_scorecard.csv") {
+
+  sample_ids <- map_chr(clone_distribution_plots, "sample_id")
+
   test0 <-
     clone_distribution_plots %>%
     map("table") %>%
-    set_names(interesting_samples) %>%
+    set_names(sample_ids) %>%
     identity()
 
   
@@ -129,9 +130,9 @@ save_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications,
 
   nb_path <- nb_paths[[tumor_id]]
 
-  plot_clone_tree(seu, tumor_id = tumor_id, nb_path, clone_simplifications, sample_id = sample_id, ...)
+  p <- plot_clone_tree(seu, tumor_id = tumor_id, nb_path, clone_simplifications, sample_id = sample_id, ...)
 
-  plot_path <- ggsave(glue("results/{sample_id}{label}.pdf"), width = 4, height = 4)
+  plot_path <- ggsave(glue("results/{sample_id}{label}.pdf"), plot = p, width = 4, height = 4)
   return(plot_path)
 }
 
