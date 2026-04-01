@@ -58,6 +58,8 @@ if (!("type" %in% colnames(myseu@meta.data))) {
 }
 
 count_mat <- count_mat[,colnames(count_mat) %in% colnames(myseu)]
+rm(myseu)
+gc()
 
 # num_out_cells <- sum(myseu$type %in% bad_cell_types)
 
@@ -90,6 +92,8 @@ bulk = numbat:::get_bulk(
 )
 
 segs_loh = bulk %>% numbat:::detect_clonal_loh(t = as.numeric(t))
+rm(bulk)
+gc()
 
 # segs_loh = NULL
 
