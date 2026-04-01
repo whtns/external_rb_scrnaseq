@@ -238,24 +238,45 @@ list(
     retrieve_numbat_plot_type(filtered_numbat_pdfs, "bulk_clones_final.pdf")
   ),
 
+  # For each sample, prefer the filtered bulk clones plot when available,
+  # falling back to the unfiltered one. This ensures consistency with
+  # fig_s03a_plots, which also prefers the filtered numbat run.
   tar_target(
-    nb_paths_s06a,
+    preferred_numbat_bulk_clones,
+    {
+      filt_ids <- str_extract(filtered_numbat_bulk_clones, "SRR[0-9]*")
+      purrr::map_chr(large_numbat_bulk_clones, function(path) {
+        sid <- str_extract(path, "SRR[0-9]*")
+        filt_match <- filtered_numbat_bulk_clones[filt_ids == sid]
+        if (length(filt_match) > 0) filt_match[[1]] else path
+      })
+    }
+  ),
+
+  tar_target(nb_paths_s06a,
     dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
   ),
 
-  tar_target(
-    ideogram_res_s06a,
+  tar_target(ideogram_res_s06a_unfiltered,
     make_rb_scna_ideograms(nb_paths_s06a),
     pattern = map(nb_paths_s06a)
   ),
 
-  tar_target(
-    fig_s06a,
+  tar_target(nb_paths_s06a_filtered,
+    dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
+  ),
+
+  tar_target(ideogram_res_s06a_filtered,
+    make_rb_scna_ideograms(nb_paths_s06a_filtered, suffix = "_filtered"),
+    pattern = map(nb_paths_s06a_filtered)
+  ),
+
+  tar_target(fig_s06a,
     {
       # targets flattens named list branch results: odd = plot paths, even = tables
-      odd_idx <- seq(1, length(ideogram_res_s06a), by = 2)
-      plot_paths <- as.character(ideogram_res_s06a[odd_idx])
-      tables <- ideogram_res_s06a[odd_idx + 1] |>
+      odd_idx <- seq(1, length(ideogram_res_s06a_unfiltered), by = 2)
+      plot_paths <- as.character(ideogram_res_s06a_unfiltered[odd_idx])
+      tables <- ideogram_res_s06a_unfiltered[odd_idx + 1] |>
         set_names(str_extract(plot_paths, "SRR[0-9]*"))
       writexl::write_xlsx(tables, "results/table_s12.xlsx")
       qpdf::pdf_combine(plot_paths, "results/fig_s06a.pdf")
@@ -344,9 +365,15 @@ list(
     iteration = "list"
   ),
 
-  tar_target(clone_trees,
-    plot_clone_tree_from_path(debranched_seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(debranched_seus),
+  tar_target(
+    debranched_clone_trees_file,
+    qpdf::pdf_combine(debranched_clone_tree_files, "results/debranched_clone_trees.pdf")
+  ),
+
+
+  tar_target(unfiltered_clone_tree_files,
+    save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, large_clone_simplifications, label = "_unfiltered_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(unfiltered_seus),
     iteration = "list"
   ),
 
@@ -357,17 +384,17 @@ list(
   ),
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
-  tar_target(clone_trees_segments_files,
-    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_debranched_segment_tree", legend = FALSE, horizontal = FALSE),
+  tar_target(filtered_clone_trees_segments_files,
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(filtered_seus),
     iteration = "list"
   ),
 
-  
-
-  tar_target(
-    debranched_clone_trees_file,
-    qpdf::pdf_combine(debranched_clone_tree_files, "results/debranched_clone_trees.pdf")
+  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
+  tar_target(unfiltered_clone_trees_segments_files,
+    save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, NULL, label = "_unfiltered_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(unfiltered_seus),
+    iteration = "list"
   ),
 
   tar_target(final_clone_tree_files,
@@ -469,16 +496,20 @@ list(
 
   tar_target(sample_summaries,
     collate_sample_summary(
+      ideogram_res_s06a_unfiltered,
+      ideogram_res_s06a_filtered,
+      unfiltered_clone_tree_files,
+      unfiltered_clone_trees_segments_files,
       filtered_clone_tree_files,
-      clone_trees_segments_files,
-      fig_s03a_plots,
+      filtered_clone_trees_segments_files,
       fig_s03a_unfiltered_plots,
+      fig_s03a_plots,
       large_numbat_expression,
-      large_numbat_bulk_clones,
       filtered_numbat_expression,
+      preferred_numbat_bulk_clones,
       filtered_numbat_bulk_clones
     ),
-    pattern = map(filtered_clone_tree_files),
+    pattern = map(unfiltered_clone_tree_files),
     iteration = "list"
   ),
 

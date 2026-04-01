@@ -51,7 +51,7 @@ plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL
 
   ## clone tree ------------------------------
 
-  nclones <- length(unique(seu$clone_opt))
+  nclones <- max(as.integer(unique(seu$clone_opt)), na.rm = TRUE)
 
   mypal <- scales::hue_pal()(nclones) %>%
     set_names(1:nclones)

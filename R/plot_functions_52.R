@@ -633,21 +633,31 @@ make_table_s10 <- make_table_s07
 #' @param density Render density in DPI (default 300)
 #' @return Path to the combined per-sample PDF
 #' @export
-collate_sample_summary <- function(clone_tree_file,
-                                   segment_tree_files,
-                                   fig_s03a_files,
+collate_sample_summary <- function(unfiltered_karyogram_files,
+                                   filtered_karyogram_files,
+                                   unfiltered_clone_tree_files,
+                                   unfiltered_clone_trees_segments_files,
+                                   filtered_clone_tree_files,
+                                   filtered_clone_trees_segments_files,
                                    fig_s03a_unfiltered_files,
+                                   fig_s03a_files,
                                    numbat_expression_files,
-                                   numbat_bulk_clone_files,
                                    filtered_numbat_expression_files,
+                                   numbat_bulk_clone_files,
                                    filtered_numbat_bulk_clone_files,
                                    density = 300) {
 
-  sample_id <- str_extract(unlist(clone_tree_file)[1], "SRR[0-9]*")
+  sample_id <- str_extract(unlist(unfiltered_clone_tree_files)[1], "SRR[0-9]*")
 
-  clone_trees   <- unlist(clone_tree_file)
-  segment_trees <- unlist(segment_tree_files)
-  segment_trees <- segment_trees[str_detect(segment_trees, sample_id)]
+  clone_trees_unfiltered   <- unlist(unfiltered_clone_tree_files)
+  segment_trees_unfiltered <- unlist(unfiltered_clone_trees_segments_files)
+  clone_trees_filtered     <- unlist(filtered_clone_tree_files)
+  segment_trees_filtered   <- unlist(filtered_clone_trees_segments_files)
+
+  clone_trees_unfiltered   <- clone_trees_unfiltered[str_detect(clone_trees_unfiltered, sample_id)]
+  segment_trees_unfiltered <- segment_trees_unfiltered[str_detect(segment_trees_unfiltered, sample_id)]
+  clone_trees_filtered     <- clone_trees_filtered[str_detect(clone_trees_filtered, sample_id)]
+  segment_trees_filtered   <- segment_trees_filtered[str_detect(segment_trees_filtered, sample_id)]
 
   # keep filtered/unfiltered separate for parallel layout
   s03a_filt   <- unlist(fig_s03a_files)
@@ -665,7 +675,23 @@ collate_sample_summary <- function(clone_tree_file,
   bulk_filt   <- unlist(filtered_numbat_bulk_clone_files)
   bulk_filt   <- bulk_filt[str_detect(bulk_filt, sample_id)]
 
-  karyogram <- glue("results/{sample_id}_karyogram.pdf")
+  karyogram_unfiltered <- if (is.list(unfiltered_karyogram_files) && length(unfiltered_karyogram_files) > 0 &&
+    is.list(unfiltered_karyogram_files[[1]]) && "plot" %in% names(unfiltered_karyogram_files[[1]])) {
+    purrr::map_chr(unfiltered_karyogram_files, "plot")
+  } else {
+    unlist(unfiltered_karyogram_files, use.names = FALSE)
+  }
+  karyogram_unfiltered <- karyogram_unfiltered[str_detect(karyogram_unfiltered, sample_id)]
+  karyogram_unfiltered <- if (length(karyogram_unfiltered) > 0) karyogram_unfiltered[[1]] else glue("results/{sample_id}_karyogram.pdf")
+
+  karyogram_filtered <- if (is.list(filtered_karyogram_files) && length(filtered_karyogram_files) > 0 &&
+    is.list(filtered_karyogram_files[[1]]) && "plot" %in% names(filtered_karyogram_files[[1]])) {
+    purrr::map_chr(filtered_karyogram_files, "plot")
+  } else {
+    unlist(filtered_karyogram_files, use.names = FALSE)
+  }
+  karyogram_filtered <- karyogram_filtered[str_detect(karyogram_filtered, sample_id)]
+  karyogram_filtered <- if (length(karyogram_filtered) > 0) karyogram_filtered[[1]] else glue("results/{sample_id}_filtered_karyogram.pdf")
 
   # Fallback: if no fig_s03a, use numbat heatmaps directly from disk
   if (length(s03a_filt) == 0 && length(s03a_unfilt) == 0) {
@@ -727,6 +753,17 @@ collate_sample_summary <- function(clone_tree_file,
     do.call(c, padded) |> magick::image_append(stack = TRUE)
   }
 
+  make_panel_row <- function(paths, label, target_height = 700L, rotate = FALSE) {
+    if (length(paths) == 0) return(NULL)
+    imgs <- lapply(paths, annotate_panel, label = label)
+    imgs <- lapply(imgs, function(img) magick::image_scale(img, paste0("x", target_height)))
+    row_img <- make_row(imgs, target_height)
+    if (rotate) {
+      row_img <- magick::image_rotate(row_img, 90)
+    }
+    row_img
+  }
+
   # helper: pad two columns to the same height then place side by side
   side_by_side <- function(left, right) {
     lh <- magick::image_info(left)$height[1L]
@@ -743,57 +780,76 @@ collate_sample_summary <- function(clone_tree_file,
   has_filt_hm   <- length(s03a_filt) > 0
   has_karyo     <- file.exists(karyogram)
 
-  # --- Row 1: clone trees + segment trees (left) | karyogram (right) ---
-  tree_imgs <- list()
-  for (i in seq_along(clone_trees)) {
-    lbl <- if (length(clone_trees) > 1) paste0("Clone tree (", i, ")") else "Clone tree"
-    tree_imgs <- c(tree_imgs, list(annotate_panel(clone_trees[i], lbl)))
-  }
-  for (i in seq_along(segment_trees)) {
-    lbl <- if (length(segment_trees) > 1) paste0("Segment tree (", i, ")") else "Segment tree"
-    tree_imgs <- c(tree_imgs, list(annotate_panel(segment_trees[i], lbl)))
-  }
-  if (length(tree_imgs) > 0 || has_karyo) {
-    trees_row <- if (length(tree_imgs) > 0) make_row(tree_imgs, target_height = 650L) else NULL
-    if (has_karyo) {
-      karyo_img <- annotate_panel(karyogram, "Karyogram") |>
+  # Build two explicit columns, each with five stacked rows.
+  make_summary_col <- function(karyo_path,
+                               clone_tree_paths,
+                               segment_tree_paths,
+                               hm_paths,
+                               expr_paths,
+                               bulk_paths,
+                               karyo_label,
+                               tree_label_prefix,
+                               hm_label,
+                               expr_label,
+                               bulk_label) {
+    row1 <- if (file.exists(karyo_path)) {
+      annotate_panel(karyo_path, karyo_label) |>
         magick::image_rotate(90) |>
         magick::image_scale("x650")
-      trees_row <- if (!is.null(trees_row)) magick::image_append(c(trees_row, karyo_img), stack = FALSE) else karyo_img
+    } else {
+      NULL
     }
-    rows[[length(rows) + 1L]] <- trees_row
+
+    tree_imgs <- c(
+      lapply(seq_along(clone_tree_paths), function(i) {
+        lbl <- if (length(clone_tree_paths) > 1) paste0(tree_label_prefix, " clone tree (", i, ")") else paste0(tree_label_prefix, " clone tree")
+        annotate_panel(clone_tree_paths[i], lbl)
+      }),
+      lapply(seq_along(segment_tree_paths), function(i) {
+        lbl <- if (length(segment_tree_paths) > 1) paste0(tree_label_prefix, " segment tree (", i, ")") else paste0(tree_label_prefix, " segment tree")
+        annotate_panel(segment_tree_paths[i], lbl)
+      })
+    ) |>
+      purrr::compact()
+    row2 <- if (length(tree_imgs) > 0) make_row(tree_imgs, target_height = 650L) else NULL
+
+    row3 <- make_panel_row(hm_paths, hm_label, target_height = 700L)
+    row4 <- make_panel_row(expr_paths, expr_label, target_height = 700L)
+    row5 <- make_panel_row(bulk_paths, bulk_label, target_height = 700L)
+
+    col_rows <- list(row1, row2, row3, row4, row5)
+    col_rows <- purrr::compact(col_rows)
+    if (length(col_rows) == 0) return(NULL)
+    make_col(col_rows)
   }
 
-  # --- Rows 2+: unfiltered column (left) | filtered column (right) ---
-  # Build each column by stacking: heatmap → expression → bulk clones
-  build_content_col <- function(hm_paths, hm_label, expr_paths, bulk_paths,
-                                expr_label, bulk_label, target_height = 700L) {
-    imgs <- list()
-    if (length(hm_paths) > 0) {
-      hm_imgs <- lapply(hm_paths, annotate_panel, label = hm_label)
-      imgs <- c(imgs, lapply(hm_imgs, function(img)
-        magick::image_scale(img, paste0("x", target_height))))
-    }
-    if (length(expr_paths) > 0) {
-      expr_imgs <- lapply(expr_paths, annotate_panel, label = expr_label)
-      imgs <- c(imgs, lapply(expr_imgs, function(img)
-        magick::image_scale(img, paste0("x", target_height))))
-    }
-    if (length(bulk_paths) > 0) {
-      bulk_imgs <- lapply(bulk_paths, annotate_panel, label = bulk_label)
-      imgs <- c(imgs, lapply(bulk_imgs, function(img)
-        magick::image_scale(img, paste0("x", target_height))))
-    }
-    if (length(imgs) == 0) return(NULL)
-    make_col(imgs)
-  }
+  unfilt_col <- make_summary_col(
+    karyogram_unfiltered,
+    clone_trees_unfiltered,
+    segment_trees_unfiltered,
+    s03a_unfilt,
+    expr_unfilt,
+    bulk_unfilt,
+    "Karyogram (unfiltered)",
+    "Unfiltered",
+    "Unfiltered fig_s03a",
+    "Unfiltered expression",
+    "Unfiltered bulk clones"
+  )
 
-  unfilt_col <- build_content_col(s03a_unfilt, "Unfiltered heatmap",
-                                  expr_unfilt, bulk_unfilt,
-                                  "Unfiltered expression", "Unfiltered bulk clones")
-  filt_col   <- build_content_col(s03a_filt,   "Filtered heatmap",
-                                  expr_filt,   bulk_filt,
-                                  "Filtered expression",   "Filtered bulk clones")
+  filt_col <- make_summary_col(
+    karyogram_filtered,
+    clone_trees_filtered,
+    segment_trees_filtered,
+    s03a_filt,
+    expr_filt,
+    bulk_filt,
+    "Karyogram (filtered)",
+    "Filtered",
+    "Filtered fig_s03a",
+    "Filtered expression",
+    "Filtered bulk clones"
+  )
 
   if (!is.null(unfilt_col) && !is.null(filt_col)) {
     rows[[length(rows) + 1L]] <- side_by_side(unfilt_col, filt_col)
