@@ -14,15 +14,23 @@
 # Performance optimizations applied:
 # - repeated_file_reads: Cache file reads to avoid redundant I/O
 
-plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", show_segment_names_on_x = FALSE, ...) {
+plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "clone_opt", show_segment_names_on_x = FALSE, ...) {
+
+  # Ensure clone_opt is a factor to avoid continuous/discrete scale errors
+  # Must do this BEFORE accessing clone levels for palette
+  if ("clone_opt" %in% colnames(nb$clone_post)) {
+    nb$clone_post$clone_opt <- as.character(nb$clone_post$clone_opt)
+  }
+  if ("clone_opt" %in% colnames(myannot)) {
+    myannot$clone_opt <- as.character(myannot$clone_opt)
+  }
   
-  clone_levels <- sort(unique(nb$clone_post$clone_opt))
-  clone_pal <- setNames(scales::hue_pal()(length(clone_levels)), clone_levels)
-  scna_levels <- sort(unique(myannot$scna))
-  scna_pal <- setNames(scales::hue_pal()(length(scna_levels)), scna_levels)
+  all_clones <- na.omit(unique(c(as.character(myseu$clone_opt), as.character(nb$clone_post$clone_opt))))
+  nclones <- max(as.integer(all_clones), na.rm = TRUE)
+  clone_pal <- scales::hue_pal()(nclones) %>% set_names(as.character(1:nclones))
   myheatmap <- nb$plot_phylo_heatmap(
     pal_clone = clone_pal,
-    pal_annot = scna_pal,
+    pal_annot = clone_pal,
     annot = myannot,
     show_phylo = FALSE,
     sort_by = sort_by,
@@ -32,6 +40,7 @@ plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", show_segm
   ) +
     labs(title = mytitle) +
     theme(legend.position = "none")
+
 
   .add_segment_labels_to_heatmap <- function(heatmap_obj, show_labels) {
     if (!isTRUE(show_labels)) {
@@ -49,11 +58,11 @@ plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", show_segm
         axis.title.x = element_blank()
       )
 
-    if (length(heatmap_obj) >= 3 && !is.null(heatmap_obj[[3]]$data) && all(c("seg", "seg_start", "seg_end") %in% colnames(heatmap_obj[[3]]$data))) {
+    if (length(heatmap_obj) >= 3 && !is.null(heatmap_obj[[3]]$data) && all(c("seg", "CHROM", "seg_start", "seg_end") %in% colnames(heatmap_obj[[3]]$data))) {
       seg_labels <- heatmap_obj[[3]]$data %>%
         dplyr::distinct(CHROM, seg, seg_start, seg_end) %>%
-        dplyr::mutate(x = (seg_start + seg_end) / 2) %>%
-        dplyr::arrange(x)
+        dplyr::arrange(CHROM, seg) %>%
+        dplyr::mutate(seg_mid = (seg_start + seg_end) / 2)
 
       heatmap_obj[[3]] <- heatmap_obj[[3]] +
         theme(
@@ -63,7 +72,7 @@ plot_numbat <- function(nb, myseu, myannot, mytitle, sort_by = "scna", show_segm
         ) +
         geom_text(
           data = seg_labels,
-          aes(x = x, y = -0.03, label = seg),
+          aes(x = seg_mid, y = -0.03, label = seg),
           inherit.aes = FALSE,
           size = 2.8,
           angle = 90,
@@ -100,7 +109,15 @@ plot_numbat_w_phylo <- function(nb, myseu, myannot, mytitle, show_segment_names_
   
   celltypes <- tibble::tibble(cell = gsub("\\.", "-", rownames(myseu@meta.data)), type = myseu@meta.data$type)
   myannot <- dplyr::left_join(myannot, celltypes, by = "cell")
-  mypal <- c("1" = "gray", "2" = "#377EB8", "3" = "#4DAF4A", "4" = "#984EA3")
+  if ("clone_opt" %in% colnames(nb$clone_post)) {
+    nb$clone_post$clone_opt <- as.character(nb$clone_post$clone_opt)
+  }
+  if ("clone_opt" %in% colnames(myannot)) {
+    myannot$clone_opt <- as.character(myannot$clone_opt)
+  }
+  all_clones <- na.omit(unique(c(as.character(myseu$clone_opt), as.character(nb$clone_post$clone_opt))))
+  nclones <- max(as.integer(all_clones), na.rm = TRUE)
+  mypal <- scales::hue_pal()(nclones) %>% set_names(as.character(1:nclones))
   myheatmap <- nb$plot_phylo_heatmap(
     pal_clone = mypal,
     annot = myannot,
@@ -117,16 +134,16 @@ plot_numbat_w_phylo <- function(nb, myseu, myannot, mytitle, show_segment_names_
         axis.title.x = element_blank()
       )
 
-    if (length(myheatmap) >= 3 && !is.null(myheatmap[[3]]$data) && all(c("seg", "seg_start", "seg_end") %in% colnames(myheatmap[[3]]$data))) {
+    if (length(myheatmap) >= 3 && !is.null(myheatmap[[3]]$data) && all(c("seg", "CHROM", "seg_start", "seg_end") %in% colnames(myheatmap[[3]]$data))) {
       seg_labels <- myheatmap[[3]]$data %>%
         dplyr::distinct(CHROM, seg, seg_start, seg_end) %>%
-        dplyr::mutate(x = (seg_start + seg_end) / 2) %>%
-        dplyr::arrange(x)
+        dplyr::arrange(CHROM, seg) %>%
+        dplyr::mutate(seg_mid = (seg_start + seg_end) / 2)
 
       myheatmap[[3]] <- myheatmap[[3]] +
         geom_text(
           data = seg_labels,
-          aes(x = x, y = -0.03, label = seg),
+          aes(x = seg_mid, y = -0.03, label = seg),
           inherit.aes = FALSE,
           size = 2.8,
           angle = 90,
@@ -182,9 +199,9 @@ plot_variability_at_SCNA <- function(phylo_plot_output, chrom = "1", p_min = 0.9
       "loss" = "#010185",
       "CNLoH" = "#387229"
     )) +
-    labs(color = "SCNA state", fill = "SCNA", y = "Probability of SCNA") +
+    labs(color = "SCNA state", fill = "Clone", y = "Probability of SCNA") +
     facet_wrap(~seg) +
-    geom_tile(aes(y = -0.2, height = 0.1, fill = scna)) +
+    geom_tile(aes(y = -0.2, height = 0.1, fill = factor(clone_opt))) +
     theme_minimal() +
     theme(
       axis.title.x = element_blank(),

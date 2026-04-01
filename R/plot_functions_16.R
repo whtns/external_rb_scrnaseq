@@ -53,16 +53,17 @@ make_annoHighlight_from_consensus <- function(ideogramPlot, ploty, chrom, chroms
 #'
 #' @param nb_path File path
 #' @param midline_threshold Threshold value for filtering
+#' @param suffix Optional suffix inserted before the karyogram filename stem
 #' @return ggplot2 plot object
 #' @export
-make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
+make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4, suffix = "") {
 	
 	chrom_lengths = seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene)
 	maxChromSize <- max(chrom_lengths)
 	
 	tumor_id <- str_extract(nb_path, "SRR[0-9]*")
 	
-	plot_path <- glue("results/{tumor_id}_karyogram.pdf")
+	plot_path <- glue("results/{tumor_id}{suffix}_karyogram.pdf")
 	
 	mynb <- readRDS(nb_path)
 	
@@ -161,13 +162,14 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4) {
 #' Perform make rb scna ideograms old operation
 #'
 #' @param consensus_file File path
+#' @param suffix Optional suffix inserted before the karyogram filename stem
 #' @return ggplot2 plot object
 #' @export
-make_rb_scna_ideograms_old <- function(consensus_file) {
+make_rb_scna_ideograms_old <- function(consensus_file, suffix = "") {
 	
 	tumor_id <- str_extract(consensus_file, "SRR[0-9]*")
 	
-	plot_path <- glue("results/{tumor_id}_karyogram.pdf")
+	plot_path <- glue("results/{tumor_id}{suffix}_karyogram.pdf")
 	
 	test0 <- read_tsv(consensus_file) |> 
 		dplyr::mutate(CHROM= paste0("chr", CHROM)) |> 

@@ -318,7 +318,8 @@ pipeline_targets_seurat <- c(
       make_numbat_heatmaps(
         filtered_seus, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_filtered",
-        show_segment_names_on_x = TRUE
+        show_segment_names_on_x = TRUE,
+        numbat_rds_filtered_files = numbat_rds_filtered_files
       ),
       pattern = map(filtered_seus),
       iteration = "list"

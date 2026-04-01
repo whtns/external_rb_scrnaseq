@@ -114,6 +114,46 @@ pipeline_targets_inputs <- c(
       )
     ),
 
+    # Durable, LLM-readable mapping of branch IDs to SRR IDs.
+    tarchetypes::tar_file(branch_registry_file, "config/branch_registry.csv"),
+    tar_target(branch_registry,
+      readr::read_csv(branch_registry_file, show_col_types = FALSE)
+    ),
+    tar_target(branch_registry_validated,
+      {
+        missing_srr <- setdiff(interesting_samples, unique(branch_registry$srr_id))
+        stopifnot(
+          !anyNA(branch_registry$branch_id),
+          !anyNA(branch_registry$srr_id),
+          !anyNA(branch_registry$seu_path),
+          !anyDuplicated(branch_registry$branch_id),
+          !anyDuplicated(branch_registry$seu_path),
+          all(startsWith(branch_registry$branch_id, branch_registry$srr_id)),
+          length(missing_srr) == 0
+        )
+        branch_registry
+      }
+    ),
+    tar_target(branch_registry_manifest_csv,
+      {
+        out <- "results/branch_registry_manifest.csv"
+        readr::write_csv(branch_registry_validated, out)
+        out
+      },
+      format = "file"
+    ),
+    tar_target(branch_registry_manifest_jsonl,
+      {
+        out <- "results/branch_registry_manifest.jsonl"
+        lines <- apply(branch_registry_validated, 1, function(row) {
+          jsonlite::toJSON(as.list(row), auto_unbox = TRUE)
+        })
+        readr::write_lines(lines, out)
+        out
+      },
+      format = "file"
+    ),
+
     # --- clone comparison configs ---
 
     tar_target(large_clone_comparisons,
@@ -136,7 +176,7 @@ pipeline_targets_inputs <- c(
     tarchetypes::tar_file(branch_dictionary_file, "data/branch_dictionary.csv"),
     tar_target(branch_dictionary, pull_branches(branch_dictionary_file)),
 
-    tar_target(cluster_file, "data/scna_cluster_order.csv", format = "file_fast"),
+    tar_target(cluster_file, "data/scna_cluster_order.csv", format = "file"),
     tar_target(cluster_orders, pull_cluster_orders(cluster_file)),
     tar_target(cluster_orders_sqlite,
       encode_cluster_order_to_hash_table(cluster_orders),

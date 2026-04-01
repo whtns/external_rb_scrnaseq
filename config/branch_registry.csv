@@ -1,0 +1,35 @@
+branch_id,srr_id,branch_num,seu_path,include,notes
+SRR13884242,SRR13884242,,output/seurat/SRR13884242_filtered_seu.rds,TRUE,baseline debranched sample
+SRR13884243,SRR13884243,,output/seurat/SRR13884243_filtered_seu.rds,TRUE,baseline debranched sample
+SRR13884244,SRR13884244,,output/seurat/SRR13884244_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR13884245,SRR13884245,,output/seurat/SRR13884245_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR13884246_branch_5,SRR13884246,5,output/seurat/SRR13884246_branch_5_filtered_seu.rds,TRUE,debranched clone
+SRR13884246_branch_6,SRR13884246,6,output/seurat/SRR13884246_branch_6_filtered_seu.rds,TRUE,debranched clone
+SRR13884247_branch_6,SRR13884247,6,output/seurat/SRR13884247_branch_6_filtered_seu.rds,TRUE,debranched clone
+SRR13884247_branch_4,SRR13884247,4,output/seurat/SRR13884247_branch_4_filtered_seu.rds,TRUE,debranched clone
+SRR13884247_branch_5,SRR13884247,5,output/seurat/SRR13884247_branch_5_filtered_seu.rds,TRUE,debranched clone
+SRR13884248,SRR13884248,,output/seurat/SRR13884248_filtered_seu.rds,TRUE,baseline debranched sample
+SRR13884249,SRR13884249,,output/seurat/SRR13884249_filtered_seu.rds,TRUE,baseline debranched sample
+SRR14800534,SRR14800534,,output/seurat/SRR14800534_filtered_seu.rds,TRUE,baseline debranched sample
+SRR14800535,SRR14800535,,output/seurat/SRR14800535_filtered_seu.rds,TRUE,baseline debranched sample
+SRR14800536,SRR14800536,,output/seurat/SRR14800536_filtered_seu.rds,TRUE,baseline debranched sample
+SRR14800540_branch_2,SRR14800540,2,output/seurat/SRR14800540_branch_2_filtered_seu.rds,TRUE,debranched clone
+SRR14800540_branch_3,SRR14800540,3,output/seurat/SRR14800540_branch_3_filtered_seu.rds,TRUE,debranched clone
+SRR14800541_branch_4,SRR14800541,4,output/seurat/SRR14800541_branch_4_filtered_seu.rds,TRUE,debranched clone
+SRR14800541_branch_7,SRR14800541,7,output/seurat/SRR14800541_branch_7_filtered_seu.rds,TRUE,debranched clone
+SRR14800543_branch_3,SRR14800543,3,output/seurat/SRR14800543_branch_3_filtered_seu.rds,TRUE,debranched clone
+SRR14800543_branch_4,SRR14800543,4,output/seurat/SRR14800543_branch_4_filtered_seu.rds,TRUE,debranched clone
+SRR17960481,SRR17960481,,output/seurat/SRR17960481_filtered_seu.rds,TRUE,baseline debranched sample
+SRR17960484,SRR17960484,,output/seurat/SRR17960484_filtered_seu.rds,TRUE,baseline debranched sample
+SRR27187899,SRR27187899,,output/seurat/SRR27187899_filtered_seu.rds,TRUE,baseline debranched sample
+SRR27187900,SRR27187900,,output/seurat/SRR27187900_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR27187901,SRR27187901,,output/seurat/SRR27187901_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR27187902_branch_3,SRR27187902,3,output/seurat/SRR27187902_branch_3_filtered_seu.rds,TRUE,debranched clone
+SRR27187902_branch_4,SRR27187902,4,output/seurat/SRR27187902_branch_4_filtered_seu.rds,TRUE,debranched clone
+SRR14800539,SRR14800539,,output/seurat/SRR14800539_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR17960482,SRR17960482,,output/seurat/SRR17960482_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR17960483,SRR17960483,,output/seurat/SRR17960483_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR17960480,SRR17960480,,output/seurat/SRR17960480_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR13633762,SRR13633762,,output/seurat/SRR13633762_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR13884240,SRR13884240,,output/seurat/SRR13884240_filtered_seu.rds,TRUE,interesting sample-level entry
+SRR13884241,SRR13884241,,output/seurat/SRR13884241_filtered_seu.rds,TRUE,interesting sample-level entry

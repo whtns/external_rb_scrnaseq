@@ -11,9 +11,16 @@
 #' @param show_segment_names_on_x Logical; if TRUE, keep segment labels visible on the numbat heatmap x-axis.
 #' @return ggplot2 plot object
 #' @export
-make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "", midline_threshold = 0.4, show_segment_names_on_x = FALSE) {
+make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "", midline_threshold = 0.4, show_segment_names_on_x = FALSE, numbat_rds_filtered_files = NULL) {
   sample_id <- str_extract(seu_path, "SRR[0-9]*")
   names(numbat_rds_files) <- str_extract(numbat_rds_files, "SRR[0-9]*")
+  if (!is.null(numbat_rds_filtered_files) && length(numbat_rds_filtered_files) > 0) {
+    names(numbat_rds_filtered_files) <- str_extract(numbat_rds_filtered_files, "SRR[0-9]*")
+    filt_idx <- which(names(numbat_rds_filtered_files) == sample_id)
+    if (length(filt_idx) > 0) {
+      numbat_rds_files[[sample_id]] <- numbat_rds_filtered_files[[filt_idx[[1]]]]
+    }
+  }
   match_idx <- which(names(numbat_rds_files) == sample_id)
   if (length(match_idx) == 0) {
     warning("No numbat RDS file found for sample: ", sample_id)
@@ -46,10 +53,15 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
     dplyr::select(cell, scna) %>%
     identity()
   myannot$scna[myannot$scna == ""] <- ".diploid"
+  clone_annot <-
+    seu@meta.data %>%
+    tibble::rownames_to_column("cell") %>%
+    dplyr::select(cell, clone_opt) %>%
+    identity()
   numbat_heatmap <- safe_plot_numbat(
     mynb,
     seu,
-    myannot,
+    clone_annot,
     sample_id,
     clone_bar = FALSE,
     p_min = p_min,
@@ -62,7 +74,7 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
     if (length(numbat_heatmap) >= 3) {
       scna_variability_plot <-
         numbat_heatmap[[3]][["data"]] |>
-        dplyr::left_join(myannot, by = "cell") |>
+        dplyr::left_join(clone_annot, by = "cell") |>
         plot_variability_at_SCNA(p_min = p_min)
       scna_var_path <- tempfile(fileext = ".pdf")
       ggsave(scna_var_path, plot = scna_variability_plot, w = 10, h = 5)
@@ -76,7 +88,7 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
   numbat_heatmap_w_phylo <- safe_plot_numbat_w_phylo(
     mynb,
     seu,
-    myannot,
+    clone_annot,
     sample_id,
     clone_bar = FALSE,
     p_min = p_min,
@@ -84,7 +96,13 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
   )[["result"]]
   heatmap_w_phylo_path <- tempfile(fileext = ".pdf")
   if (!is.null(numbat_heatmap_w_phylo) && !identical(numbat_heatmap_w_phylo, NA_real_)) {
-    ggsave(heatmap_w_phylo_path, plot = numbat_heatmap_w_phylo, w = 10, h = 5)
+    tryCatch(
+      ggsave(heatmap_w_phylo_path, plot = numbat_heatmap_w_phylo, w = 10, h = 5),
+      error = function(e) {
+        warning("ggsave failed for w_phylo heatmap (", sample_id, "): ", conditionMessage(e))
+        heatmap_w_phylo_path <<- NULL
+      }
+    )
   } else {
     heatmap_w_phylo_path <- NULL
   }
