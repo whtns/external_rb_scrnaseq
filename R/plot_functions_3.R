@@ -27,12 +27,26 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
   seu <- readRDS(seus[[sample_id]])
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
   mynb <- readRDS(numbat_rds_file)
+  if (is.null(mynb[["clone_post"]])) {
+    message("clone_post is NULL in numbat RDS for ", sample_id, "; returning NA")
+    return(NA_character_)
+  }
   nb_clone_post <- mynb[["clone_post"]][, c("cell", "clone_opt", "GT_opt")] %>%
     dplyr::mutate(cell = str_replace(cell, "\\.", "-")) %>%
     tibble::column_to_rownames("cell")
   seu <- Seurat::AddMetaData(seu, nb_clone_post)
   seu <- seu[, !is.na(seu$clone_opt)]
   all_cells_meta <- seu@meta.data
+  if (!"gene_snn_res.0.2" %in% colnames(seu@meta.data)) {
+    message("gene_snn_res.0.2 missing for ", sample_id, "; re-running FindNeighbors + seurat_cluster")
+    if (!"gene_nn" %in% names(seu@graphs)) {
+      seu <- FindNeighbors(seu, dims = 1:30, verbose = FALSE)
+    }
+    seu <- seurat_cluster(seu = seu, resolution = seq(0.2, 1.0, by = 0.2), reduction = "pca")
+  }
+  if (is.null(cluster_dictionary[[sample_id]])) {
+    stop("cluster_dictionary has no entry for ", sample_id, "; cannot assign abbreviations")
+  }
   test0 <- seu@meta.data["gene_snn_res.0.2"] %>%
     tibble::rownames_to_column("cell") %>%
     dplyr::mutate(gene_snn_res.0.2 = as.numeric(gene_snn_res.0.2)) %>%
@@ -40,10 +54,14 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
     dplyr::select("cell", "abbreviation") %>%
     tibble::column_to_rownames("cell")
   seu <- AddMetaData(seu, test0)
-  large_clone_simplifications <-
-    tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
-    tidyr::unnest(seg) %>%
-    dplyr::mutate(seg = as.character(seg))
+  if (is.null(large_clone_simplifications[[sample_id]])) {
+    large_clone_simplifications <- tibble::tibble(scna = character(), seg = character())
+  } else {
+    large_clone_simplifications <-
+      tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
+      tidyr::unnest(seg) %>%
+      dplyr::mutate(seg = as.character(seg))
+  }
 
   scna_labels <- vapply(
     nb_clone_post$GT_opt,
@@ -110,7 +128,7 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
       stop(e)
     }
   )
-  filtered_seu_path <- glue("output/seurat/{sample_id}_filtered_seu2.rds")
+  filtered_seu_path <- glue("output/seurat/{sample_id}_filtered{extension}_seu.rds")
   Project(seu) <- sample_id
   add_hash_metadata(seu = seu, filepath = filtered_seu_path)
 
@@ -138,11 +156,25 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
   seu <- readRDS(glue("output/seurat/{sample_id}_seu.rds"))
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
   mynb <- readRDS(numbat_rds_file)
+  if (is.null(mynb[["clone_post"]])) {
+    message("clone_post is NULL in numbat RDS for ", sample_id, "; returning NA")
+    return(NA_character_)
+  }
   nb_clone_post <- mynb[["clone_post"]][, c("cell", "clone_opt", "GT_opt")] %>%
     dplyr::mutate(cell = str_replace(cell, "\\.", "-")) %>%
     tibble::column_to_rownames("cell")
   seu <- Seurat::AddMetaData(seu, nb_clone_post)
   seu <- seu[, !is.na(seu$clone_opt)]
+  if (!"gene_snn_res.0.2" %in% colnames(seu@meta.data)) {
+    message("gene_snn_res.0.2 missing for ", sample_id, "; re-running FindNeighbors + seurat_cluster")
+    if (!"gene_nn" %in% names(seu@graphs)) {
+      seu <- FindNeighbors(seu, dims = 1:30, verbose = FALSE)
+    }
+    seu <- seurat_cluster(seu = seu, resolution = c(0.2, 0.4, 0.6), reduction = "pca")
+  }
+  if (is.null(cluster_dictionary[[sample_id]])) {
+    stop("cluster_dictionary has no entry for ", sample_id, "; cannot assign abbreviations")
+  }
   test0 <- seu@meta.data["gene_snn_res.0.2"] %>%
     tibble::rownames_to_column("cell") %>%
     dplyr::mutate(gene_snn_res.0.2 = as.numeric(gene_snn_res.0.2)) %>%
@@ -150,10 +182,14 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
     dplyr::select("cell", "abbreviation") %>%
     tibble::column_to_rownames("cell")
   seu <- AddMetaData(seu, test0)
-  large_clone_simplifications <-
-    tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
-    tidyr::unnest(seg) %>%
-    dplyr::mutate(seg = as.character(seg))
+  if (is.null(large_clone_simplifications[[sample_id]])) {
+    large_clone_simplifications <- tibble::tibble(scna = character(), seg = character())
+  } else {
+    large_clone_simplifications <-
+      tibble::enframe(large_clone_simplifications[[sample_id]], "scna", "seg") %>%
+      tidyr::unnest(seg) %>%
+      dplyr::mutate(seg = as.character(seg))
+  }
 
   scna_labels <- vapply(
     nb_clone_post$GT_opt,

@@ -120,6 +120,10 @@ plot_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications,
 #' @export
 save_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications, label = "_clone_tree", ...) {
 
+  # Handle NA inputs (e.g., when clone_post is NULL for a sample)
+  if (is.na(seu_path)) {
+    return(NA_character_)
+  }
 
   seu <- readRDS(seu_path)
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")

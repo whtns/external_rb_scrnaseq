@@ -95,16 +95,43 @@ pipeline_targets_seurat <- c(
       prep_unfiltered_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, extension = "_unfiltered"),
       pattern = map(numbat_rds_files),
       iteration = "list",
-      deployment = "main"
+      deployment = "main",
+      cue = tar_cue(command = FALSE, depend = FALSE)
     ),
 
     tar_target(filtered_seus,
       # Filtered counterpart also computes/adds scna metadata at cell level.
-      filter_cluster_save_seu(numbat_rds_files, seus_interesting, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"),
+      filter_cluster_save_seu(
+        numbat_rds_files, seus_interesting,
+        cluster_dictionary, large_clone_simplifications,
+        filter_expressions = NULL, cells_to_remove,
+        extension = "",
+        leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"
+      ),
       pattern = map(numbat_rds_files),
       iteration = "list",
-      deployment = "main"
+      deployment = "main",
+      error = "null",
+      cue = tar_cue(command = FALSE, depend = FALSE)
     ),
+
+    tar_target(filtered_seus_nb_filtered,
+      # Seurat objects annotated with clone/SCNA metadata from numbat_sridhar_filtered RDS files.
+      filter_cluster_save_seu(
+        numbat_rds_filtered_files, seus_interesting,
+        cluster_dictionary, large_clone_simplifications,
+        filter_expressions = NULL, cells_to_remove,
+        extension = "_nb_filtered",
+        leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"
+      ),
+      pattern = map(numbat_rds_filtered_files),
+      iteration = "list",
+      deployment = "main",
+      error = "null",
+      cue = tar_cue(command = FALSE, depend = FALSE)
+    ),
+
+
 
     tar_target(
       final_seus,
@@ -316,12 +343,12 @@ pipeline_targets_seurat <- c(
 
     tar_target(fig_s03a_plots,
       make_numbat_heatmaps(
-        filtered_seus, numbat_rds_files,
+        filtered_seus_nb_filtered, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_filtered",
         show_segment_names_on_x = TRUE,
         numbat_rds_filtered_files = numbat_rds_filtered_files
       ),
-      pattern = map(filtered_seus),
+      pattern = map(filtered_seus_nb_filtered),
       iteration = "list"
     ),
 

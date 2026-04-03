@@ -254,7 +254,7 @@ def numbat_filtered_rds_output(wildcards):
   input = []
   input.extend(expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample = samples.name[samples.type == 'PE'].values.tolist()))
   filtered_samples = [s for s in samples.name[samples.type == 'PE'].values.tolist()
-                      if os.path.exists(outputdir + f"seurat/{s}_filtered_seu2.rds")]
+                      if os.path.exists(outputdir + f"seurat/{s}_filtered_seu.rds")]
   input.extend(expand(outputdir + "numbat_sridhar_filtered/{sample}_numbat.rds", sample = filtered_samples))
   return input
   
@@ -1345,7 +1345,7 @@ rule numbat_sridhar_filtered:
 		prof= outputdir + "numbat_sridhar_filtered/{sample}/log.prof",
 		ref_path = config["sridhar_ref_path"],
 		script = "scripts/run_numbat_filtered.R",
-		seu_path = outputdir + "seurat/{sample}_filtered_seu2.rds"
+		seu_path = outputdir + "seurat/{sample}_filtered_seu.rds"
 	shell:
 		'''
 		{Rbin} CMD BATCH --no-restore --no-save "--args \

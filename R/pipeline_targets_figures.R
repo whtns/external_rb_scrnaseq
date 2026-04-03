@@ -45,7 +45,7 @@ list(
       fig_s20 = fig_s20,    # 2p+ clone diffex within clusters
       fig_s23 = fig_s23,    # 6p+ sample-specific analyses after integration
       fig_s25 = fig_s25,    # subtype markers
-      clone_trees_segments = clone_trees_segments_files, # clone trees annotated by raw NUMBAT segments (GT_opt)
+      clone_trees_segments = filtered_clone_trees_segments_files, # clone trees annotated by raw NUMBAT segments (GT_opt)
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
       oncoprint_plots = oncoprint_plots,
@@ -206,18 +206,16 @@ list(
     iteration = "list"
   ),
 
-  tar_target(
-    large_numbat_expression,
+  tar_target(unfiltered_numbat_expression,
     retrieve_numbat_plot_type(large_numbat_pdfs, "exp_roll_clust.pdf")
   ),
 
-  tar_target(
-      large_numbat_bulk_clones,
+  tar_target(unfiltered_numbat_bulk_clones,
       retrieve_numbat_plot_type(large_numbat_pdfs, "bulk_clones_final.pdf")
   ),
 
   tar_target(fig_s05,
-    qpdf::pdf_combine(large_numbat_expression, "results/numbat_expression.pdf")
+    qpdf::pdf_combine(unfiltered_numbat_expression, "results/numbat_expression.pdf")
   ),
 
   # --- filtered numbat plots ---
@@ -228,13 +226,11 @@ list(
     iteration = "list"
   ),
 
-  tar_target(
-    filtered_numbat_expression,
+  tar_target(filtered_numbat_expression,
     retrieve_numbat_plot_type(filtered_numbat_pdfs, "exp_roll_clust.pdf")
   ),
 
-  tar_target(
-    filtered_numbat_bulk_clones,
+  tar_target(filtered_numbat_bulk_clones,
     retrieve_numbat_plot_type(filtered_numbat_pdfs, "bulk_clones_final.pdf")
   ),
 
@@ -245,7 +241,7 @@ list(
     preferred_numbat_bulk_clones,
     {
       filt_ids <- str_extract(filtered_numbat_bulk_clones, "SRR[0-9]*")
-      purrr::map_chr(large_numbat_bulk_clones, function(path) {
+      purrr::map_chr(unfiltered_numbat_bulk_clones, function(path) {
         sid <- str_extract(path, "SRR[0-9]*")
         filt_match <- filtered_numbat_bulk_clones[filt_ids == sid]
         if (length(filt_match) > 0) filt_match[[1]] else path
@@ -374,27 +370,31 @@ list(
   tar_target(unfiltered_clone_tree_files,
     save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, large_clone_simplifications, label = "_unfiltered_clone_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(unfiltered_seus),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(filtered_clone_tree_files,
-    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus),
-    iteration = "list"
+    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus_nb_filtered),
+    iteration = "list",
+    error = "null"
   ),
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
   tar_target(filtered_clone_trees_segments_files,
-    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus),
-    iteration = "list"
+    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus_nb_filtered),
+    iteration = "list",
+    error = "null"
   ),
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
   tar_target(unfiltered_clone_trees_segments_files,
     save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, NULL, label = "_unfiltered_segment_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(unfiltered_seus),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(final_clone_tree_files,
@@ -504,13 +504,14 @@ list(
       filtered_clone_trees_segments_files,
       fig_s03a_unfiltered_plots,
       fig_s03a_plots,
-      large_numbat_expression,
+      unfiltered_numbat_expression,
       filtered_numbat_expression,
-      preferred_numbat_bulk_clones,
+      unfiltered_numbat_bulk_clones,
       filtered_numbat_bulk_clones
     ),
     pattern = map(unfiltered_clone_tree_files),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   # --- pipeline notification ---
