@@ -9,6 +9,11 @@
 #' @return ggplot2 plot object
 #' @export
 save_cc_space_plot_from_path <- function(seu_path, clone_simplifications, label = "_clone_tree", ...) {
+  # Handle NA inputs (e.g., when clone_post is NULL for a sample)
+  if (is.na(seu_path)) {
+    return(NA_character_)
+  }
+  
   seu <- readRDS(seu_path)
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")

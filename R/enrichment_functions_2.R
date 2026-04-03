@@ -132,11 +132,12 @@ convert_numbat_pngs <- function(numbat_rds_file) {
   
   numbat_output_dir <- str_remove(numbat_rds_file, "_numbat.*")
   sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  numbat_dir <- basename(dirname(numbat_output_dir))
   numbat_pngs <- dir_ls(numbat_output_dir, glob = "*.png") %>%
     set_names(path_file(.))
   numbat_pdfs <- stringr::str_replace(path_file(numbat_pngs), ".png", ".pdf")
-  numbat_pdfs <- glue("results/{sample_id}/{numbat_pdfs}")
-  dir_create(glue("results/{sample_id}"))
+  numbat_pdfs <- glue("results/{numbat_dir}/{sample_id}/{numbat_pdfs}")
+  dir_create(glue("results/{numbat_dir}/{sample_id}"))
   numbat_images <- purrr::map(numbat_pngs, image_read) %>%
     imap(~ image_annotate(.x, sample_id, size = 50))
   map2(numbat_images, numbat_pdfs, ~ image_write(.x, format = "pdf", .y))

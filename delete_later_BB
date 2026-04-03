@@ -1,0 +1,93 @@
+# RAN
+numbat_sridhar_filtered_SRR13884241.log
+numbat_sridhar_filtered_SRR17960480.log
+
+# DID NOT RUN (tail end of error)
+numbat_sridhar_filtered_SRR13884240.log
+numbat_sridhar_filtered_SRR13633762.log
+Mem used: 2.98Gb
+Excluding clonal LOH regions .. 
+All cells succeeded
+Building phylogeny ..
+Mem used: 3.18Gb
+Using 10 CNVs to construct phylogeny
+Aggregate function missing, defaulting to 'length'
+Only computing UPGMA..
+Using UPGMA tree as seed..
+Mem used: 3.38Gb
+Error in if (max(scores) > max_current + eps) { : 
+  missing value where TRUE/FALSE needed
+Calls: <Anonymous> -> perform_nni
+In addition: Warning message:
+In log(1 - P) : NaNs produced
+Execution halted
+
+
+
+numbat_sridhar_filtered_SRR27187899.log
+numbat_sridhar_filtered_SRR14800539.log
+line #221
+All cells succeeded
+Error in `mutate()`:
+ℹ In argument: `seg = factor(seg, mixedsort(unique(seg)))`.
+Caused by error:
+! object 'seg' not found
+Backtrace:
+
+
+numbat_sridhar_filtered_SRR17960482.log
+numbat_sridhar_filtered_SRR17960483.log
+numbat_sridhar_filtered_SRR27187901.log
+numbat_sridhar_filtered_SRR17960481.log
+number of genes left: 9926
+running hclust...
+! # Invaild edge matrix for <phylo>. A <tbl_df> is returned.
+! # Invaild edge matrix for <phylo>. A <tbl_df> is returned.
+Killed
+
+
+
+
+
+
+
+numbat_sridhar_filtered_SRR27187902.log
+# Memory issue
+
+Mem used: 2.14Gb
+number of genes left: 9818
+running hclust...
+! # Invaild edge matrix for <phylo>. A <tbl_df> is returned.
+! # Invaild edge matrix for <phylo>. A <tbl_df> is returned.
+Iteration 1
+Mem used: 9.99Gb
+Expression noise level (MSE): high (1.7). Consider using a custom expression reference profile.
+Running HMMs on 9 cell groups..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Retesting CNVs..
+Running HMMs on 5 cell groups..
+Evaluating CNV per cell ..
+Mem used: 6.62Gb
+Excluding clonal LOH regions .. 
+Killed
+
+
+pileup_and_phase_SRR13633761.log
+WARNING: ignoring environment value of R_HOME
+Warning message:
+package ‘argparse’ was built under R version 4.3.1 
+Error: package or namespace load failed for ‘stringr’ in dyn.load(file, DLLpath = DLLpath, ...):
+ unable to load shared object '/dataVolume/R/4.4.0/site-library/rlang/libs/rlang.so':
+  /dataVolume/R/4.4.0/site-library/rlang/libs/rlang.so: undefined symbol: R_existsVarInFrame
+In addition: Warning messages:
+1: package ‘glue’ was built under R version 4.4.2 
+2: package ‘stringr’ was built under R version 4.4.0 
+Execution halted
+

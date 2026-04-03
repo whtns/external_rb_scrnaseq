@@ -654,26 +654,26 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
   clone_trees_filtered     <- unlist(filtered_clone_tree_files)
   segment_trees_filtered   <- unlist(filtered_clone_trees_segments_files)
 
-  clone_trees_unfiltered   <- clone_trees_unfiltered[str_detect(clone_trees_unfiltered, sample_id)]
-  segment_trees_unfiltered <- segment_trees_unfiltered[str_detect(segment_trees_unfiltered, sample_id)]
-  clone_trees_filtered     <- clone_trees_filtered[str_detect(clone_trees_filtered, sample_id)]
-  segment_trees_filtered   <- segment_trees_filtered[str_detect(segment_trees_filtered, sample_id)]
+  clone_trees_unfiltered   <- clone_trees_unfiltered[!is.na(clone_trees_unfiltered) & str_detect(clone_trees_unfiltered, sample_id)]
+  segment_trees_unfiltered <- segment_trees_unfiltered[!is.na(segment_trees_unfiltered) & str_detect(segment_trees_unfiltered, sample_id)]
+  clone_trees_filtered     <- clone_trees_filtered[!is.na(clone_trees_filtered) & str_detect(clone_trees_filtered, sample_id)]
+  segment_trees_filtered   <- segment_trees_filtered[!is.na(segment_trees_filtered) & str_detect(segment_trees_filtered, sample_id)]
 
   # keep filtered/unfiltered separate for parallel layout
   s03a_filt   <- unlist(fig_s03a_files)
-  s03a_filt   <- s03a_filt[str_detect(s03a_filt, sample_id)]
+  s03a_filt   <- s03a_filt[!is.na(s03a_filt) & str_detect(s03a_filt, sample_id)]
   s03a_unfilt <- unlist(fig_s03a_unfiltered_files)
-  s03a_unfilt <- s03a_unfilt[str_detect(s03a_unfilt, sample_id)]
+  s03a_unfilt <- s03a_unfilt[!is.na(s03a_unfilt) & str_detect(s03a_unfilt, sample_id)]
 
   expr_unfilt <- unlist(numbat_expression_files)
-  expr_unfilt <- expr_unfilt[str_detect(expr_unfilt, sample_id)]
+  expr_unfilt <- expr_unfilt[!is.na(expr_unfilt) & str_detect(expr_unfilt, sample_id)]
   expr_filt   <- unlist(filtered_numbat_expression_files)
-  expr_filt   <- expr_filt[str_detect(expr_filt, sample_id)]
+  expr_filt   <- expr_filt[!is.na(expr_filt) & str_detect(expr_filt, sample_id)]
 
   bulk_unfilt <- unlist(numbat_bulk_clone_files)
-  bulk_unfilt <- bulk_unfilt[str_detect(bulk_unfilt, sample_id)]
+  bulk_unfilt <- bulk_unfilt[!is.na(bulk_unfilt) & str_detect(bulk_unfilt, sample_id)]
   bulk_filt   <- unlist(filtered_numbat_bulk_clone_files)
-  bulk_filt   <- bulk_filt[str_detect(bulk_filt, sample_id)]
+  bulk_filt   <- bulk_filt[!is.na(bulk_filt) & str_detect(bulk_filt, sample_id)]
 
   karyogram_unfiltered <- if (is.list(unfiltered_karyogram_files) && length(unfiltered_karyogram_files) > 0 &&
     is.list(unfiltered_karyogram_files[[1]]) && "plot" %in% names(unfiltered_karyogram_files[[1]])) {
@@ -753,11 +753,16 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
     do.call(c, padded) |> magick::image_append(stack = TRUE)
   }
 
-  make_panel_row <- function(paths, label, target_height = 700L, rotate = FALSE) {
+  make_panel_row <- function(paths, label, target_height = 700L, target_width = NULL, rotate = FALSE) {
     if (length(paths) == 0) return(NULL)
     imgs <- lapply(paths, annotate_panel, label = label)
-    imgs <- lapply(imgs, function(img) magick::image_scale(img, paste0("x", target_height)))
-    row_img <- make_row(imgs, target_height)
+    if (!is.null(target_width)) {
+      imgs <- lapply(imgs, function(img) magick::image_scale(img, paste0(target_width, "x")))
+      row_img <- do.call(c, imgs) |> magick::image_append(stack = FALSE)
+    } else {
+      imgs <- lapply(imgs, function(img) magick::image_scale(img, paste0("x", target_height)))
+      row_img <- make_row(imgs, target_height)
+    }
     if (rotate) {
       row_img <- magick::image_rotate(row_img, 90)
     }
@@ -778,7 +783,7 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
 
   has_unfilt_hm <- length(s03a_unfilt) > 0
   has_filt_hm   <- length(s03a_filt) > 0
-  has_karyo     <- file.exists(karyogram)
+  has_karyo     <- file.exists(karyogram_unfiltered) || file.exists(karyogram_filtered)
 
   # Build two explicit columns, each with five stacked rows.
   make_summary_col <- function(karyo_path,
@@ -792,13 +797,8 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
                                hm_label,
                                expr_label,
                                bulk_label) {
-    row1 <- if (file.exists(karyo_path)) {
-      annotate_panel(karyo_path, karyo_label) |>
-        magick::image_rotate(90) |>
-        magick::image_scale("x650")
-    } else {
-      NULL
-    }
+    existing_karyo <- karyo_path[file.exists(karyo_path)]
+    row1 <- if (length(existing_karyo) > 0) make_panel_row(existing_karyo, karyo_label, target_height = 650L, rotate = TRUE) else NULL
 
     tree_imgs <- c(
       lapply(seq_along(clone_tree_paths), function(i) {
@@ -813,11 +813,12 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
       purrr::compact()
     row2 <- if (length(tree_imgs) > 0) make_row(tree_imgs, target_height = 650L) else NULL
 
-    row3 <- make_panel_row(hm_paths, hm_label, target_height = 700L)
+    row3  <- make_panel_row(hm_paths[1L], hm_label, target_height = 700L)
+    row3b <- if (length(hm_paths) >= 2L) make_panel_row(hm_paths[2L], paste0(hm_label, " (SCNA variability)"), target_height = 700L) else NULL
     row4 <- make_panel_row(expr_paths, expr_label, target_height = 700L)
-    row5 <- make_panel_row(bulk_paths, bulk_label, target_height = 700L)
+    row5 <- make_panel_row(bulk_paths, bulk_label, target_width = 700L)
 
-    col_rows <- list(row1, row2, row3, row4, row5)
+    col_rows <- list(row1, row2, row3, row3b, row4, row5)
     col_rows <- purrr::compact(col_rows)
     if (length(col_rows) == 0) return(NULL)
     make_col(col_rows)
