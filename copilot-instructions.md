@@ -3,6 +3,32 @@ Rscript is located at /opt/R/4.3.1/bin/Rscript
 the targets store is _targets_r431
 use the targets-pipeline skill
 run the targets pipeline with /home/skevin/single_cell_projects/resources/external_rb_scrnaseq_proj/run_targets_bg.R
+
+## Monitoring Targets Pipeline
+
+When the user asks about targets pipeline progress, status, or to monitor the pipeline, use the monitoring script:
+```bash
+# Basic usage (uses default _targets_r431 store)
+./scripts/monitor_targets.sh
+
+# Specify different store
+./scripts/monitor_targets.sh _targets
+
+# Specify store and refresh interval (seconds)
+./scripts/monitor_targets.sh _targets_r431 5
+```
+
+The script provides:
+- Real-time progress percentage
+- Count of completed, dispatched, and skipped targets
+- List of currently active targets
+- Error detection
+- Recently completed targets with runtimes
+
+For one-time status checks without continuous monitoring, use:
+```bash
+Rscript -e 'library(targets); tar_config_set(store = "_targets_r431"); progress <- tar_progress(); table(progress$progress)'
+```
 ## Function Index
 
 | Function | File |

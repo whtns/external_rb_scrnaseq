@@ -42,7 +42,9 @@ plot_fig_04_05 <- function(seu_paths, integrated_enrichment, plot_path = "result
 	
 	panel_f_file <- ggsave(tempfile(fileext = ".pdf"), panel_f, width = 14, height = 6)
 	
-	qpdf::pdf_combine(unlist(c(panels_a_d, panel_e_file, panel_f_file)), plot_path)
+	paths <- unlist(c(panels_a_d, panel_e_file, panel_f_file))
+	paths <- paths[!is.na(paths)]
+	qpdf::pdf_combine(paths, plot_path)
 	
 	return(plot_path)
 	

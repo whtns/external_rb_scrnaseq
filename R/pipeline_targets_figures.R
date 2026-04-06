@@ -56,7 +56,8 @@ list(
       table_s03 = table_s03, # clusters removed with marker genes
       table_s07 = table_s07, # 1q+ clone percentage per cluster
       table_s09 = table_s09, # 16q- clone percentage per cluster
-      table_s10 = table_s10  # 2p+ clone percentage per cluster
+      table_s10 = table_s10,  # 2p+ clone percentage per cluster
+      sample_summaries = sample_summaries  # collated per-sample summary of key results (ideograms, clone trees, numbat plots, etc.
     )
   ),
 
@@ -95,7 +96,11 @@ list(
   # Combine all per-sample subtype violin PDFs into a single merged PDF.
   tar_target(
     subtype_violin_files,
-    qpdf::pdf_combine(unlist(subtype_violins), "results/scna_vlns.pdf")
+    {
+      paths <- unlist(subtype_violins)
+      paths <- paths[!is.na(paths)]
+      qpdf::pdf_combine(paths, "results/scna_vlns.pdf")
+    }
   ),
 
   # Plot cell cycle phase distribution across all samples grouped by SCNA type.
@@ -214,6 +219,20 @@ list(
       retrieve_numbat_plot_type(large_numbat_pdfs, "bulk_clones_final.pdf")
   ),
 
+    tar_target(subset_numbat_pdfs,
+    convert_numbat_pngs(numbat_rds_files),
+    pattern = map(numbat_rds_files),
+    iteration = "list"
+  ),
+
+  tar_target(subset_numbat_expression,
+    retrieve_numbat_plot_type(subset_numbat_pdfs, "exp_roll_clust.pdf")
+  ),
+
+  tar_target(subset_numbat_bulk_clones,
+      retrieve_numbat_plot_type(subset_numbat_pdfs, "bulk_clones_final.pdf")
+  ),
+  
   tar_target(fig_s05,
     qpdf::pdf_combine(unfiltered_numbat_expression, "results/numbat_expression.pdf")
   ),
@@ -255,6 +274,11 @@ list(
 
   tar_target(ideogram_res_s06a_unfiltered,
     make_rb_scna_ideograms(nb_paths_s06a),
+    pattern = map(nb_paths_s06a)
+  ),
+
+  tar_target(ideogram_res_s06a_subset,
+    make_rb_scna_ideograms(nb_paths_s06a, suffix = "_subset"),
     pattern = map(nb_paths_s06a)
   ),
 
@@ -374,8 +398,31 @@ list(
     error = "null"
   ),
 
+  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
+  tar_target(unfiltered_clone_trees_segments_files,
+    save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, NULL, label = "_unfiltered_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(unfiltered_seus),
+    iteration = "list",
+    error = "null"
+  ),
+
+  tar_target(subset_clone_tree_files,
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications, label = "_subset_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
+    iteration = "list",
+    error = "null"
+  ),
+
+  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
+  tar_target(subset_clone_trees_segments_files,
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_subset_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
+    iteration = "list",
+    error = "null"
+  ),
+
   tar_target(filtered_clone_tree_files,
-    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
+    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_filtered_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(filtered_seus_nb_filtered),
     iteration = "list",
     error = "null"
@@ -383,16 +430,8 @@ list(
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
   tar_target(filtered_clone_trees_segments_files,
-    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
+    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_filtered_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(filtered_seus_nb_filtered),
-    iteration = "list",
-    error = "null"
-  ),
-
-  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
-  tar_target(unfiltered_clone_trees_segments_files,
-    save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, NULL, label = "_unfiltered_segment_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(unfiltered_seus),
     iteration = "list",
     error = "null"
   ),
@@ -497,19 +536,44 @@ list(
   tar_target(sample_summaries,
     collate_sample_summary(
       ideogram_res_s06a_unfiltered,
+      ideogram_res_s06a_subset,
       ideogram_res_s06a_filtered,
       unfiltered_clone_tree_files,
       unfiltered_clone_trees_segments_files,
+      subset_clone_tree_files,
+      subset_clone_trees_segments_files,
       filtered_clone_tree_files,
       filtered_clone_trees_segments_files,
       fig_s03a_unfiltered_plots,
+      fig_s03a_subset_plots,
       fig_s03a_plots,
       unfiltered_numbat_expression,
+      subset_numbat_expression,
       filtered_numbat_expression,
       unfiltered_numbat_bulk_clones,
+      subset_numbat_bulk_clones,
       filtered_numbat_bulk_clones
     ),
     pattern = map(unfiltered_clone_tree_files),
+    iteration = "list",
+    error = "null"
+  ),
+
+  tar_target(hypoxia_summaries,
+    collate_hypoxia_summary(
+      hypoxia_seus,
+      hypoxia_score_plots,
+      heatmap_collages_hypoxia,
+      heatmap_collages_low_hypoxia,
+      heatmap_collages_high_hypoxia
+    ),
+    pattern = map(
+      hypoxia_seus,
+      hypoxia_score_plots,
+      heatmap_collages_hypoxia,
+      heatmap_collages_low_hypoxia,
+      heatmap_collages_high_hypoxia
+    ),
     iteration = "list",
     error = "null"
   ),

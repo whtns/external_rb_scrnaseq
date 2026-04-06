@@ -99,6 +99,19 @@ pipeline_targets_seurat <- c(
       cue = tar_cue(command = FALSE, depend = FALSE)
     ),
 
+    tar_target(filter_inspection_metadata,
+      # Lightweight per-cell metadata tibble for threshold sweeping.
+      # Reads unfiltered_seus (no SCTransform/UMAP); invalidated only when Seurat content changes.
+      extract_filter_metadata(
+        unfiltered_seus,
+        cluster_dictionary,
+        cells_to_remove,
+        large_clone_simplifications
+      ),
+      pattern = map(unfiltered_seus),
+      iteration = "list"
+    ),
+
     tar_target(filtered_seus,
       # Filtered counterpart also computes/adds scna metadata at cell level.
       filter_cluster_save_seu(
@@ -339,11 +352,25 @@ pipeline_targets_seurat <- c(
       iteration = "list"
     ),
 
-    tar_target(fig_s03a_unfiltered, qpdf::pdf_combine(unlist(fig_s03a_unfiltered_plots), "results/unfiltered_heatmaps.pdf")),
+    tar_target(fig_s03a_subset_plots,
+      make_numbat_heatmaps(
+        filtered_seus, numbat_rds_files,
+        p_min = 0.9, line_width = 0.1, extension = "_subset",
+        show_segment_names_on_x = TRUE
+      ),
+      pattern = map(filtered_seus),
+      iteration = "list"
+    ),
+
+    tar_target(fig_s03a_unfiltered, {
+      paths <- unlist(fig_s03a_unfiltered_plots)
+      paths <- paths[!is.na(paths)]
+      qpdf::pdf_combine(paths, "results/unfiltered_heatmaps.pdf")
+    }),
 
     tar_target(fig_s03a_plots,
       make_numbat_heatmaps(
-        filtered_seus_nb_filtered, numbat_rds_files,
+        filtered_seus_nb_filtered, numbat_rds_filtered_files,
         p_min = 0.9, line_width = 0.1, extension = "_filtered",
         show_segment_names_on_x = TRUE,
         numbat_rds_filtered_files = numbat_rds_filtered_files
@@ -352,7 +379,11 @@ pipeline_targets_seurat <- c(
       iteration = "list"
     ),
 
-    tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_plots), "results/filtered_heatmaps.pdf")),
+    tar_target(fig_s03a, {
+      paths <- unlist(fig_s03a_plots)
+      paths <- paths[!is.na(paths)]
+      qpdf::pdf_combine(paths, "results/filtered_heatmaps.pdf")
+    }),
 
     tar_target(fig_s13,
       # Always re-render: output layout can depend on graphics device/session state.
@@ -415,20 +446,28 @@ pipeline_targets_seurat <- c(
 
     tar_target(
       hypoxia_score_plots,
-      plot_hypoxia_score(hypoxia_seus, threshold = 0.5),
+      plot_hypoxia_score(hypoxia_seus, threshold = hypoxia_threshold),
       pattern = map(hypoxia_seus),
       iteration = "list"
     ),
 
     tar_target(seus_low_hypoxia,
       # Low-hypoxia partition is later remapped into SCNA-specific subsets.
-      subset_seu_by_expression(hypoxia_seus, run_hypoxia_clustering = TRUE, hypoxia_expr = "hypoxia_score <= 0.5", slug = "hypoxia_low"),
+      subset_seu_by_expression(
+        hypoxia_seus, run_hypoxia_clustering = TRUE,
+        hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}"),
+        slug = "hypoxia_low"
+      ),
       pattern = map(hypoxia_seus),
       iteration = "list"
     ),
 
     tar_target(seus_high_hypoxia,
-      subset_seu_by_expression(hypoxia_seus, run_hypoxia_clustering = TRUE, hypoxia_expr = "hypoxia_score > 0.5", slug = "hypoxia_high"),
+      subset_seu_by_expression(
+        hypoxia_seus, run_hypoxia_clustering = TRUE,
+        hypoxia_expr = glue::glue("hypoxia_score > {hypoxia_threshold}"),
+        slug = "hypoxia_high"
+      ),
       pattern = map(hypoxia_seus),
       iteration = "list"
     ),
@@ -439,15 +478,40 @@ pipeline_targets_seurat <- c(
       iteration = "list"
     ),
 
-    # TODO: heatmap_collages_hypoxia_low and heatmap_collages_hypoxia_high need to be
-    # updated to use seus_low_hypoxia / seus_high_hypoxia respectively.
+    tar_target(heatmap_collages_low_hypoxia,
+      plot_seu_marker_heatmap(
+        seus_low_hypoxia,
+        nb_paths = numbat_rds_files,
+        clone_simplifications = large_clone_simplifications,
+        tmp_plot_path = TRUE
+      ),
+      pattern = map(seus_low_hypoxia),
+      iteration = "list"
+    ),
+
+    tar_target(heatmap_collages_high_hypoxia,
+      plot_seu_marker_heatmap(
+        seus_high_hypoxia,
+        nb_paths = numbat_rds_files,
+        clone_simplifications = large_clone_simplifications,
+        tmp_plot_path = TRUE
+      ),
+      pattern = map(seus_high_hypoxia),
+      iteration = "list"
+    ),
 
     tar_target(hypoxia_effect_plots,
-      list(
-        qpdf::pdf_combine(unlist(hypoxia_score_plots), "01_hypoxia_score_plots.pdf"),
-        qpdf::pdf_combine(unlist(heatmap_collages_hypoxia), "02_hypoxia_heatmap.pdf")
-        # TODO: add low/high hypoxia heatmaps once those targets are fixed
-      ),
+      {
+        hypoxia_paths <- unlist(hypoxia_score_plots)
+        hypoxia_paths <- hypoxia_paths[!is.na(hypoxia_paths)]
+        heatmap_paths <- unlist(heatmap_collages_hypoxia)
+        heatmap_paths <- heatmap_paths[!is.na(heatmap_paths)]
+        list(
+          qpdf::pdf_combine(hypoxia_paths, "01_hypoxia_score_plots.pdf"),
+          qpdf::pdf_combine(heatmap_paths, "02_hypoxia_heatmap.pdf")
+          # TODO: add low/high hypoxia heatmaps once those targets are fixed
+        )
+      },
     ),
 
     tar_target(silhouette_plots,
@@ -504,7 +568,11 @@ pipeline_targets_seurat <- c(
       .clustree_combined,
       tarchetypes::tar_files(
         clustree_compilation,
-        qpdf::pdf_combine(unlist(clustrees), "results/clustrees.pdf"),
+        {
+          paths <- unlist(clustrees)
+          paths <- paths[!is.na(paths)]
+          qpdf::pdf_combine(paths, "results/clustrees.pdf")
+        },
         format = "file"
       )
     )
@@ -532,7 +600,8 @@ pipeline_targets_seurat <- c(
     tar_target(integrated_seu_low_hypoxia,
       integration_by_scna_clones(
         hypoxia_sym, scna_of_interest = scna,
-        large_clone_comparisons, filter_expr = "hypoxia_score <= 0.5"
+        large_clone_comparisons,
+        filter_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}")
       )
     )
   ),

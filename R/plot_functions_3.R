@@ -283,6 +283,199 @@ filter_sample_qc <- function(seu, mito_threshold = 5, nCount_threshold = 500, nF
     identity()
 }
 
+#' Extract per-cell filtering metadata from an unfiltered Seurat RDS
+#'
+#' Reads the unfiltered Seurat object (output of prep_unfiltered_seu, which already
+#' contains clone_opt, GT_opt, gene_snn_res.0.2, abbreviation, and scna metadata)
+#' and returns a flat tibble of per-cell filtering flags.  No SCTransform, PCA,
+#' UMAP, or marker detection is performed.
+#'
+#' @param seu_path Path to an unfiltered Seurat RDS (element of unfiltered_seus target).
+#' @param cluster_dictionary Named list of per-sample tibbles with columns
+#'   gene_snn_res.0.2, abbreviation, remove.
+#' @param cells_to_remove Named list of per-sample tibbles with a "cell" column
+#'   listing manually excluded barcodes.
+#' @param large_clone_simplifications Named list of per-sample SCNA simplification
+#'   vectors (passed through to identify sample_id only; not used for metadata
+#'   derivation since scna is already in the unfiltered object).
+#' @return A tibble with one row per cell and columns: cell, sample_id,
+#'   nCount_gene, nFeature_gene, percent.mt, clone_opt_is_na, cluster,
+#'   abbreviation, cluster_remove_flag, is_malat1, in_manual_exclude, scna.
+#' @export
+extract_filter_metadata <- function(
+  seu_path,
+  cluster_dictionary,
+  cells_to_remove,
+  large_clone_simplifications
+) {
+  sample_id <- stringr::str_extract(seu_path, "SRR[0-9]*")
+  seu <- readRDS(seu_path)
+
+  meta <- seu@meta.data |>
+    tibble::rownames_to_column("cell") |>
+    tibble::as_tibble() |>
+    dplyr::mutate(
+      sample_id      = sample_id,
+      clone_opt_is_na = is.na(clone_opt),
+      cluster        = as.numeric(as.character(gene_snn_res.0.2))
+    )
+
+  # cluster_remove_flag from cluster_dictionary
+  if (!is.null(cluster_dictionary[[sample_id]])) {
+    clusters_to_remove <- cluster_dictionary[[sample_id]] |>
+      dplyr::filter(remove == "1") |>
+      dplyr::pull(gene_snn_res.0.2)
+    meta <- meta |>
+      dplyr::mutate(cluster_remove_flag = cluster %in% clusters_to_remove)
+  } else {
+    meta <- meta |> dplyr::mutate(cluster_remove_flag = FALSE)
+  }
+
+  meta <- meta |>
+    dplyr::mutate(is_malat1 = !is.na(abbreviation) & abbreviation == "MALAT1")
+
+  manual_cells <- cells_to_remove[[sample_id]][["cell"]]
+  if (is.null(manual_cells)) manual_cells <- character(0)
+  meta <- meta |>
+    dplyr::mutate(in_manual_exclude = cell %in% manual_cells)
+
+  meta |>
+    dplyr::select(
+      cell, sample_id,
+      nCount_gene, nFeature_gene, percent.mt,
+      clone_opt_is_na, cluster, abbreviation,
+      cluster_remove_flag, is_malat1, in_manual_exclude,
+      scna
+    )
+}
+
+#' Simulate filtering pipeline on per-cell metadata and return staged cell counts
+#'
+#' Pure dplyr operation on the tibble from extract_filter_metadata.  No Seurat I/O.
+#' Stages mirror the four snapshots used by plot_filtering_timeline.
+#'
+#' @param filter_meta Tibble from extract_filter_metadata (one row per cell).
+#' @param mito_threshold Maximum percent.mt to retain (default 10).
+#' @param nCount_threshold Minimum nCount_gene to retain (default 1000).
+#' @param nFeature_threshold Minimum nFeature_gene to retain (default 1000).
+#' @param include_cluster_removal Logical; apply cluster_remove_flag step (default TRUE).
+#' @param include_malat1_removal Logical; remove MALAT1 cluster cells (default TRUE).
+#' @param include_manual_removal Logical; apply manual exclusion list (default TRUE).
+#' @return A tibble with columns: stage, scna, n_cells, pct_remaining.
+#'   pct_remaining is the percentage of the pre-filter total at that stage.
+#' @export
+apply_filter_criteria <- function(
+  filter_meta,
+  mito_threshold          = 10,
+  nCount_threshold        = 1000,
+  nFeature_threshold      = 1000,
+  include_cluster_removal = TRUE,
+  include_malat1_removal  = TRUE,
+  include_manual_removal  = TRUE
+) {
+  n_total <- nrow(filter_meta)
+  stage_cells <- list()
+
+  stage_cells[["clone_na"]] <- filter_meta |>
+    dplyr::filter(!clone_opt_is_na)
+
+  stage_cells[["qc"]] <- stage_cells[["clone_na"]] |>
+    dplyr::filter(
+      percent.mt    < mito_threshold,
+      nCount_gene   > nCount_threshold,
+      nFeature_gene > nFeature_threshold
+    )
+
+  stage_cells[["cluster_removal"]] <- stage_cells[["qc"]]
+  if (include_cluster_removal) {
+    stage_cells[["cluster_removal"]] <- stage_cells[["cluster_removal"]] |>
+      dplyr::filter(!cluster_remove_flag)
+  }
+  if (include_malat1_removal) {
+    stage_cells[["cluster_removal"]] <- stage_cells[["cluster_removal"]] |>
+      dplyr::filter(!is_malat1)
+  }
+
+  stage_cells[["manual"]] <- stage_cells[["cluster_removal"]]
+  if (include_manual_removal) {
+    stage_cells[["manual"]] <- stage_cells[["manual"]] |>
+      dplyr::filter(!in_manual_exclude)
+  }
+
+  stage_names <- c("clone_na", "qc", "cluster_removal", "manual")
+
+  purrr::map_dfr(stage_names, function(stage) {
+    stage_cells[[stage]] |>
+      dplyr::count(scna, name = "n_cells") |>
+      dplyr::mutate(
+        stage         = stage,
+        pct_remaining = round(100 * n_cells / n_total, 1)
+      )
+  }) |>
+    dplyr::mutate(stage = factor(stage, levels = stage_names)) |>
+    dplyr::select(stage, scna, n_cells, pct_remaining)
+}
+
+#' Sweep QC threshold combinations and plot cell survival landscape
+#'
+#' Calls apply_filter_criteria over a grid of mito/nCount/nFeature thresholds and
+#' returns a faceted ggplot.  No Seurat I/O — operates entirely on the tibble from
+#' extract_filter_metadata.
+#'
+#' @param filter_meta Tibble from extract_filter_metadata (can be combined across
+#'   samples with dplyr::bind_rows).
+#' @param param_grid Optional data frame with columns mito, nCount, nFeature.
+#'   Defaults to expand.grid of c(5,10,15,20) x c(500,1000,2000) x c(500,1000,2000).
+#' @return A ggplot2 object.
+#' @export
+plot_filter_sweep <- function(filter_meta, param_grid = NULL) {
+  if (is.null(param_grid)) {
+    param_grid <- expand.grid(
+      mito     = c(5, 10, 15, 20),
+      nCount   = c(500, 1000, 2000),
+      nFeature = c(500, 1000, 2000),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  results <- purrr::map_dfr(seq_len(nrow(param_grid)), function(i) {
+    mito     <- param_grid[["mito"]][i]
+    nCount   <- param_grid[["nCount"]][i]
+    nFeature <- param_grid[["nFeature"]][i]
+    apply_filter_criteria(
+      filter_meta,
+      mito_threshold     = mito,
+      nCount_threshold   = nCount,
+      nFeature_threshold = nFeature
+    ) |>
+      dplyr::filter(stage == "manual") |>
+      dplyr::mutate(mito = mito, nCount = nCount, nFeature = nFeature)
+  })
+
+  results_long <- results |>
+    tidyr::pivot_longer(
+      cols      = c("mito", "nCount", "nFeature"),
+      names_to  = "qc_metric",
+      values_to = "threshold"
+    )
+
+  ggplot2::ggplot(results_long, ggplot2::aes(
+    x     = threshold,
+    y     = pct_remaining,
+    color = scna,
+    group = interaction(scna, qc_metric)
+  )) +
+    ggplot2::geom_line() +
+    ggplot2::geom_point() +
+    ggplot2::facet_wrap(~ qc_metric, scales = "free_x") +
+    ggplot2::labs(
+      x     = "Threshold value",
+      y     = "% cells remaining (post all filters)",
+      color = "SCNA"
+    ) +
+    ggplot2::theme_bw()
+}
+
 #' Read all hypoxia Seurat RDS files and pull hypoxia_score metadata
 #'
 #' @param dir Directory to search for hypoxia Seurat files. Defaults to "output/seurat".
