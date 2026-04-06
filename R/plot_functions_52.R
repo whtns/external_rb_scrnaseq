@@ -634,16 +634,22 @@ make_table_s10 <- make_table_s07
 #' @return Path to the combined per-sample PDF
 #' @export
 collate_sample_summary <- function(unfiltered_karyogram_files,
+                                   subset_karyogram_files,
                                    filtered_karyogram_files,
                                    unfiltered_clone_tree_files,
                                    unfiltered_clone_trees_segments_files,
+                                   subset_clone_tree_files,
+                                   subset_clone_trees_segments_files,
                                    filtered_clone_tree_files,
                                    filtered_clone_trees_segments_files,
                                    fig_s03a_unfiltered_files,
+                                   fig_s03a_subset_files,
                                    fig_s03a_files,
                                    numbat_expression_files,
+                                   subset_numbat_expression_files,
                                    filtered_numbat_expression_files,
                                    numbat_bulk_clone_files,
+                                   subset_numbat_bulk_clone_files,
                                    filtered_numbat_bulk_clone_files,
                                    density = 300) {
 
@@ -651,47 +657,76 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
 
   clone_trees_unfiltered   <- unlist(unfiltered_clone_tree_files)
   segment_trees_unfiltered <- unlist(unfiltered_clone_trees_segments_files)
+  clone_trees_subset       <- unlist(subset_clone_tree_files)
+  segment_trees_subset     <- unlist(subset_clone_trees_segments_files)
   clone_trees_filtered     <- unlist(filtered_clone_tree_files)
   segment_trees_filtered   <- unlist(filtered_clone_trees_segments_files)
 
   clone_trees_unfiltered   <- clone_trees_unfiltered[!is.na(clone_trees_unfiltered) & str_detect(clone_trees_unfiltered, sample_id)]
   segment_trees_unfiltered <- segment_trees_unfiltered[!is.na(segment_trees_unfiltered) & str_detect(segment_trees_unfiltered, sample_id)]
+  clone_trees_subset       <- clone_trees_subset[!is.na(clone_trees_subset) & str_detect(clone_trees_subset, sample_id)]
+  segment_trees_subset     <- segment_trees_subset[!is.na(segment_trees_subset) & str_detect(segment_trees_subset, sample_id)]
   clone_trees_filtered     <- clone_trees_filtered[!is.na(clone_trees_filtered) & str_detect(clone_trees_filtered, sample_id)]
   segment_trees_filtered   <- segment_trees_filtered[!is.na(segment_trees_filtered) & str_detect(segment_trees_filtered, sample_id)]
 
-  # keep filtered/unfiltered separate for parallel layout
+  # keep unfiltered/subset/filtered separate for three-column layout
   s03a_filt   <- unlist(fig_s03a_files)
   s03a_filt   <- s03a_filt[!is.na(s03a_filt) & str_detect(s03a_filt, sample_id)]
+  s03a_subset <- unlist(fig_s03a_subset_files)
+  s03a_subset <- s03a_subset[!is.na(s03a_subset) & str_detect(s03a_subset, sample_id)]
   s03a_unfilt <- unlist(fig_s03a_unfiltered_files)
   s03a_unfilt <- s03a_unfilt[!is.na(s03a_unfilt) & str_detect(s03a_unfilt, sample_id)]
 
-  expr_unfilt <- unlist(numbat_expression_files)
-  expr_unfilt <- expr_unfilt[!is.na(expr_unfilt) & str_detect(expr_unfilt, sample_id)]
-  expr_filt   <- unlist(filtered_numbat_expression_files)
-  expr_filt   <- expr_filt[!is.na(expr_filt) & str_detect(expr_filt, sample_id)]
+  expr_unfilt  <- unlist(numbat_expression_files)
+  expr_unfilt  <- expr_unfilt[!is.na(expr_unfilt) & str_detect(expr_unfilt, sample_id)]
+  expr_subset  <- unlist(subset_numbat_expression_files)
+  expr_subset  <- expr_subset[!is.na(expr_subset) & str_detect(expr_subset, sample_id)]
+  expr_filt    <- unlist(filtered_numbat_expression_files)
+  expr_filt    <- expr_filt[!is.na(expr_filt) & str_detect(expr_filt, sample_id)]
 
-  bulk_unfilt <- unlist(numbat_bulk_clone_files)
-  bulk_unfilt <- bulk_unfilt[!is.na(bulk_unfilt) & str_detect(bulk_unfilt, sample_id)]
-  bulk_filt   <- unlist(filtered_numbat_bulk_clone_files)
-  bulk_filt   <- bulk_filt[!is.na(bulk_filt) & str_detect(bulk_filt, sample_id)]
+  bulk_unfilt  <- unlist(numbat_bulk_clone_files)
+  bulk_unfilt  <- bulk_unfilt[!is.na(bulk_unfilt) & str_detect(bulk_unfilt, sample_id)]
+  bulk_subset  <- unlist(subset_numbat_bulk_clone_files)
+  bulk_subset  <- bulk_subset[!is.na(bulk_subset) & str_detect(bulk_subset, sample_id)]
+  bulk_filt    <- unlist(filtered_numbat_bulk_clone_files)
+  bulk_filt    <- bulk_filt[!is.na(bulk_filt) & str_detect(bulk_filt, sample_id)]
 
-  karyogram_unfiltered <- if (is.list(unfiltered_karyogram_files) && length(unfiltered_karyogram_files) > 0 &&
-    is.list(unfiltered_karyogram_files[[1]]) && "plot" %in% names(unfiltered_karyogram_files[[1]])) {
-    purrr::map_chr(unfiltered_karyogram_files, "plot")
-  } else {
-    unlist(unfiltered_karyogram_files, use.names = FALSE)
+  extract_karyogram_path <- function(karyogram_files, sample_id, fallback_suffix = "") {
+    if (is.list(karyogram_files) && length(karyogram_files) > 0 &&
+      is.list(karyogram_files[[1]]) && "plot" %in% names(karyogram_files[[1]])) {
+      candidates <- purrr::map_chr(karyogram_files, "plot")
+    } else {
+      candidates <- unlist(karyogram_files, use.names = FALSE)
+      candidates <- candidates[!is.na(candidates)]
+      candidates <- candidates[str_detect(candidates, "_karyogram\\.pdf$")]
+    }
+
+    candidates <- candidates[!is.na(candidates) & str_detect(candidates, sample_id)]
+
+    if (length(candidates) > 0) {
+      candidates[[1]]
+    } else {
+      glue("results/{sample_id}{fallback_suffix}_karyogram.pdf")
+    }
   }
-  karyogram_unfiltered <- karyogram_unfiltered[str_detect(karyogram_unfiltered, sample_id)]
-  karyogram_unfiltered <- if (length(karyogram_unfiltered) > 0) karyogram_unfiltered[[1]] else glue("results/{sample_id}_karyogram.pdf")
 
-  karyogram_filtered <- if (is.list(filtered_karyogram_files) && length(filtered_karyogram_files) > 0 &&
-    is.list(filtered_karyogram_files[[1]]) && "plot" %in% names(filtered_karyogram_files[[1]])) {
-    purrr::map_chr(filtered_karyogram_files, "plot")
-  } else {
-    unlist(filtered_karyogram_files, use.names = FALSE)
-  }
-  karyogram_filtered <- karyogram_filtered[str_detect(karyogram_filtered, sample_id)]
-  karyogram_filtered <- if (length(karyogram_filtered) > 0) karyogram_filtered[[1]] else glue("results/{sample_id}_filtered_karyogram.pdf")
+  karyogram_unfiltered <- extract_karyogram_path(
+    unfiltered_karyogram_files,
+    sample_id,
+    fallback_suffix = ""
+  )
+
+  karyogram_subset <- extract_karyogram_path(
+    subset_karyogram_files,
+    sample_id,
+    fallback_suffix = "_subset"
+  )
+
+  karyogram_filtered <- extract_karyogram_path(
+    filtered_karyogram_files,
+    sample_id,
+    fallback_suffix = "_filtered"
+  )
 
   # Fallback: if no fig_s03a, use numbat heatmaps directly from disk
   if (length(s03a_filt) == 0 && length(s03a_unfilt) == 0) {
@@ -700,11 +735,16 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
       glue("{nb_dir}/{sample_id}_unfiltered.pdf"),
       glue("{nb_dir}/{sample_id}_unfiltered_scna_var.pdf")
     )
+    cands_subset <- c(
+      glue("{nb_dir}/{sample_id}_subset.pdf"),
+      glue("{nb_dir}/{sample_id}_subset_scna_var.pdf")
+    )
     cands_filt <- c(
       glue("{nb_dir}/{sample_id}_filtered.pdf"),
       glue("{nb_dir}/{sample_id}_filtered_scna_var.pdf")
     )
     s03a_unfilt <- cands_unfilt[file.exists(cands_unfilt)]
+    s03a_subset <- cands_subset[file.exists(cands_subset)]
     s03a_filt   <- cands_filt[file.exists(cands_filt)]
   }
 
@@ -754,6 +794,7 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
   }
 
   make_panel_row <- function(paths, label, target_height = 700L, target_width = NULL, rotate = FALSE) {
+    paths <- paths[!is.na(paths)]
     if (length(paths) == 0) return(NULL)
     imgs <- lapply(paths, annotate_panel, label = label)
     if (!is.null(target_width)) {
@@ -797,9 +838,8 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
                                hm_label,
                                expr_label,
                                bulk_label) {
-    existing_karyo <- karyo_path[file.exists(karyo_path)]
-    row1 <- if (length(existing_karyo) > 0) make_panel_row(existing_karyo, karyo_label, target_height = 650L, rotate = TRUE) else NULL
 
+    # Build middle rows first so we can derive the column width
     tree_imgs <- c(
       lapply(seq_along(clone_tree_paths), function(i) {
         lbl <- if (length(clone_tree_paths) > 1) paste0(tree_label_prefix, " clone tree (", i, ")") else paste0(tree_label_prefix, " clone tree")
@@ -815,11 +855,36 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
 
     row3  <- make_panel_row(hm_paths[1L], hm_label, target_height = 700L)
     row3b <- if (length(hm_paths) >= 2L) make_panel_row(hm_paths[2L], paste0(hm_label, " (SCNA variability)"), target_height = 700L) else NULL
-    row4 <- make_panel_row(expr_paths, expr_label, target_height = 700L)
-    row5 <- make_panel_row(bulk_paths, bulk_label, target_width = 700L)
+    row4  <- make_panel_row(expr_paths, expr_label, target_height = 700L)
 
-    col_rows <- list(row1, row2, row3, row3b, row4, row5)
-    col_rows <- purrr::compact(col_rows)
+    # Derive column width from middle rows; fall back to a sensible default
+    middle_rows <- purrr::compact(list(row2, row3, row3b, row4))
+    col_width <- if (length(middle_rows) > 0) {
+      max(vapply(middle_rows, function(r) magick::image_info(r)$width[1L], integer(1L)))
+    } else {
+      1400L
+    }
+
+    # Karyogram: rotate then scale to full column width; blank if missing
+    existing_karyo <- karyo_path[file.exists(karyo_path)]
+    row1 <- if (length(existing_karyo) > 0) {
+      img <- annotate_panel(existing_karyo[[1L]], karyo_label)
+      img <- magick::image_rotate(img, 90)
+      magick::image_scale(img, paste0(col_width, "x"))
+    } else {
+      magick::image_blank(col_width, 650L, color = "white")
+    }
+
+    # Bulk clones: scale to full column width; blank if missing
+    existing_bulk <- bulk_paths[file.exists(bulk_paths)]
+    row5 <- if (length(existing_bulk) > 0) {
+      img <- annotate_panel(existing_bulk[[1L]], bulk_label)
+      magick::image_scale(img, paste0(col_width, "x"))
+    } else {
+      magick::image_blank(col_width, 700L, color = "white")
+    }
+
+    col_rows <- purrr::compact(list(row1, row2, row3, row3b, row4, row5))
     if (length(col_rows) == 0) return(NULL)
     make_col(col_rows)
   }
@@ -838,6 +903,20 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
     "Unfiltered bulk clones"
   )
 
+  subset_col <- make_summary_col(
+    karyogram_subset,
+    clone_trees_subset,
+    segment_trees_subset,
+    s03a_subset,
+    expr_subset,
+    bulk_subset,
+    "Karyogram (subset)",
+    "Subset",
+    "Subset fig_s03a",
+    "Subset expression",
+    "Subset bulk clones"
+  )
+
   filt_col <- make_summary_col(
     karyogram_filtered,
     clone_trees_filtered,
@@ -852,12 +931,17 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
     "Filtered bulk clones"
   )
 
-  if (!is.null(unfilt_col) && !is.null(filt_col)) {
-    rows[[length(rows) + 1L]] <- side_by_side(unfilt_col, filt_col)
-  } else if (!is.null(unfilt_col)) {
-    rows[[length(rows) + 1L]] <- unfilt_col
-  } else if (!is.null(filt_col)) {
-    rows[[length(rows) + 1L]] <- filt_col
+  # Combine up to three columns, padding each to the same height first
+  all_cols <- purrr::compact(list(unfilt_col, subset_col, filt_col))
+  if (length(all_cols) > 0) {
+    max_col_h <- max(vapply(all_cols, function(col) magick::image_info(col)$height[1L], integer(1L)))
+    all_cols <- lapply(all_cols, function(col) {
+      h <- magick::image_info(col)$height[1L]
+      if (h < max_col_h)
+        magick::image_extent(col, glue("{magick::image_info(col)$width[1L]}x{max_col_h}"), gravity = "North", color = "white")
+      else col
+    })
+    rows[[length(rows) + 1L]] <- do.call(c, all_cols) |> magick::image_append(stack = FALSE)
   }
 
   if (length(rows) == 0) {
@@ -890,4 +974,106 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
   magick::image_write(summary_img, format = "pdf", path = out_path)
 
   return(out_path)
+}
+
+#' Collate per-sample hypoxia partition summary
+#'
+#' Assembles a three-column PDF (subset | low hypoxia | high hypoxia) for one
+#' sample, with the hypoxia score distribution plot as a header row.
+#'
+#' @param seu_path Path to the hypoxia-scored Seurat RDS (used to derive sample_id).
+#' @param score_plot_file PDF produced by plot_hypoxia_score() for this sample.
+#' @param subset_heatmap_file Marker heatmap PDF for the full hypoxia-scored seu.
+#' @param low_heatmap_file Marker heatmap PDF for the low-hypoxia subset.
+#' @param high_heatmap_file Marker heatmap PDF for the high-hypoxia subset.
+#' @param density Integer rasterisation DPI passed to magick (default 300).
+#' @return Path to the written summary PDF, or NULL if no panels were found.
+#' @export
+collate_hypoxia_summary <- function(seu_path,
+                                    score_plot_file,
+                                    subset_heatmap_file,
+                                    low_heatmap_file,
+                                    high_heatmap_file,
+                                    density = 300) {
+
+  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+
+  annotate_panel <- function(path, label) {
+    img <- magick::image_read_pdf(path, density = density)[1]
+    img_info <- magick::image_info(img)[1, ]
+    label_strip_height <- max(50L, as.integer(round(img_info$height * 0.05)))
+    label_strip <- magick::image_blank(img_info$width, label_strip_height, color = "white")
+    label_strip <- magick::image_annotate(
+      label_strip, label,
+      size = 36, color = "black", gravity = "center", weight = 700
+    )
+    magick::image_append(c(label_strip, img), stack = TRUE)
+  }
+
+  safe_panel <- function(path, label) {
+    if (is.null(path) || is.na(path) || !file.exists(path)) return(NULL)
+    tryCatch(annotate_panel(path, label), error = function(e) {
+      warning("Could not read panel '", label, "' for ", sample_id, ": ", e$message)
+      NULL
+    })
+  }
+
+  make_col <- function(img_list) {
+    img_list <- purrr::compact(img_list)
+    if (length(img_list) == 0) return(NULL)
+    w <- max(vapply(img_list, function(img) magick::image_info(img)$width[1L], integer(1L)))
+    padded <- lapply(img_list, function(img) {
+      info <- magick::image_info(img)[1L, ]
+      if (info$width < w)
+        magick::image_extent(img, glue("{w}x{info$height}"), gravity = "West", color = "white")
+      else img
+    })
+    do.call(c, padded) |> magick::image_append(stack = TRUE)
+  }
+
+  score_img   <- safe_panel(score_plot_file,    glue("Hypoxia score — {sample_id}"))
+  subset_img  <- safe_panel(subset_heatmap_file, "Subset (all cells)")
+  low_img     <- safe_panel(low_heatmap_file,    "Low hypoxia")
+  high_img    <- safe_panel(high_heatmap_file,   "High hypoxia")
+
+  heatmap_cols <- purrr::compact(list(subset_img, low_img, high_img))
+  if (length(heatmap_cols) == 0 && is.null(score_img)) {
+    warning("No panels found for sample ", sample_id)
+    return(NULL)
+  }
+
+  rows <- list()
+
+  if (!is.null(score_img)) {
+    rows[[length(rows) + 1L]] <- score_img
+  }
+
+  if (length(heatmap_cols) > 0) {
+    target_h <- 700L
+    scaled <- lapply(heatmap_cols, function(img)
+      magick::image_scale(img, paste0("x", target_h))
+    )
+    rows[[length(rows) + 1L]] <- do.call(c, scaled) |> magick::image_append(stack = FALSE)
+  }
+
+  max_width <- max(vapply(rows, function(r) magick::image_info(r)$width[1L], integer(1L)))
+  padded_rows <- lapply(rows, function(r) {
+    info <- magick::image_info(r)[1L, ]
+    if (info$width < max_width)
+      magick::image_extent(r, glue("{max_width}x{info$height}"), gravity = "West", color = "white")
+    else r
+  })
+  summary_img <- do.call(c, padded_rows) |> magick::image_append(stack = TRUE)
+
+  title_h <- max(70L, as.integer(round(magick::image_info(summary_img)$height[1L] * 0.03)))
+  title_strip <- magick::image_blank(magick::image_info(summary_img)$width[1L], title_h, color = "white")
+  title_strip <- magick::image_annotate(
+    title_strip, sample_id,
+    size = 60, color = "black", gravity = "north", weight = 700, location = "+0+14"
+  )
+  summary_img <- magick::image_append(c(title_strip, summary_img), stack = TRUE)
+
+  out_path <- glue("results/{sample_id}_hypoxia_summary.pdf")
+  magick::image_write(summary_img, format = "pdf", path = out_path)
+  out_path
 }

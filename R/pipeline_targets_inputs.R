@@ -198,6 +198,8 @@ pipeline_targets_inputs <- c(
     # --- QC and metadata ---
 
     tar_target(cells_to_remove, read_cells_to_remove("data/cells_to_remove_final.xlsx")),
+    tar_target(cells_to_remove2, read_cells_to_remove("data/cells_to_remove_final.xlsx")),
+
     tar_target(total_metadata, read_tsv("data/metadata.tsv")),
     tar_target(hallmark_gene_sets, msigdbr(species = "Homo sapiens", category = "H")),
 

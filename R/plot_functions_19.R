@@ -597,7 +597,18 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2), ass
   if (!is.null(hypoxia_expr) && isTRUE(run_hypoxia_clustering)) {
     message("Re-running clustering on hypoxia-subsetted object at resolutions: ", paste(cluster_resolutions, collapse = ", "))
     seu <- seurat_cluster(seu, resolution = cluster_resolutions, seurat_assay = assay)
-    seu <- find_all_markers(seu, seurat_assay = assay)
+    seu <- tryCatch(
+      find_all_markers(seu, seurat_assay = assay),
+      error = function(e) {
+        if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+          warning("SCT marker JoinLayers failed; using PrepSCTFindMarkers fallback.")
+          seu <- PrepSCTFindMarkers(seu)
+          seu@misc$markers[["clusters"]] <- FindAllMarkers(seu, assay = assay, verbose = FALSE)
+          return(seu)
+        }
+        stop(e)
+      }
+    )
   }
 
   new_filepath <- str_replace(seu_path, "_seu.*.rds", paste0("_", slug, "_seu.rds"))

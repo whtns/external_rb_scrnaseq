@@ -27,7 +27,7 @@ make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_w
     return(c(NA_character_, NA_character_))
   }
   numbat_rds_file <- numbat_rds_files[[match_idx[[1]]]]
-  numbat_dir <- "numbat_sridhar"
+  numbat_dir <- basename(dirname(dirname(numbat_rds_file)))
   dir_create(glue("results/{numbat_dir}/"))
   dir_create(glue("results/{numbat_dir}/{sample_id}"))
   seu <- readRDS(seu_path)
