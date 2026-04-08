@@ -17,7 +17,88 @@
 # - rownames_round_trip: Avoid unnecessary rownames conversions - keep as column when possible
 # - multiple_joins: Combine multiple joins into single join operation where possible
 
-filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv") {
+annotate_filter_reason <- function(
+  seu,
+  sample_id,
+  cluster_dictionary,
+  cells_to_remove = NULL,
+  mito_threshold = 10,
+  nCount_threshold = 1000,
+  nFeature_threshold = 1000
+) {
+  if (is.null(cluster_dictionary[[sample_id]])) {
+    stop("cluster_dictionary has no entry for ", sample_id, "; cannot annotate filter reasons")
+  }
+
+  clusters_to_remove <-
+    cluster_dictionary[[sample_id]] %>%
+    dplyr::filter(remove == "1") %>%
+    dplyr::pull(`gene_snn_res.0.2`)
+
+  cells_to_drop <- character(0)
+  if (!is.null(cells_to_remove) && !is.null(cells_to_remove[[sample_id]])) {
+    cells_to_drop <- cells_to_remove[[sample_id]][["cell"]]
+    if (is.null(cells_to_drop)) {
+      cells_to_drop <- character(0)
+    }
+  }
+
+  meta <- seu@meta.data
+  has_clone_col <- "clone_opt" %in% colnames(meta)
+  has_cluster_col <- "gene_snn_res.0.2" %in% colnames(meta)
+  has_abbrev_col <- "abbreviation" %in% colnames(meta)
+
+  clone_missing <- if (has_clone_col) {
+    is.na(meta$clone_opt)
+  } else {
+    rep(TRUE, nrow(meta))
+  }
+
+  qc_fail <-
+    meta$percent.mt >= mito_threshold |
+    meta$nFeature_gene <= nFeature_threshold |
+    meta$nCount_gene <= nCount_threshold
+
+  cluster_remove <- if (has_cluster_col) {
+    meta$gene_snn_res.0.2 %in% clusters_to_remove
+  } else {
+    rep(FALSE, nrow(meta))
+  }
+
+  malat1_remove <- if (has_abbrev_col) {
+    !is.na(meta$abbreviation) & meta$abbreviation == "MALAT1"
+  } else {
+    rep(FALSE, nrow(meta))
+  }
+
+  manual_remove <- if (length(cells_to_drop) > 0) {
+    rownames(meta) %in% cells_to_drop
+  } else {
+    rep(FALSE, nrow(meta))
+  }
+
+  filter_reason <- dplyr::case_when(
+    clone_missing ~ "clone_opt_na",
+    qc_fail ~ "qc_fail",
+    cluster_remove ~ "cluster_remove",
+    malat1_remove ~ "malat1",
+    manual_remove ~ "manual_exclude",
+    TRUE ~ NA_character_
+  )
+
+  filter_keep <- is.na(filter_reason)
+
+  reason_meta <- data.frame(
+    filter_reason = filter_reason,
+    filter_keep = filter_keep,
+    stringsAsFactors = FALSE,
+    row.names = rownames(meta)
+  )
+
+  Seurat::AddMetaData(seu, metadata = reason_meta)
+}
+
+filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv", ...) {
   
   sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
@@ -35,7 +116,6 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
     dplyr::mutate(cell = str_replace(cell, "\\.", "-")) %>%
     tibble::column_to_rownames("cell")
   seu <- Seurat::AddMetaData(seu, nb_clone_post)
-  seu <- seu[, !is.na(seu$clone_opt)]
   all_cells_meta <- seu@meta.data
   if (!"gene_snn_res.0.2" %in% colnames(seu@meta.data)) {
     message("gene_snn_res.0.2 missing for ", sample_id, "; re-running FindNeighbors + seurat_cluster")
@@ -85,29 +165,18 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
 
   seu <- Seurat::AddMetaData(seu, scna_metadata)
 
+  seu <- annotate_filter_reason(
+    seu = seu,
+    sample_id = sample_id,
+    cluster_dictionary = cluster_dictionary,
+    cells_to_remove = cells_to_remove,
+    ...
+  )
 
   scna_meta <- seu@meta.data
-  seu <- filter_sample_qc(seu,
-    mito_threshold = 10, nCount_threshold = 1000, nFeature_threshold = 1000
-  )
-  qc_meta <- seu@meta.data
-  clusters_to_remove <-
-    cluster_dictionary[[sample_id]] %>%
-    dplyr::filter(remove == "1") %>%
-    dplyr::pull(`gene_snn_res.0.2`)
-  cells_to_drop <- cells_to_remove[[sample_id]][["cell"]]
-  if (is.null(cells_to_drop)) {
-    cells_to_drop <- character(0)
-  }
-
-  keep_cells <- !(seu$gene_snn_res.0.2 %in% clusters_to_remove)
-  if ("MALAT1" %in% unique(seu$abbreviation)) {
-    keep_cells <- keep_cells & seu$abbreviation != "MALAT1"
-  }
-  if (length(cells_to_drop) > 0) {
-    keep_cells <- keep_cells & !(colnames(seu) %in% cells_to_drop)
-  }
-  seu <- seu[, keep_cells]
+  scna_meta <- seu[seu$filter_reason %in% c("qc_fail", "cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]@meta.data
+  qc_meta <- seu[seu$filter_reason %in% c("cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]@meta.data
+  seu <- seu[, seu$filter_keep]
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
   seu <- RunPCA(seu, verbose = FALSE)
   seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
@@ -134,7 +203,7 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
 
   cell_type_meta <- seu@meta.data
   plot_filtering_timeline(all_cells_meta, scna_meta, qc_meta, cell_type_meta, sample_id)
-  ggsave(glue("results/{sample_id}_filtering_timeline_new.pdf"), width = 8, height = 4)
+  ggsave(glue("results/{sample_id}_filtering_timeline_{extension}.pdf"), width = 8, height = 4)
   return(filtered_seu_path)
 }
 
@@ -144,10 +213,11 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
 #' @param cluster_dictionary Cluster information
 #' @param large_clone_simplifications Parameter for large clone simplifications
 #' @param filter_expressions Parameter for filter expressions
+#' @param cells_to_remove Cell identifiers or information
 #' @param extension Character string (default: "")
 #' @return Modified Seurat object
 #' @export
-prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, extension = "") {
+prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove = NULL, extension = "") {
   
   sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
@@ -164,7 +234,6 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
     dplyr::mutate(cell = str_replace(cell, "\\.", "-")) %>%
     tibble::column_to_rownames("cell")
   seu <- Seurat::AddMetaData(seu, nb_clone_post)
-  seu <- seu[, !is.na(seu$clone_opt)]
   if (!"gene_snn_res.0.2" %in% colnames(seu@meta.data)) {
     message("gene_snn_res.0.2 missing for ", sample_id, "; re-running FindNeighbors + seurat_cluster")
     if (!"gene_nn" %in% names(seu@graphs)) {
@@ -211,6 +280,13 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
 
   scna_metadata <- scna_metadata[colnames(seu), , drop = FALSE]
   seu <- Seurat::AddMetaData(seu, scna_metadata)
+
+  seu <- annotate_filter_reason(
+    seu = seu,
+    sample_id = sample_id,
+    cluster_dictionary = cluster_dictionary,
+    cells_to_remove = cells_to_remove
+  )
 
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
   seu <- RunPCA(seu, verbose = FALSE)
@@ -275,7 +351,7 @@ regress_filtered_seu <- function(filtered_seu_path) {
 }
 
 
-filter_sample_qc <- function(seu, mito_threshold = 5, nCount_threshold = 500, nFeature_threshold = 500) {
+filter_sample_qc <- function(seu, mito_threshold = 10, nCount_threshold = 1000, nFeature_threshold = 1000) {
   #
   seu <-
     seu %>%
