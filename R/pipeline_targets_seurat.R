@@ -131,7 +131,7 @@ pipeline_targets_seurat <- c(
     tar_target(filtered_seus_nb_filtered,
       # Seurat objects annotated with clone/SCNA metadata from numbat_sridhar_filtered RDS files.
       filter_cluster_save_seu(
-        numbat_rds_filtered_files, seus_interesting,
+        numbat_rds_filtered_files, unfiltered_seus,
         cluster_dictionary, large_clone_simplifications,
         filter_expressions = NULL, cells_to_remove,
         extension = "_nb_filtered",
@@ -301,7 +301,13 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(effect_of_filtering,
-      plot_effect_of_filtering(unfiltered_seus, final_seus),
+      {
+        path <- unlist(unfiltered_seus)
+        sample_id <- stringr::str_extract(path, "SRR[0-9]+")
+        filtered_path <- unlist(filtered_seus)[grepl(sample_id, unlist(filtered_seus))]
+        if (length(filtered_path) == 0) filtered_path <- NULL
+        plot_effect_of_filtering(path, filtered_path, cluster_dictionary = cluster_dictionary)
+      },
       pattern = map(unfiltered_seus),
       iteration = "list"
     ),

@@ -165,13 +165,10 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
 
   seu <- Seurat::AddMetaData(seu, scna_metadata)
 
-  seu <- annotate_filter_reason(
-    seu = seu,
-    sample_id = sample_id,
-    cluster_dictionary = cluster_dictionary,
-    cells_to_remove = cells_to_remove,
-    ...
-  )
+  if (!all(c("filter_reason", "filter_keep") %in% colnames(seu@meta.data))) {
+    stop("Missing filter metadata columns in input Seurat object for ", sample_id,
+         ". Expected columns: filter_reason, filter_keep.")
+  }
 
   scna_meta <- seu@meta.data
   scna_meta <- seu[seu$filter_reason %in% c("qc_fail", "cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]@meta.data
