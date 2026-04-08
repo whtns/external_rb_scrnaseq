@@ -419,10 +419,16 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
       column_title <- NULL
     }
 
+    cc_groupby <- c("G2M.Score", "S.Score", "scna", "clusters")
+    cc_groupby <- cc_groupby[sapply(cc_groupby, function(col) {
+      vals <- seu@meta.data[[col]]
+      is.null(vals) || length(unique(vals[!is.na(vals)])) > 1L
+    })]
+
     seu_heatmap <- ggplotify::as.ggplot(
       seu_complex_heatmap(seu,
         features = heatmap_features$Gene.Name,
-        group.by = c("G2M.Score", "S.Score", "scna", "clusters"),
+        group.by = cc_groupby,
         col_arrangement = c("clusters", "scna"),
         cluster_rows = FALSE,
         column_split = column_split,
@@ -700,17 +706,22 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
     seu@meta.data <- seu_meta[rownames(seu@meta.data), ]
 
     seu <- seu[, seu$phase_level %in% kept_phases]
-    seu <- tryCatch(
-      find_all_markers(seu, metavar = "clusters", seurat_assay = "SCT"),
-      error = function(e) {
-        if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
-          warning("SCT marker JoinLayers failed; using stash_marker_features fallback.")
-          seu@misc$markers[["clusters"]] <- seuratTools:::stash_marker_features("clusters", seu, seurat_assay = "SCT")
-          return(seu)
+    seu <- if (length(unique(seu@meta.data$clusters)) < 2L) {
+      warning("Fewer than 2 clusters in ", seu_path, "; skipping marker finding.")
+      seu
+    } else {
+      tryCatch(
+        find_all_markers(seu, metavar = "clusters", seurat_assay = "SCT"),
+        error = function(e) {
+          if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+            warning("SCT marker JoinLayers failed; using stash_marker_features fallback.")
+            seu@misc$markers[["clusters"]] <- seuratTools:::stash_marker_features("clusters", seu, seurat_assay = "SCT")
+            return(seu)
+          }
+          stop(e)
         }
-        stop(e)
-      }
-    )
+      )
+    }
 
     seu@meta.data$clusters <- forcats::fct_drop(seu@meta.data$clusters)
 
@@ -782,10 +793,16 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
 
   row_ha <- ComplexHeatmap::rowAnnotation(term = rev(heatmap_features$term))
 
+  cc_groupby <- c("G2M.Score", "S.Score", "scna", "clusters")
+  cc_groupby <- cc_groupby[sapply(cc_groupby, function(col) {
+    vals <- seu@meta.data[[col]]
+    is.null(vals) || length(unique(vals[!is.na(vals)])) > 1L
+  })]
+
   seu_heatmap <- ggplotify::as.ggplot(
     seu_complex_heatmap(seu,
       features = heatmap_features$Gene.Name,
-      group.by = c("G2M.Score", "S.Score", "scna", "clusters"),
+      group.by = cc_groupby,
       col_arrangement = c("clusters", "scna"),
       cluster_rows = FALSE,
       column_split = sort(seu@meta.data$clusters),

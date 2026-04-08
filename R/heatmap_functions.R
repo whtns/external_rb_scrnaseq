@@ -10,6 +10,21 @@ load_and_save_hypoxia_score <- function(seu_path) {
     # }
 
     seu <- readRDS(seu_path)
+
+    if (!all(c("G2M.Score", "S.Score") %in% colnames(seu@meta.data))) {
+        message("CC scores missing in ", basename(seu_path), "; running CellCycleScoring.")
+        seu <- tryCatch(
+            Seurat::CellCycleScoring(seu, s.features = cc.genes$s.genes, g2m.features = cc.genes$g2m.genes, set.ident = FALSE),
+            error = function(e) {
+                message("CellCycleScoring failed (", e$message, "); setting CC scores to 0.")
+                seu$S.Score <- 0
+                seu$G2M.Score <- 0
+                seu$Phase <- "G1"
+                return(seu)
+            }
+        )
+    }
+
     seu <- add_hypoxia_score(seu)
 
     add_hash_metadata(seu = seu, filepath = hypoxia_path)
@@ -107,9 +122,21 @@ add_hypoxia_score <- function(seu) {
 
     # hypoxia_genes <- c("BNIP3", "GAS5", "EPB41L4A-AS1")
 
-    nbin <- floor(length(VariableFeatures(seu)) / 100)
-    
-    seu <- Seurat::AddModuleScore(seu, features = list("hypoxia" = hypoxia_genes, "MT" = mt_genes), name = "hypoxia", nbin = nbin, ctrl = 100)
+    nbin <- max(24L, floor(length(VariableFeatures(seu)) / 100))
+
+    seu <- tryCatch(
+      Seurat::AddModuleScore(seu, features = list("hypoxia" = hypoxia_genes, "MT" = mt_genes), name = "hypoxia", nbin = nbin, ctrl = 100),
+      error = function(e) {
+        message("AddModuleScore failed with nbin=", nbin, ", retrying with nbin=5: ", e$message)
+        tryCatch(
+          Seurat::AddModuleScore(seu, features = list("hypoxia" = hypoxia_genes, "MT" = mt_genes), name = "hypoxia", nbin = 5L, ctrl = 5L),
+          error = function(e2) {
+            message("AddModuleScore failed with nbin=5, retrying with nbin=2: ", e2$message)
+            Seurat::AddModuleScore(seu, features = list("hypoxia" = hypoxia_genes, "MT" = mt_genes), name = "hypoxia", nbin = 2L, ctrl = 2L)
+          }
+        )
+      }
+    )
     
     seu$hypoxia <- seu$hypoxia1
     seu$MT <- seu$hypoxia2
