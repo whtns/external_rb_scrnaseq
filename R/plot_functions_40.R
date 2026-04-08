@@ -161,87 +161,167 @@ plot_effect_of_filtering_old <- function(unfiltered_seu_path, filtered_seu_path,
 #' @param plot_path File path
 #' @return ggplot2 plot object
 #' @export
-plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NULL, group.by = "gene_snn_res.0.2", cluster_dictionary, plot_path = "results/fig_02.01.1.pdf") {
-  
-  
-  
-  
-  
-  
-	
-	sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
-	
-	unfiltered_seu <- unfiltered_seu_path
-	
-	original_filtered_seu <- filtered_seu_path
+plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NULL, group.by = "gene_snn_res.0.2", cluster_dictionary,
+                                     mito_threshold = c(5, 10, 15, 20),
+                                     nCount_threshold = c(500, 1000, 2000),
+                                     nFeature_threshold = c(500, 1000, 2000),
+                                     plot_path = "results/fig_02.01.1.pdf") {
+
+  sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
+
+  unfiltered_seu <- readRDS(unfiltered_seu_path)
+  original_filtered_seu <- if (!is.null(filtered_seu_path)) readRDS(filtered_seu_path) else NULL
 
   plot_list <- list()
-  
-  removed_clusters <- cluster_dictionary[[sample_id]] |> 
-  	dplyr::filter(remove == 1) |> 
-  	dplyr::pull(`gene_snn_res.0.2`)
 
-  # removed_clusters <- removed_clusters[removed_clusters$sample_id == sample_id,][["gene_snn_res.0.2"]]
-  
-  filtered_seu <- unfiltered_seu[,!unfiltered_seu$gene_snn_res.0.2 %in% removed_clusters]
+  # use filter_reason / filter_keep columns if present, otherwise fall back to cluster_dictionary
+  if (all(c("filter_reason", "filter_keep") %in% colnames(unfiltered_seu@meta.data))) {
+    filtered_seu <- unfiltered_seu[, unfiltered_seu$filter_keep]
+  } else {
+    removed_clusters <- cluster_dictionary[[sample_id]] |>
+      dplyr::filter(remove == 1) |>
+      dplyr::pull(`gene_snn_res.0.2`)
+    filtered_seu <- unfiltered_seu[, !unfiltered_seu$gene_snn_res.0.2 %in% removed_clusters]
+  }
+
+  # threshold sweep ------------------------------
+  meta <- unfiltered_seu@meta.data
+  sweep_grid <- expand.grid(
+    mito_threshold = mito_threshold,
+    nCount_threshold = nCount_threshold,
+    nFeature_threshold = nFeature_threshold
+  )
+  sweep_grid$n_kept <- apply(sweep_grid, 1, function(r) {
+    sum(
+      meta$percent.mt < r[["mito_threshold"]] &
+      meta$nCount_gene > r[["nCount_threshold"]] &
+      meta$nFeature_gene > r[["nFeature_threshold"]]
+    )
+  })
+  sweep_grid$pct_kept <- sweep_grid$n_kept / nrow(meta) * 100
+  sweep_grid$mito_threshold <- factor(sweep_grid$mito_threshold)
+  sweep_grid$nCount_threshold <- factor(sweep_grid$nCount_threshold)
+  sweep_grid$nFeature_threshold <- factor(sweep_grid$nFeature_threshold)
+
+  p_sweep <- ggplot(sweep_grid, aes(x = nCount_threshold, y = nFeature_threshold, fill = pct_kept)) +
+    geom_tile() +
+    geom_text(aes(label = n_kept), size = 2.5) +
+    facet_wrap(~ mito_threshold, labeller = label_both) +
+    scale_fill_viridis_c(name = "% kept", limits = c(0, 100)) +
+    labs(title = glue::glue("{sample_id} — threshold sweep"), x = "nCount_threshold", y = "nFeature_threshold") +
+    theme_bw()
+
+  tmp_path <- tempfile(fileext = ".pdf")
+  plot_list["threshold_sweep"] <- tmp_path
+  ggsave(tmp_path, p_sweep, height = 4, width = 3 * length(mito_threshold))
 
   # abbreviation markers ------------------------------
   (plot_markers(unfiltered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
-  		labs(title = "unfiltered") + 
-   	theme(legend.position = "none") + 
-   	NULL) +
-  	(plot_markers(original_filtered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
-    labs(title = "filtered") + 
-    	theme(axis.title.y = element_blank()) +
-    	NULL) +
-    plot_annotation(title = sample_id) + 
-  	plot_layout(guides='collect')
+      labs(title = "unfiltered") +
+      theme(legend.position = "none") +
+      NULL) +
+    (plot_markers(filtered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
+      labs(title = "filtered") +
+      theme(axis.title.y = element_blank()) +
+      NULL) +
+    plot_annotation(title = sample_id) +
+    plot_layout(guides = "collect")
 
   tmp_path <- tempfile(fileext = ".pdf")
   plot_list["abbreviation_markers"] <- tmp_path
   ggsave(tmp_path, height = 6, width = 9)
 
+  # filter_reason umap ------------------------------
+  if ("filter_reason" %in% colnames(unfiltered_seu@meta.data)) {
+    reason_levels <- c("clone_opt_na", "qc_fail", "cluster_remove", "malat1", "manual_exclude")
+    reason_cols <- c(scales::hue_pal()(length(reason_levels)), "grey80") |>
+      set_names(c(reason_levels, "kept"))
+
+    # sweep dimplots: re-evaluate qc_fail per threshold combo, carry forward other reasons
+    tmp_path <- tempfile(fileext = ".pdf")
+    plot_list["sweep_dimplots"] <- tmp_path
+    pdf(tmp_path, height = 3, width = 4.5)
+    for (i in seq_len(nrow(sweep_grid))) {
+      r <- sweep_grid[i, ]
+      qc_fail_sweep <-
+        meta$percent.mt >= as.numeric(as.character(r$mito_threshold)) |
+        meta$nCount_gene <= as.numeric(as.character(r$nCount_threshold)) |
+        meta$nFeature_gene <= as.numeric(as.character(r$nFeature_threshold))
+      sweep_reason <- dplyr::case_when(
+        !is.na(unfiltered_seu@meta.data$filter_reason) & unfiltered_seu@meta.data$filter_reason != "qc_fail" ~ unfiltered_seu@meta.data$filter_reason,
+        qc_fail_sweep ~ "qc_fail",
+        TRUE ~ NA_character_
+      )
+      unfiltered_seu@meta.data$sweep_reason_label <- factor(
+        tidyr::replace_na(sweep_reason, "kept"),
+        levels = c(reason_levels, "kept")
+      )
+      print(DimPlot(unfiltered_seu, group.by = "sweep_reason_label", cols = reason_cols) +
+        labs(
+          title = glue::glue("{sample_id}"),
+          subtitle = glue::glue("mito<{r$mito_threshold} nCount>{r$nCount_threshold} nFeature>{r$nFeature_threshold}"),
+          colour = "filter reason"
+        ))
+    }
+    dev.off()
+
+    reason_labels <- tidyr::replace_na(unfiltered_seu@meta.data$filter_reason, "kept")
+    unfiltered_seu@meta.data$filter_reason_label <- factor(reason_labels, levels = c(reason_levels, "kept"))
+
+    tmp_path <- tempfile(fileext = ".pdf")
+    plot_list["filter_reason_umap"] <- tmp_path
+    pdf(tmp_path, height = 3, width = 4.5)
+    print(DimPlot(unfiltered_seu, group.by = "filter_reason_label", cols = reason_cols) +
+      labs(title = sample_id, colour = "filter reason"))
+    dev.off()
+  }
+
   # scna umaps ------------------------------
   scna_cols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["scna"]])))
-  
+
   unfiltered_seu@meta.data$scna <- vec_split_label_line(unfiltered_seu@meta.data$scna, 3)
   filtered_seu@meta.data$scna <- vec_split_label_line(filtered_seu@meta.data$scna, 3)
 
   # abbreviation umaps ------------------------------
   col_numbers <- sort(as.numeric(unique(unfiltered_seu@meta.data[[group.by]])))
-  group_cols <- scales::hue_pal()(length(col_numbers)) |> 
-  	set_names(col_numbers)
+  group_cols <- scales::hue_pal()(length(col_numbers)) |>
+    set_names(col_numbers)
 
   tmp_path <- tempfile(fileext = ".pdf")
   plot_list["abbreviation_umaps"] <- tmp_path
   pdf(tmp_path, height = 3, width = 4.5)
-  
+
   print(DimPlot(unfiltered_seu, group.by = "scna", cols = scna_cols) +
-  		labs(title = "unfiltered") +
-  		theme(axis.title.x = element_blank()))
-  	
-  	print(DimPlot(filtered_seu, group.by = "scna", cols = scna_cols) +
-  	 	labs(title = "filtered") +
-  	 	theme(axis.title.x = element_blank(),
-  	 				axis.title.y = element_blank()))
-  	
-  	print(DimPlot(original_filtered_seu, group.by = "scna", cols = scna_cols) +
-  	 	labs(title = "re-clustered") +
-  	 	theme(axis.title.x = element_blank(),
-  	 				axis.title.y = element_blank()))
+    labs(title = "unfiltered") +
+    theme(axis.title.x = element_blank()))
 
-  	print(DimPlot(unfiltered_seu, group.by = group.by, cols = group_cols))
-   
-  	print(DimPlot(filtered_seu, group.by = group.by, cols = group_cols) +
-     	theme(axis.title.y = element_blank(),
-     				legend.position = "none"))
+  print(DimPlot(filtered_seu, group.by = "scna", cols = scna_cols) +
+    labs(title = "filtered") +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank()))
 
-  	print(DimPlot(original_filtered_seu, group.by = group.by, cols = group_cols) +
-  	 	theme(axis.title.y = element_blank(),
-  	 				legend.position = "none"))
-  	
-  	dev.off()
-  
+  if (!is.null(original_filtered_seu)) {
+    original_filtered_seu@meta.data$scna <- vec_split_label_line(original_filtered_seu@meta.data$scna, 3)
+    print(DimPlot(original_filtered_seu, group.by = "scna", cols = scna_cols) +
+      labs(title = "re-clustered") +
+      theme(axis.title.x = element_blank(),
+            axis.title.y = element_blank()))
+  }
+
+  print(DimPlot(unfiltered_seu, group.by = group.by, cols = group_cols))
+
+  print(DimPlot(filtered_seu, group.by = group.by, cols = group_cols) +
+    theme(axis.title.y = element_blank(),
+          legend.position = "none"))
+
+  if (!is.null(original_filtered_seu)) {
+    print(DimPlot(original_filtered_seu, group.by = group.by, cols = group_cols) +
+      theme(axis.title.y = element_blank(),
+            legend.position = "none"))
+  }
+
+  dev.off()
+
   plot_path <- qpdf::pdf_combine(plot_list, plot_path)
 
   return(plot_path)
