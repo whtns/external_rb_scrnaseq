@@ -112,8 +112,8 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 #' @return Function result
 #' @export
 split_label_line <- function(label, n_comma_values = 2) {
-  
-  
+  if (is.na(label)) return(NA_character_)
+
   label_vec <- label %>% stringr::str_split_1(",")
 
   label_groups <- ceiling(seq_along(label_vec) / n_comma_values)

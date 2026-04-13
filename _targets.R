@@ -11,7 +11,7 @@ tar_option_set(
   error = "continue",
   workspace_on_error = TRUE,
   trust_timestamps = TRUE,
-  controller = crew_controller_local(workers = 4)
+  controller = crew_controller_local(workers = 1)
 )
 
 ## _targets.R must return a list of tar_target objects.

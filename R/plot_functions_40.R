@@ -162,15 +162,81 @@ plot_effect_of_filtering_old <- function(unfiltered_seu_path, filtered_seu_path,
 #' @return ggplot2 plot object
 #' @export
 plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NULL, group.by = "gene_snn_res.0.2", cluster_dictionary,
-                                     mito_threshold = c(5, 10, 15, 20),
-                                     nCount_threshold = c(500, 1000, 2000),
-                                     nFeature_threshold = c(500, 1000, 2000),
-                                     plot_path = "results/fig_02.01.1.pdf") {
+                                     mito_threshold = c(5, 10),
+                                     nCount_threshold = c(500, 1000),
+                                     nFeature_threshold = c(500, 1000),
+                                     plot_path = NULL) {
 
   sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
 
+  if (is.null(plot_path)) {
+    fs::dir_create("results/effect_of_filtering")
+    plot_path <- glue::glue("results/effect_of_filtering/{sample_id}_effect_of_filtering.pdf")
+  }
+
   unfiltered_seu <- readRDS(unfiltered_seu_path)
   original_filtered_seu <- if (!is.null(filtered_seu_path)) readRDS(filtered_seu_path) else NULL
+
+  # Replace missing/empty scna with differential GT_opt labels
+  # For each unique GT_opt value, show only the segments not in its nearest parent clone.
+  # e.g. if clone A = "1q", clone B = "1q,2p", clone C = "1q,2p,13q":
+  #   A -> "1q",  B -> "[1]+2p",  C -> "[2]+13q"
+  differential_gt_labels <- function(gt_vals) {
+    unique_gts <- unique(gt_vals[!is.na(gt_vals) & gt_vals != ""])
+    if (length(unique_gts) == 0) {
+      result <- gt_vals
+      result[is.na(gt_vals) | gt_vals == ""] <- "diploid"
+      return(result)
+    }
+    seg_sets <- setNames(
+      lapply(unique_gts, function(gt) sort(trimws(strsplit(gt, ",")[[1]]))),
+      unique_gts
+    )
+    sorted_gts <- names(seg_sets)[order(lengths(seg_sets))]
+    # For each clone, find the closest proper-subset parent
+    parent_of <- setNames(rep(NA_character_, length(sorted_gts)), sorted_gts)
+    for (i in seq_along(sorted_gts)) {
+      gt <- sorted_gts[i]; segs <- seg_sets[[gt]]
+      best_len <- -1L
+      for (j in seq_len(i - 1L)) {
+        cand <- sorted_gts[j]; cand_segs <- seg_sets[[cand]]
+        if (length(cand_segs) > best_len && all(cand_segs %in% segs)) {
+          parent_of[gt] <- cand; best_len <- length(cand_segs)
+        }
+      }
+    }
+    clone_idx <- setNames(seq_along(sorted_gts), sorted_gts)
+    display <- setNames(character(length(sorted_gts)), sorted_gts)
+    for (gt in sorted_gts) {
+      parent <- parent_of[gt]
+      if (is.na(parent)) {
+        display[gt] <- paste(seg_sets[[gt]], collapse = ",")
+      } else {
+        new_segs <- sort(setdiff(seg_sets[[gt]], seg_sets[[parent]]))
+        display[gt] <- paste0("[", clone_idx[parent], "]+", paste(new_segs, collapse = ","))
+      }
+    }
+    result <- gt_vals
+    for (gt in sorted_gts) result[!is.na(result) & result == gt] <- display[gt]
+    result[is.na(gt_vals) | (!is.na(gt_vals) & gt_vals == "")] <- "diploid"
+    result
+  }
+
+  fill_scna_from_gt_opt <- function(seu) {
+    if (!"GT_opt" %in% colnames(seu@meta.data)) return(seu)
+    if (!"scna" %in% colnames(seu@meta.data)) {
+      needs_gt <- rep(TRUE, nrow(seu@meta.data))
+    } else {
+      needs_gt <- is.na(seu@meta.data$scna) | seu@meta.data$scna == ""
+    }
+    if (!any(needs_gt)) return(seu)
+    if (!"scna" %in% colnames(seu@meta.data)) seu@meta.data$scna <- NA_character_
+    gt_diff <- differential_gt_labels(seu@meta.data$GT_opt[needs_gt])
+    seu@meta.data$scna[needs_gt] <- gt_diff
+    seu
+  }
+  unfiltered_seu <- fill_scna_from_gt_opt(unfiltered_seu)
+  if (!is.null(original_filtered_seu)) original_filtered_seu <- fill_scna_from_gt_opt(original_filtered_seu)
 
   plot_list <- list()
 
@@ -216,39 +282,64 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
   ggsave(tmp_path, p_sweep, height = 4, width = 3 * length(mito_threshold))
 
   # abbreviation markers ------------------------------
-  (plot_markers(unfiltered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
-      labs(title = "unfiltered") +
-      theme(legend.position = "none") +
-      NULL) +
-    (plot_markers(filtered_seu, group.by, marker_method = "presto", return_plotly = FALSE, hide_technical = "all", num_markers = 5) +
-      labs(title = "filtered") +
-      theme(axis.title.y = element_blank()) +
-      NULL) +
-    plot_annotation(title = sample_id) +
-    plot_layout(guides = "collect")
+  # Skip marker computation for very large objects — presto::wilcoxauc
+  # (C++) crashes the process and cannot be caught by tryCatch.
+  # Samples with >50k cells are too large to run safely.
+  safe_plot_markers <- function(seu, grp = group.by, max_cells = 50000L, ...) {
+    cat("safe_plot_markers: ncol =", ncol(seu), "\n")
+    if (ncol(seu) > max_cells) {
+      warning("Skipping marker plot — too many cells (", ncol(seu), ")")
+      return(NULL)
+    }
+    # Assay5 + joined layers required by seuratTools::find_all_markers
+    if (!is(seu[["gene"]], "Assay5")) {
+      seu[["gene"]] <- tryCatch(as(seu[["gene"]], "Assay5"), error = function(e) seu[["gene"]])
+    }
+    seu[["gene"]] <- tryCatch(JoinLayers(seu[["gene"]]), error = function(e) seu[["gene"]])
+    if (nrow(GetAssayData(seu, assay = "gene", layer = "data")) == 0) {
+      seu <- NormalizeData(seu, assay = "gene")
+    }
+    tryCatch(
+      seuratTools::plot_markers(seu, grp, ...),
+      error = function(e) {
+        warning("plot_markers failed: ", conditionMessage(e))
+        NULL
+      }
+    )
+  }
 
-  tmp_path <- tempfile(fileext = ".pdf")
-  plot_list["abbreviation_markers"] <- tmp_path
-  ggsave(tmp_path, height = 6, width = 9)
+  p_unfiltered <- safe_plot_markers(unfiltered_seu, marker_method = "wilcox", return_plotly = FALSE, hide_technical = "all", num_markers = 5)
+  gc()
+  p_filtered   <- safe_plot_markers(filtered_seu,   marker_method = "wilcox", return_plotly = FALSE, hide_technical = "all", num_markers = 5)
+  gc()
+
+  if (!is.null(p_unfiltered) && !is.null(p_filtered)) {
+    (p_unfiltered + labs(title = "unfiltered") + theme(legend.position = "none") + NULL) +
+      (p_filtered + labs(title = "filtered") + theme(axis.title.y = element_blank()) + NULL) +
+      plot_annotation(title = sample_id) +
+      plot_layout(guides = "collect")
+
+    tmp_path <- tempfile(fileext = ".pdf")
+    plot_list["abbreviation_markers"] <- tmp_path
+    ggsave(tmp_path, height = 6, width = 9)
+  }
 
   # filter_reason umap ------------------------------
   if ("filter_reason" %in% colnames(unfiltered_seu@meta.data)) {
     reason_levels <- c("clone_opt_na", "qc_fail", "cluster_remove", "malat1", "manual_exclude")
+    unfiltered_seu@meta.data$filter_reason <- factor(unfiltered_seu@meta.data$filter_reason, levels = reason_levels)
     reason_cols <- c(scales::hue_pal()(length(reason_levels)), "grey80") |>
       set_names(c(reason_levels, "kept"))
 
     # sweep dimplots: re-evaluate qc_fail per threshold combo, carry forward other reasons
-    tmp_path <- tempfile(fileext = ".pdf")
-    plot_list["sweep_dimplots"] <- tmp_path
-    pdf(tmp_path, height = 3, width = 4.5)
-    for (i in seq_len(nrow(sweep_grid))) {
+    sweep_plots <- lapply(seq_len(nrow(sweep_grid)), function(i) {
       r <- sweep_grid[i, ]
       qc_fail_sweep <-
         meta$percent.mt >= as.numeric(as.character(r$mito_threshold)) |
         meta$nCount_gene <= as.numeric(as.character(r$nCount_threshold)) |
         meta$nFeature_gene <= as.numeric(as.character(r$nFeature_threshold))
       sweep_reason <- dplyr::case_when(
-        !is.na(unfiltered_seu@meta.data$filter_reason) & unfiltered_seu@meta.data$filter_reason != "qc_fail" ~ unfiltered_seu@meta.data$filter_reason,
+        !is.na(unfiltered_seu@meta.data$filter_reason) & unfiltered_seu@meta.data$filter_reason != "qc_fail" ~ as.character(unfiltered_seu@meta.data$filter_reason),
         qc_fail_sweep ~ "qc_fail",
         TRUE ~ NA_character_
       )
@@ -256,73 +347,108 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
         tidyr::replace_na(sweep_reason, "kept"),
         levels = c(reason_levels, "kept")
       )
-      print(DimPlot(unfiltered_seu, group.by = "sweep_reason_label", cols = reason_cols) +
+      DimPlot(unfiltered_seu, group.by = "sweep_reason_label") +
+        scale_color_manual(values = reason_cols, limits = names(reason_cols), na.value = "grey90") +
         labs(
-          title = glue::glue("{sample_id}"),
-          subtitle = glue::glue("mito<{r$mito_threshold} nCount>{r$nCount_threshold} nFeature>{r$nFeature_threshold}"),
+          title = glue::glue("mito<{r$mito_threshold}"),
+          subtitle = glue::glue("nCount>{r$nCount_threshold} nFeature>{r$nFeature_threshold}"),
           colour = "filter reason"
-        ))
-    }
-    dev.off()
+        )
+    })
 
-    reason_labels <- tidyr::replace_na(unfiltered_seu@meta.data$filter_reason, "kept")
+    # all sweep plots on a single page: ncol = nCount thresholds, rows = mito x nFeature combos
+    tmp_path <- tempfile(fileext = ".pdf")
+    n_sweep_rows <- length(mito_threshold) * length(nFeature_threshold)
+    sweep_ok <- tryCatch({
+      pdf(tmp_path, height = 3 * n_sweep_rows, width = 4.5 * length(nCount_threshold))
+      on.exit(if (!is.null(dev.list())) dev.off(), add = TRUE)
+      grid <- patchwork::wrap_plots(sweep_plots, ncol = length(nCount_threshold)) +
+        patchwork::plot_annotation(title = sample_id) +
+        patchwork::guide_area() +
+        patchwork::plot_layout(guides = "collect")
+      print(grid)
+      dev.off()
+      on.exit(NULL)
+      TRUE
+    }, error = function(e) {
+      if (!is.null(dev.list())) dev.off()
+      warning("sweep_dimplots failed: ", conditionMessage(e))
+      FALSE
+    })
+    if (sweep_ok) plot_list["sweep_dimplots"] <- tmp_path
+
+    reason_labels <- tidyr::replace_na(as.character(unfiltered_seu@meta.data$filter_reason), "kept")
     unfiltered_seu@meta.data$filter_reason_label <- factor(reason_labels, levels = c(reason_levels, "kept"))
 
     tmp_path <- tempfile(fileext = ".pdf")
-    plot_list["filter_reason_umap"] <- tmp_path
-    pdf(tmp_path, height = 3, width = 4.5)
-    print(DimPlot(unfiltered_seu, group.by = "filter_reason_label", cols = reason_cols) +
-      labs(title = sample_id, colour = "filter reason"))
-    dev.off()
+    fr_ok <- tryCatch({
+      pdf(tmp_path, height = 3, width = 4.5)
+      on.exit(if (!is.null(dev.list())) dev.off(), add = TRUE)
+      print(DimPlot(unfiltered_seu, group.by = "filter_reason_label") +
+        scale_color_manual(values = reason_cols, limits = names(reason_cols), na.value = "grey90") +
+        labs(title = sample_id, colour = "filter reason"))
+      dev.off()
+      on.exit(NULL)
+      TRUE
+    }, error = function(e) {
+      if (!is.null(dev.list())) dev.off()
+      warning("filter_reason_umap failed: ", conditionMessage(e))
+      FALSE
+    })
+    if (fr_ok) plot_list["filter_reason_umap"] <- tmp_path
   }
 
-  # scna umaps ------------------------------
+  # dimplot grids ------------------------------
   scna_cols <- scales::hue_pal()(length(unique(unfiltered_seu@meta.data[["scna"]])))
 
   unfiltered_seu@meta.data$scna <- vec_split_label_line(unfiltered_seu@meta.data$scna, 3)
-  filtered_seu@meta.data$scna <- vec_split_label_line(filtered_seu@meta.data$scna, 3)
+  filtered_seu@meta.data$scna   <- vec_split_label_line(filtered_seu@meta.data$scna, 3)
 
-  # abbreviation umaps ------------------------------
   col_numbers <- sort(as.numeric(unique(unfiltered_seu@meta.data[[group.by]])))
-  group_cols <- scales::hue_pal()(length(col_numbers)) |>
-    set_names(col_numbers)
+  group_cols  <- scales::hue_pal()(length(col_numbers)) |> set_names(col_numbers)
+
+  n_cols <- if (!is.null(original_filtered_seu)) 3L else 2L
+
+  # row 1: scna
+  scna_plots <- list(
+    DimPlot(unfiltered_seu, group.by = "scna", cols = scna_cols) + labs(title = "unfiltered"),
+    DimPlot(filtered_seu,   group.by = "scna", cols = scna_cols) + labs(title = "filtered")
+  )
+  if (!is.null(original_filtered_seu)) {
+    original_filtered_seu@meta.data$scna <- vec_split_label_line(original_filtered_seu@meta.data$scna, 3)
+    scna_plots[[3]] <- DimPlot(original_filtered_seu, group.by = "scna", cols = scna_cols) + labs(title = "re-clustered")
+  }
+
+  # row 2: cluster
+  cluster_plots <- list(
+    DimPlot(unfiltered_seu, group.by = group.by, cols = group_cols) + labs(title = "unfiltered"),
+    DimPlot(filtered_seu,   group.by = group.by, cols = group_cols) + labs(title = "filtered")
+  )
+  if (!is.null(original_filtered_seu)) {
+    cluster_plots[[3]] <- DimPlot(original_filtered_seu, group.by = group.by, cols = group_cols) + labs(title = "re-clustered")
+  }
+
+  dimplot_grid <- patchwork::wrap_plots(c(scna_plots, cluster_plots), ncol = n_cols) +
+    patchwork::plot_annotation(title = sample_id)
 
   tmp_path <- tempfile(fileext = ".pdf")
   plot_list["abbreviation_umaps"] <- tmp_path
-  pdf(tmp_path, height = 3, width = 4.5)
+  ggsave(tmp_path, dimplot_grid, height = 6, width = 4.5 * n_cols)
 
-  print(DimPlot(unfiltered_seu, group.by = "scna", cols = scna_cols) +
-    labs(title = "unfiltered") +
-    theme(axis.title.x = element_blank()))
-
-  print(DimPlot(filtered_seu, group.by = "scna", cols = scna_cols) +
-    labs(title = "filtered") +
-    theme(axis.title.x = element_blank(),
-          axis.title.y = element_blank()))
-
-  if (!is.null(original_filtered_seu)) {
-    original_filtered_seu@meta.data$scna <- vec_split_label_line(original_filtered_seu@meta.data$scna, 3)
-    print(DimPlot(original_filtered_seu, group.by = "scna", cols = scna_cols) +
-      labs(title = "re-clustered") +
-      theme(axis.title.x = element_blank(),
-            axis.title.y = element_blank()))
+  # Filter to only valid, non-empty PDF files before combining
+  valid_pdfs <- Filter(function(f) !is.null(f) && file.exists(f) && file.size(f) > 100L,
+                       unlist(plot_list))
+  if (length(valid_pdfs) == 0) {
+    warning("No valid PDF pages produced for ", sample_id)
+    return(NULL)
   }
-
-  print(DimPlot(unfiltered_seu, group.by = group.by, cols = group_cols))
-
-  print(DimPlot(filtered_seu, group.by = group.by, cols = group_cols) +
-    theme(axis.title.y = element_blank(),
-          legend.position = "none"))
-
-  if (!is.null(original_filtered_seu)) {
-    print(DimPlot(original_filtered_seu, group.by = group.by, cols = group_cols) +
-      theme(axis.title.y = element_blank(),
-            legend.position = "none"))
-  }
-
-  dev.off()
-
-  plot_path <- qpdf::pdf_combine(plot_list, plot_path)
+  plot_path <- tryCatch(
+    qpdf::pdf_combine(valid_pdfs, plot_path),
+    error = function(e) {
+      warning("pdf_combine failed: ", conditionMessage(e))
+      NULL
+    }
+  )
 
   return(plot_path)
 }
