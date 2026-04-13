@@ -92,11 +92,11 @@ pipeline_targets_seurat <- c(
 
     tar_target(unfiltered_seus,
       # First stage where scna metadata is injected into Seurat objects.
-      prep_unfiltered_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, cells_to_remove, extension = "_unfiltered"),
+      prep_unfiltered_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, extension = "_unfiltered"),
       pattern = map(numbat_rds_files),
       iteration = "list",
       deployment = "main",
-      cue = tar_cue(command = FALSE, depend = FALSE)
+      cue = tar_cue(command = FALSE, depend = TRUE)
     ),
 
     tar_target(filter_inspection_metadata,
@@ -125,7 +125,7 @@ pipeline_targets_seurat <- c(
       iteration = "list",
       deployment = "main",
       error = "null",
-      cue = tar_cue(command = FALSE, depend = FALSE)
+      cue = tar_cue(command = FALSE, depend = TRUE)
     ),
 
     tar_target(filtered_seus_nb_filtered,

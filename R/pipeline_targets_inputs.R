@@ -37,13 +37,13 @@ pipeline_targets_inputs <- c(
         "SRR27187900", 
         "SRR27187901", 
         "SRR27187902",
-        # "SRR14800538",  # no numbat output; needs full pipeline re-run
+        "SRR14800538",  # no numbat output; needs full pipeline re-run
         "SRR14800539",
         "SRR17960482",
         "SRR17960483",
         "SRR17960480",
-        # "SRR14800542",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
-        # "SRR13633760",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
+        "SRR14800542",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
+        "SRR13633760",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
         "SRR13633762",
         "SRR13884240",
         "SRR13884241"

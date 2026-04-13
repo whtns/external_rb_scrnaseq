@@ -390,7 +390,6 @@ list(
     qpdf::pdf_combine(debranched_clone_tree_files, "results/debranched_clone_trees.pdf")
   ),
 
-
   tar_target(unfiltered_clone_tree_files,
     save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, large_clone_simplifications, label = "_unfiltered_clone_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(unfiltered_seus),
@@ -404,6 +403,11 @@ list(
     pattern = map(unfiltered_seus),
     iteration = "list",
     error = "null"
+  ),
+
+  tar_target(
+    unfiltered_clone_trees_segments_figure,
+    qpdf::pdf_combine(unfiltered_clone_trees_segments_files, "results/unfiltered_clone_trees_segments.pdf")
   ),
 
   tar_target(subset_clone_tree_files,

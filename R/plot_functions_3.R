@@ -281,8 +281,8 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
   seu <- annotate_filter_reason(
     seu = seu,
     sample_id = sample_id,
-    cluster_dictionary = cluster_dictionary,
-    cells_to_remove = cells_to_remove
+    cluster_dictionary = cluster_dictionary
+    # cells_to_remove = cells_to_remove
   )
 
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
