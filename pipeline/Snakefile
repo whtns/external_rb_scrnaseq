@@ -150,6 +150,13 @@ def max_iter_for_sample(wildcards):
 		return per_sample[wildcards.sample]
 	return default_value
 
+def max_entropy_for_sample(wildcards):
+	default_value = config.get("max_entropy", 0.7)
+	per_sample = config.get("max_entropy_by_sample", {})
+	if isinstance(per_sample, dict) and wildcards.sample in per_sample:
+		return per_sample[wildcards.sample]
+	return default_value
+
 def max_nni_for_sample(wildcards):
 	default_value = config.get("max_nni", 100)
 	per_sample = config.get("max_nni_by_sample", {})
@@ -1296,7 +1303,7 @@ rule numbat_sridhar:
 		numbat_t = config["numbat_t"],
 		gamma = config["gamma"],
 		numbatdir = numbat_sridhar_dir,
-		max_entropy = config["max_entropy"],
+		max_entropy = max_entropy_for_sample,
 		min_LLR = config["min_LLR"],
 		max_iter = config["max_iter"],
 		read_prop = config["read_prop"],
@@ -1335,7 +1342,7 @@ rule numbat_sridhar_filtered:
 		numbat_t = config["numbat_t"],
 		gamma = config["gamma"],
 		numbatdir = outputdir + "numbat_sridhar_filtered/",
-		max_entropy = config["max_entropy"],
+		max_entropy = max_entropy_for_sample,
 		min_LLR = config["min_LLR"],
 		max_iter = max_iter_for_sample,
 		max_nni = max_nni_for_sample,

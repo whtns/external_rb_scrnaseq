@@ -92,11 +92,11 @@ pipeline_targets_seurat <- c(
 
     tar_target(unfiltered_seus,
       # First stage where scna metadata is injected into Seurat objects.
-      prep_unfiltered_seu(numbat_rds_files, cluster_dictionary, large_clone_simplifications, large_filter_expressions, extension = "_unfiltered"),
-      pattern = map(numbat_rds_files),
+      prep_unfiltered_seu(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample, large_filter_expressions_per_sample, extension = "_unfiltered"),
+      pattern = map(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample, large_filter_expressions_per_sample),
       iteration = "list",
       deployment = "main",
-      cue = tar_cue(command = FALSE, depend = TRUE)
+      cue = tar_cue(command = FALSE, depend = FALSE)
     ),
 
     tar_target(filter_inspection_metadata,
@@ -104,11 +104,11 @@ pipeline_targets_seurat <- c(
       # Reads unfiltered_seus (no SCTransform/UMAP); invalidated only when Seurat content changes.
       extract_filter_metadata(
         unfiltered_seus,
-        cluster_dictionary,
+        cluster_dictionary_per_sample,
         cells_to_remove,
-        large_clone_simplifications
+        large_clone_simplifications_per_sample
       ),
-      pattern = map(unfiltered_seus),
+      pattern = map(unfiltered_seus, cluster_dictionary_per_sample, large_clone_simplifications_per_sample),
       iteration = "list"
     ),
 
@@ -116,16 +116,16 @@ pipeline_targets_seurat <- c(
       # Filtered counterpart also computes/adds scna metadata at cell level.
       filter_cluster_save_seu(
         numbat_rds_files, unfiltered_seus,
-        cluster_dictionary, large_clone_simplifications,
+        cluster_dictionary_per_sample, large_clone_simplifications_per_sample,
         filter_expressions = NULL, cells_to_remove,
         extension = "",
         leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"
       ),
-      pattern = map(numbat_rds_files),
+      pattern = map(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample),
       iteration = "list",
       deployment = "main",
       error = "null",
-      cue = tar_cue(command = FALSE, depend = TRUE)
+      cue = tar_cue(command = FALSE, depend = FALSE)  # re-run when unfiltered_seus changes, but not when filter_inspection_metadata changes
     ),
 
     tar_target(filtered_seus_nb_filtered,
@@ -303,6 +303,7 @@ pipeline_targets_seurat <- c(
     tar_target(effect_of_filtering,
       {
         path <- unlist(unfiltered_seus)
+        if (is.na(path)) return(NULL)
         sample_id <- stringr::str_extract(path, "SRR[0-9]+")
         filtered_path <- unlist(filtered_seus)[grepl(sample_id, unlist(filtered_seus))]
         if (length(filtered_path) == 0) filtered_path <- NULL

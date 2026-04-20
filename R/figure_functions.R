@@ -1551,6 +1551,7 @@ plot_fig_01 <- function(seu_path, plot_path = "results/fig_01.pdf") {
 		ifelse(str_detect(seu$scna, "1q"), "w/ 1q+", "w/o 1q+"),
 		levels = c("w/o 1q+", "w/ 1q+")
 	)
+	seu$clusters <- seu$seurat_clusters
 	seu$clusters <- factor(seu$clusters)
 
 	labels <- data.frame(
@@ -1633,4 +1634,128 @@ plot_fig_01 <- function(seu_path, plot_path = "results/fig_01.pdf") {
 	ggsave(path_f, plot = clone_distribution_plot, w = 3.5, h = 3)
 
 	qpdf::pdf_combine(c(path_d, path_e, path_f), plot_path)
+}
+
+plot_fig_02 <- function(seu_path, numbat_rds_files, large_clone_simplifications, plot_path = NULL) {
+	if (is.na(seu_path)) return(NA_character_)
+
+	sample_id <- stringr::str_extract(seu_path, "SRR[0-9]+")
+	plot_path <- plot_path %||% glue::glue("results/fig_02_{sample_id}.pdf")
+	fs::dir_create(fs::path_dir(plot_path))
+
+	# Panel A: phylo heatmap (PDF)
+	heatmap_paths <- make_numbat_heatmaps(seu_path, numbat_rds_files, p_min = 0.9, show_segment_names_on_x = TRUE)
+	panel_a_path <- heatmap_paths[[1]]
+
+	# Panel B: clone tree (PDF)
+	panel_b_path <- save_clone_tree_from_path(
+		seu_path, numbat_rds_files, large_clone_simplifications,
+		label = "_fig_02_clone_tree", legend = FALSE, horizontal = FALSE
+	)
+
+	# Helper: load a PDF page as a ggdraw grob
+	pdf_to_grob <- function(pdf_path, trim = FALSE) {
+		if (is.null(pdf_path) || is.na(pdf_path)) return(NULL)
+		img <- pdftools::pdf_render_page(pdf_path, page = 1, dpi = 150)
+		if (trim) img <- magick::image_trim(magick::image_read(img))
+		cowplot::ggdraw() + cowplot::draw_image(img)
+	}
+
+	grob_a <- pdf_to_grob(panel_a_path)
+	grob_b <- pdf_to_grob(panel_b_path, trim = TRUE)
+
+	# Load Seurat for panels C-F
+	seu <- readRDS(seu_path)
+	seu$clusters <- seu$seurat_clusters
+	seu$clusters <- factor(seu$clusters)
+
+	cc_data <- FetchData(seu, c("clusters", "G2M.Score", "S.Score", "Phase", "scna"))
+
+	centroid_data <- cc_data %>%
+		dplyr::group_by(clusters) %>%
+		dplyr::summarise(mean_x = mean(S.Score), mean_y = mean(G2M.Score), .groups = "drop") %>%
+		dplyr::mutate(clusters = factor(clusters, levels = levels(cc_data$clusters)))
+
+	cluster_g2m_order <- cc_data %>%
+		dplyr::group_by(clusters) %>%
+		dplyr::summarise(g2m_prop = mean(Phase == "G2M"), .groups = "drop") %>%
+		dplyr::arrange(g2m_prop) %>%
+		dplyr::pull(clusters)
+
+	cc_data$clusters <- factor(cc_data$clusters, levels = cluster_g2m_order)
+	seu$clusters <- factor(seu$clusters, levels = cluster_g2m_order)
+	centroid_data$clusters <- factor(centroid_data$clusters, levels = cluster_g2m_order)
+
+	# Panel C: 3 UMAP plots
+	panel_c <- (DimPlot(seu, group.by = "clusters", label = TRUE) + NoLegend()) |
+	           DimPlot(seu, group.by = "Phase") |
+	           DimPlot(seu, group.by = "scna")
+
+	# Panel D: CC space scatter x3 (clusters, Phase, scna) — same dimensions as panel C (2996x1498)
+	make_cc_scatter <- function(color_by, show_fill_legend = TRUE) {
+		p <- cc_data %>%
+			ggplot(aes(x = S.Score, y = G2M.Score, color = .data[[color_by]])) +
+			geom_point(size = 0.1) +
+			geom_point(
+				data = centroid_data,
+				aes(x = mean_x, y = mean_y, fill = clusters),
+				size = 6, shape = 23, colour = "black", alpha = 0.7, inherit.aes = FALSE
+			) +
+			theme_light() +
+			labs(title = color_by)
+		if (!show_fill_legend) p <- p + guides(fill = "none")
+		p
+	}
+	panel_d <- make_cc_scatter("clusters") |
+	           make_cc_scatter("Phase", show_fill_legend = FALSE) |
+	           make_cc_scatter("scna", show_fill_legend = FALSE)
+
+	# Panel E: faceted by cluster, colored by scna
+	panel_e <- cc_data %>%
+		ggplot(aes(x = S.Score, y = G2M.Score, color = scna)) +
+		geom_point(size = 0.1) +
+		geom_point(
+			data = centroid_data,
+			aes(x = mean_x, y = mean_y, fill = clusters),
+			size = 6, shape = 23, colour = "black", alpha = 0.7, inherit.aes = FALSE
+		) +
+		facet_wrap(~clusters, nrow = 2, ncol = 6) +
+		geom_label(
+			data = data.frame(clusters = unique(cc_data$clusters)),
+			aes(label = clusters),
+			x = max(cc_data$S.Score),
+			y = max(cc_data$G2M.Score),
+			hjust = 1, vjust = 1,
+			inherit.aes = FALSE
+		) +
+		theme_light() +
+		theme(strip.background = element_blank(), strip.text.x = element_blank()) +
+		guides(color = "none", fill = "none")
+
+	# Panel F: clone distribution
+	panel_f <- plot_distribution_of_clones_across_clusters(
+		seu, seu_name = sample_id, var_x = "scna", var_y = "clusters", plot_type = "clone"
+	) +
+		theme(legend.position = "none")
+
+	# Assemble rows
+	row1 <- cowplot::plot_grid(
+		grob_a, grob_b, nrow = 1, rel_widths = c(0.8, 0.2),
+		labels = c("A", "B"), label_size = 14
+	)
+	row4 <- cowplot::plot_grid(
+		panel_e, panel_f, nrow = 1, rel_widths = c(0.8, 0.2),
+		labels = c("E", "F"), label_size = 14
+	)
+
+	page <- cowplot::plot_grid(
+		row1, panel_c, panel_d, row4,
+		ncol = 1,
+		rel_heights = c(1000, 1000, 1000, 1070),
+		labels = c("", "C", "D", ""), label_size = 14
+	)
+
+	# Page width = panel C width; total height = sum of row heights
+	ggsave(plot_path, page, width = 2996, height = 1000 + 1000 + 1000 + 1070, units = "px")
+	return(plot_path)
 }
