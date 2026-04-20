@@ -159,11 +159,21 @@ pipeline_targets_inputs <- c(
     tar_target(large_clone_comparisons,
       yaml::read_yaml(here::here("config/large_clone_comparisons.yaml"))
     ),
-    tar_target(large_clone_simplifications,
-      yaml::read_yaml(here::here("config/large_clone_simplifications.yaml"))
+    tarchetypes::tar_file(large_clone_simplifications_file, "config/large_clone_simplifications.yaml"),
+    tar_target(large_clone_simplifications, yaml::read_yaml(large_clone_simplifications_file)),
+    tar_target(
+      large_clone_simplifications_per_sample,
+      large_clone_simplifications[stringr::str_extract(numbat_rds_files, "SRR[0-9]+")],
+      pattern = map(numbat_rds_files),
+      iteration = "list"
     ),
-    tar_target(large_filter_expressions,
-      yaml::read_yaml(here::here("config/large_filter_expression.yaml"))
+    tarchetypes::tar_file(large_filter_expressions_file, "config/large_filter_expression.yaml"),
+    tar_target(large_filter_expressions, yaml::read_yaml(large_filter_expressions_file)),
+    tar_target(
+      large_filter_expressions_per_sample,
+      large_filter_expressions[stringr::str_extract(numbat_rds_files, "SRR[0-9]+")],
+      pattern = map(numbat_rds_files),
+      iteration = "list"
     ),
     tar_target(clone_comparison_table,
       tabulate_clone_comparisons(large_clone_comparisons)
@@ -171,7 +181,14 @@ pipeline_targets_inputs <- c(
 
     # --- cluster annotation configs ---
 
-    tar_target(cluster_dictionary, read_cluster_dictionary("data/cluster_dictionary.tsv")),
+    tarchetypes::tar_file(cluster_dictionary_file, "data/cluster_dictionary.tsv"),
+    tar_target(cluster_dictionary, read_cluster_dictionary(cluster_dictionary_file)),
+    tar_target(
+      cluster_dictionary_per_sample,
+      cluster_dictionary[stringr::str_extract(numbat_rds_files, "SRR[0-9]+")],
+      pattern = map(numbat_rds_files),
+      iteration = "list"
+    ),
 
     tarchetypes::tar_file(branch_dictionary_file, "data/branch_dictionary.csv"),
     tar_target(branch_dictionary, pull_branches(branch_dictionary_file)),

@@ -56,16 +56,26 @@ plot_clone_tree <- function(seu, tumor_id, nb_path, clone_simplifications = NULL
 
   ## clone tree ------------------------------
 
-  nclones <- max(as.integer(unique(seu$clone_opt)), na.rm = TRUE)
-
-  mypal <- scales::hue_pal()(nclones) %>%
-    set_names(1:nclones)
-
   if(!is.null(clone_simplifications)){
   	rb_scnas <- clone_simplifications[[tumor_id]]
   	mynb <- simplify_gt(mynb, rb_scnas)
-
   }
+
+  # Renumber clones in BFS tree order so clone numbers follow phylogenetic order
+  g <- mynb$mut_graph
+  root_v <- which(igraph::degree(g, mode = "in") == 0)
+  bfs_order <- igraph::bfs(g, root = root_v, mode = "out")$order
+  old_clones <- igraph::V(g)$clone[bfs_order]
+  remap <- setNames(seq_along(old_clones), as.character(old_clones))
+
+  igraph::V(mynb$mut_graph)$clone <- as.integer(remap[as.character(igraph::V(mynb$mut_graph)$clone)])
+  mynb$clone_post <- mynb$clone_post %>%
+    dplyr::mutate(clone_opt = as.integer(remap[as.character(clone_opt)]))
+  seu$clone_opt <- as.integer(remap[as.character(seu$clone_opt)])
+
+  nclones <- max(as.integer(unique(seu$clone_opt)), na.rm = TRUE)
+  mypal <- scales::hue_pal()(nclones) %>%
+    set_names(1:nclones)
 
   plot_title <- ifelse(is.null(sample_id), tumor_id, sample_id)
 

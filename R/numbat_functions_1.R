@@ -147,13 +147,24 @@ split_seu_by_branch <- function(seu_path, branches, ...) {
     seu <- readRDS(seu_path)
     seu_paths <- list()
     for (terminal_clone in names(branches)) {
+      branch_path <- str_replace(seu_path, "_filtered_seu.*", glue("_branch_{terminal_clone}_filtered_seu.rds"))
       debranched_seu <- seu[, seu$clone_opt %in% branches[[terminal_clone]]]
-
       sample_id <- glue("{tumor_id}_branch_{terminal_clone}")
 
-      prep_seu_branch(debranched_seu, tumor_id = tumor_id, sample_id = sample_id, ...)
+      # Cache check: if branch file exists with the same cells, skip the expensive
+      # prep_seu_branch (SCTransform x2 + PCA + UMAP + clustering x2 + markers x2).
+      if (file.exists(branch_path)) {
+        cached_seu <- tryCatch(readRDS(branch_path), error = function(e) NULL)
+        if (!is.null(cached_seu) && identical(sort(colnames(cached_seu)), sort(colnames(debranched_seu)))) {
+          message("Cell barcodes unchanged for ", sample_id, "; skipping prep_seu_branch")
+          seu_paths[[terminal_clone]] <- branch_path
+          next
+        }
+        message("Cell barcodes changed for ", sample_id, "; running full prep_seu_branch")
+      }
 
-      seu_paths[[terminal_clone]] <- str_replace(seu_path, "_filtered_seu.*", glue("_branch_{terminal_clone}_filtered_seu.rds"))
+      debranched_seu <- prep_seu_branch(debranched_seu, tumor_id = tumor_id, sample_id = sample_id, ...)
+      seu_paths[[terminal_clone]] <- branch_path
       add_hash_metadata(seu = debranched_seu, filepath = seu_paths[[terminal_clone]])
     }
   }

@@ -404,8 +404,9 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
   unfiltered_seu@meta.data$scna <- vec_split_label_line(unfiltered_seu@meta.data$scna, 3)
   filtered_seu@meta.data$scna   <- vec_split_label_line(filtered_seu@meta.data$scna, 3)
 
-  col_numbers <- sort(as.numeric(unique(unfiltered_seu@meta.data[[group.by]])))
-  group_cols  <- scales::hue_pal()(length(col_numbers)) |> set_names(col_numbers)
+  cluster_labels <- unique(as.character(unfiltered_seu@meta.data[[group.by]]))
+  cluster_labels <- stringr::str_sort(cluster_labels, numeric = TRUE)
+  group_cols  <- scales::hue_pal()(length(cluster_labels)) |> set_names(cluster_labels)
 
   n_cols <- if (!is.null(original_filtered_seu)) 3L else 2L
 

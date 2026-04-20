@@ -78,9 +78,9 @@ annotate_filter_reason <- function(
   }
 
   filter_reason <- dplyr::case_when(
+    cluster_remove ~ "cluster_remove",
     clone_missing ~ "clone_opt_na",
     qc_fail ~ "qc_fail",
-    cluster_remove ~ "cluster_remove",
     malat1_remove ~ "malat1",
     manual_remove ~ "manual_exclude",
     TRUE ~ NA_character_
@@ -105,11 +105,16 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
   dir_create(glue("results/{numbat_dir}"))
   dir_create(glue("results/{numbat_dir}/{sample_id}"))
   names(seus) <- str_extract(seus, "SRR[0-9]*")
-  seu <- readRDS(seus[[sample_id]])
+  seu_path <- seus[[sample_id]]
+  if (is.null(seu_path) || is.na(seu_path)) {
+    message("No unfiltered seu for ", sample_id, "; returning NA")
+    return(NA_character_)
+  }
+  seu <- readRDS(seu_path)
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
   mynb <- readRDS(numbat_rds_file)
-  if (is.null(mynb[["clone_post"]])) {
-    message("clone_post is NULL in numbat RDS for ", sample_id, "; returning NA")
+  if (is.null(mynb[["clone_post"]]) || !all(c("clone_opt", "GT_opt") %in% colnames(mynb[["clone_post"]]))) {
+    message("clone_post missing required columns (clone_opt, GT_opt) for ", sample_id, "; returning NA")
     return(NA_character_)
   }
   nb_clone_post <- mynb[["clone_post"]][, c("cell", "clone_opt", "GT_opt")] %>%
@@ -170,10 +175,31 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
          ". Expected columns: filter_reason, filter_keep.")
   }
 
-  scna_meta <- seu@meta.data
-  scna_meta <- seu[seu$filter_reason %in% c("qc_fail", "cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]@meta.data
-  qc_meta <- seu[seu$filter_reason %in% c("cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]@meta.data
+  scna_meta <- seu@meta.data[seu$filter_reason %in% c("qc_fail", "cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]
+  qc_meta <- seu@meta.data[seu$filter_reason %in% c("cluster_remove", "malat1", "manual_exclude") | is.na(seu$filter_reason), ]
   seu <- seu[, seu$filter_keep]
+
+  filtered_seu_path <- glue("output/seurat/{sample_id}_filtered{extension}_seu.rds")
+
+  # Cache check: if existing filtered_seu has the same post-filter cells, skip
+  # expensive recomputation and only refresh metadata.
+  meta_cols_to_refresh <- c("clone_opt", "GT_opt", "scna", "filter_reason", "filter_keep", "abbreviation")
+  if (file.exists(filtered_seu_path)) {
+    cached_seu <- tryCatch(readRDS(filtered_seu_path), error = function(e) NULL)
+    if (!is.null(cached_seu) && identical(sort(colnames(cached_seu)), sort(colnames(seu)))) {
+      message("Cell barcodes unchanged for ", sample_id, "; refreshing metadata only (skipping SCTransform/PCA/UMAP)")
+      refresh_meta <- seu@meta.data[, base::intersect(meta_cols_to_refresh, colnames(seu@meta.data)), drop = FALSE]
+      cached_seu <- Seurat::AddMetaData(cached_seu, refresh_meta)
+      Project(cached_seu) <- sample_id
+      add_hash_metadata(seu = cached_seu, filepath = filtered_seu_path)
+      cell_type_meta <- cached_seu@meta.data
+      plot_filtering_timeline(all_cells_meta, scna_meta, qc_meta, cell_type_meta, sample_id)
+      ggsave(glue("results/{sample_id}_filtering_timeline_{extension}.pdf"), width = 8, height = 4)
+      return(filtered_seu_path)
+    }
+    message("Cell barcodes changed for ", sample_id, "; running full SCTransform/PCA/UMAP pipeline")
+  }
+
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
   seu <- RunPCA(seu, verbose = FALSE)
   seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
@@ -194,7 +220,6 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
       stop(e)
     }
   )
-  filtered_seu_path <- glue("output/seurat/{sample_id}_filtered{extension}_seu.rds")
   Project(seu) <- sample_id
   add_hash_metadata(seu = seu, filepath = filtered_seu_path)
 
@@ -223,8 +248,8 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
   seu <- readRDS(glue("output/seurat/{sample_id}_seu.rds"))
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
   mynb <- readRDS(numbat_rds_file)
-  if (is.null(mynb[["clone_post"]])) {
-    message("clone_post is NULL in numbat RDS for ", sample_id, "; returning NA")
+  if (is.null(mynb[["clone_post"]]) || !all(c("clone_opt", "GT_opt") %in% colnames(mynb[["clone_post"]]))) {
+    message("clone_post missing required columns (clone_opt, GT_opt) for ", sample_id, "; returning NA")
     return(NA_character_)
   }
   nb_clone_post <- mynb[["clone_post"]][, c("cell", "clone_opt", "GT_opt")] %>%
@@ -285,6 +310,23 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
     # cells_to_remove = cells_to_remove
   )
 
+  unfiltered_seu_path <- glue("output/seurat/{sample_id}_unfiltered_seu.rds")
+
+  # Cache check: if existing unfiltered_seu has the same cells, skip expensive
+  # recomputation (SCTransform/PCA/UMAP/clustering/markers) and only refresh metadata.
+  meta_cols_to_refresh <- c("clone_opt", "GT_opt", "scna", "filter_reason", "filter_keep", "abbreviation")
+  if (file.exists(unfiltered_seu_path)) {
+    cached_seu <- tryCatch(readRDS(unfiltered_seu_path), error = function(e) NULL)
+    if (!is.null(cached_seu) && identical(sort(colnames(cached_seu)), sort(colnames(seu)))) {
+      message("Cell barcodes unchanged for ", sample_id, "; refreshing metadata only (skipping SCTransform/PCA/UMAP)")
+      refresh_meta <- seu@meta.data[, base::intersect(meta_cols_to_refresh, colnames(seu@meta.data)), drop = FALSE]
+      cached_seu <- Seurat::AddMetaData(cached_seu, refresh_meta)
+      add_hash_metadata(seu = cached_seu, filepath = unfiltered_seu_path)
+      return(unfiltered_seu_path)
+    }
+    message("Cell barcodes changed for ", sample_id, "; running full SCTransform/PCA/UMAP pipeline")
+  }
+
   seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
   seu <- RunPCA(seu, verbose = FALSE)
   seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
@@ -305,7 +347,6 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
       stop(e)
     }
   )
-  unfiltered_seu_path <- glue("output/seurat/{sample_id}_unfiltered_seu.rds")
 
   add_hash_metadata(seu = seu, filepath = unfiltered_seu_path)
   return(unfiltered_seu_path)
@@ -317,10 +358,21 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
 #' @return Modified Seurat object
 #' @export
 regress_filtered_seu <- function(filtered_seu_path) {
-  
-  
+  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
   regressed_seu_path <- str_replace(filtered_seu_path, "_filtered", "_regressed")
   regressed_seu <- readRDS(filtered_seu_path)
+
+  # Cache check: regression doesn't change cell barcodes, so if the cached file
+  # exists with the same cells as the input, skip the expensive recomputation.
+  if (file.exists(regressed_seu_path)) {
+    cached_seu <- tryCatch(readRDS(regressed_seu_path), error = function(e) NULL)
+    if (!is.null(cached_seu) && identical(sort(colnames(cached_seu)), sort(colnames(regressed_seu)))) {
+      message("Cell barcodes unchanged for ", sample_id, "; skipping SCTransform/PCA/UMAP regression")
+      return(regressed_seu_path)
+    }
+    message("Cell barcodes changed for ", sample_id, "; running full regression pipeline")
+  }
+
   regressed_seu <- PercentageFeatureSet(regressed_seu, pattern = "^MT-", col.name = "percent.mt")
   regressed_seu <- SCTransform(regressed_seu, assay = "gene", vars.to.regress = c("percent.mt", "S.Score", "G2M.Score"), verbose = FALSE)
   regressed_seu <- RunPCA(regressed_seu, verbose = FALSE)
@@ -330,7 +382,6 @@ regress_filtered_seu <- function(filtered_seu_path) {
     seu = regressed_seu, resolution = seq(0.2, 1.0, by = 0.2),
     reduction = "pca"
   )
-  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
   regressed_seu <- tryCatch(
     find_all_markers(regressed_seu, seurat_assay = "SCT"),
     error = function(e) {

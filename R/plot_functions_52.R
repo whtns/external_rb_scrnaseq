@@ -654,6 +654,7 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
                                    density = 300) {
 
   sample_id <- str_extract(unlist(unfiltered_clone_tree_files)[1], "SRR[0-9]*")
+  if (is.na(sample_id)) return(NULL)
 
   clone_trees_unfiltered   <- unlist(unfiltered_clone_tree_files)
   segment_trees_unfiltered <- unlist(unfiltered_clone_trees_segments_files)

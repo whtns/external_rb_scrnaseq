@@ -8,12 +8,12 @@ pipeline_targets_figures <- c(
 list(
   # --- aggregate output tracking ---
 
-  tar_target(
-    figures_and_tables,
+  tar_target(figures_and_tables,
     list(
       cluster_comparisons_by_phase_for_disctinct_clones = cluster_comparisons_by_phase_for_disctinct_clones,
       clustree_compilation = clustree_compilation,
       collage_compilation = collage_compilation,
+      fig_02 = fig_02,     # single-sample multi-panel figure (SRR14800534)
       fig_04 = fig_04,     # integrated 1q fig for all 1q+ samples
       fig_04_v2 = fig_04_v2, # updated integrated 1q fig for all 1q+ samples
       fig_03 = fig_03,     # integrated 16q- alternative resolutions
@@ -68,6 +68,15 @@ list(
 
   # Cell cycle space and clone distribution plots for figure 01.
   tar_target(fig_01, plot_fig_01(final_seus[["SRR14800534"]])),
+
+  # Multi-panel single-sample figure: Numbat heatmap, clone tree, UMAPs, CC space, clone distribution.
+  tar_target(fig_02,
+    plot_fig_02(
+      final_seus[["SRR14800534"]],
+      numbat_rds_files,
+      large_clone_simplifications
+    )
+  ),
 
   # Plot study-level metadata summary for supplemental figure S04.
   tar_target(fig_s04, plot_study_metadata(study_cell_stats)),
@@ -322,8 +331,7 @@ list(
     iteration = "list"
   ),
 
-  tar_target(
-    filtering_timelines,
+  tar_target(filtering_timelines,
     qpdf::pdf_combine(dir_ls("results", regexp = ".*SRR[0-9]*_filtering_timeline.pdf"), "results/filtering_timelines.pdf")
   ),
 
@@ -417,6 +425,10 @@ list(
     error = "null"
   ),
 
+  tar_target(subset_clone_trees_figure,
+    qpdf::pdf_combine(subset_clone_tree_files, "results/subset_clone_trees_files.pdf")
+  ),
+
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
   tar_target(subset_clone_trees_segments_files,
     save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_subset_segment_tree", legend = FALSE, horizontal = FALSE),
@@ -446,8 +458,7 @@ list(
     iteration = "list"
   ),
 
-  tar_target(
-    final_clone_trees_file,
+  tar_target(final_clone_trees_file,
     qpdf::pdf_combine(final_clone_tree_files, "results/final_clone_trees.pdf")
   ),
 

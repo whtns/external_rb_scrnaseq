@@ -41,3 +41,4 @@ tmp/
 Rb_object
 .codetree/
 pipeline.log
+*.zip

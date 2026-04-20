@@ -141,6 +141,10 @@ gmap: /usr/local/bin/TOOLS/Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz
 snpvcf: /dataVolume/storage/Homo_sapiens/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz
 paneldir: /dataVolume/storage/Homo_sapiens/numbat/1000G_hg38
 max_entropy: 0.7
+max_entropy_by_sample:
+  SRR13633760: 0.8
+  SRR14800538: 0.8
+  SRR14800542: 0.8
 min_LLR: 5
 max_iter: 2
 read_prop: 1
