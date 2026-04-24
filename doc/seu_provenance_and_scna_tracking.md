@@ -315,7 +315,7 @@ Purpose:
 
 QC/heatmap targets:
 
-- fig_s03a_plots
+- fig_s03a_low_hypoxia_plots
 - fig_s03a
 - fig_s13
 - filtered_numbat_heatmaps_file

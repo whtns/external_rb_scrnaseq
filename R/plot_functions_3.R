@@ -432,6 +432,7 @@ extract_filter_metadata <- function(
   cells_to_remove,
   large_clone_simplifications
 ) {
+  if (is.na(seu_path)) return(NA)
   sample_id <- stringr::str_extract(seu_path, "SRR[0-9]*")
   seu <- readRDS(seu_path)
 
@@ -469,7 +470,8 @@ extract_filter_metadata <- function(
       nCount_gene, nFeature_gene, percent.mt,
       clone_opt_is_na, cluster, abbreviation,
       cluster_remove_flag, is_malat1, in_manual_exclude,
-      scna
+      scna,
+      dplyr::any_of("filter_keep")
     )
 }
 
@@ -636,3 +638,52 @@ read_all_hypoxia_scores <- function(files) {
 
     return(res)
 }
+
+assemble_diploid_seu <- function(filtered_seus_paths,
+                                 out_path = "output/seurat/diploid_seu.rds") {
+  paths <- unlist(filtered_seus_paths)
+  paths <- paths[!is.na(paths)]
+  sample_ids <- stringr::str_extract(paths, "SRR[0-9]+")
+
+  seus <- purrr::imap(
+    purrr::set_names(paths, sample_ids),
+    function(path, sample_id) {
+      seu <- readRDS(path)
+      diploid_mask <- is.na(seu$scna) | seu$scna == ""
+      if (!any(diploid_mask)) return(NULL)
+      seu <- seu[, diploid_mask]
+      for (assay_name in SeuratObject::Assays(seu)) {
+        if (inherits(seu[[assay_name]], "Assay5"))
+          seu[[assay_name]] <- SeuratObject::JoinLayers(seu[[assay_name]])
+      }
+      seu$sample_source <- sample_id
+      seu
+    }
+  ) |>
+    purrr::compact()
+
+  join_assay5_layers <- function(s) {
+    for (assay_name in SeuratObject::Assays(s)) {
+      if (inherits(s[[assay_name]], "Assay5"))
+        s[[assay_name]] <- SeuratObject::JoinLayers(s[[assay_name]])
+    }
+    s
+  }
+
+  seus_list <- as.list(seus)
+  seu <- seus_list[[1]]
+  for (i in seq_along(seus_list)[-1]) {
+    seu <- merge(seu, seus_list[[i]])
+    seu <- join_assay5_layers(seu)
+  }
+
+  seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
+  seu <- RunPCA(seu, verbose = FALSE)
+  seu <- FindNeighbors(seu, dims = 1:30, verbose = FALSE)
+  seu <- FindClusters(seu, resolution = 0.2, verbose = FALSE)
+  seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
+
+  add_hash_metadata(seu = seu, filepath = out_path)
+  out_path
+}
+

@@ -1,5 +1,7 @@
 
 load_and_save_hypoxia_score <- function(seu_path) {
+    if (is.na(seu_path)) return(NA_character_)
+
     # determine target path first and skip work if file already exists
 
     hypoxia_path <- sub("^([^_]+)_.*$", "\\1_seu_hypoxia.rds", seu_path)

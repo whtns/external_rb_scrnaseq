@@ -575,8 +575,9 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
   return(plot_path)
 }
 
-subset_seu_by_expression <- function(seu_path, hypoxia_expr = NULL, 
+subset_seu_by_expression <- function(seu_path, hypoxia_expr = NULL,
 run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2), assay = "SCT", slug = "hypoxia_low") {
+  if (is.na(seu_path)) return(NA_character_)
 
   seu <- readRDS(seu_path)
 
@@ -627,14 +628,16 @@ nb_paths = NULL, clone_simplifications = NULL, group.by = "SCT_snn_res.0.6",
 assay = "SCT", label = "_filtered_", height = 10, width = 18, 
 equalize_scna_clones = FALSE, 
 phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), 
-kept_phases = NULL, tmp_plot_path = FALSE, hypoxia_expr = NULL, 
+kept_phases = NULL, tmp_plot_path = FALSE, hypoxia_expr = NULL,
 run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
   kept_phases <- kept_phases %||% phase_levels
 
+  if (is.na(seu_path)) return(NA_character_)
+
   file_id <- fs::path_file(seu_path)
-  
+
   tumor_id <- str_extract(seu_path, "SRR[0-9]*")
-  
+
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   
   message(file_id)
@@ -975,6 +978,7 @@ numeric_col_fun <- function(myvec, color) {
 #' @return A ggplot2 object showing per-cell hypoxia scores.
 #' @export
 plot_hypoxia_score <- function(seu_path, threshold = 0.5) {
+    if (is.na(seu_path)) return(NA_character_)
     seu <- readRDS(seu_path)
     sample_id <- str_extract(seu_path, "SRR[0-9]*")
     p <- seu@meta.data |> 

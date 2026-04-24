@@ -67,7 +67,7 @@ segment names.
 
 ### Filtered heatmap (Row 3)
 
-**Target:** `fig_s03a_plots`
+**Target:** `fig_s03a_low_hypoxia_plots`
 
 Produced by `make_numbat_heatmaps(filtered_seus, ...)` with
 `extension = "_filtered"`. Same heatmap type as above but for the **filtered**
