@@ -67,12 +67,12 @@ list(
   tar_target(study_cell_stats, collect_study_metadata()),
 
   # Cell cycle space and clone distribution plots for figure 01.
-  tar_target(fig_01, plot_fig_01(final_seus[["SRR14800534"]])),
+  tar_target(fig_01, plot_fig_01(unlist(seus_low_hypoxia)[grepl("SRR14800534", unlist(seus_low_hypoxia))])),
 
   # Multi-panel single-sample figure: Numbat heatmap, clone tree, UMAPs, CC space, clone distribution.
   tar_target(fig_02,
     plot_fig_02(
-      final_seus[["SRR14800534"]],
+      unlist(seus_low_hypoxia)[grepl("SRR14800534", unlist(seus_low_hypoxia))],
       numbat_rds_files,
       large_clone_simplifications
     )
@@ -212,7 +212,7 @@ list(
     iteration = "list"
   ),
 
-  # --- large numbat plots ---
+  # --- unfiltered numbat plots ---
 
   tar_target(large_numbat_pdfs,
     convert_numbat_pngs(numbat_rds_files),
@@ -228,20 +228,6 @@ list(
       retrieve_numbat_plot_type(large_numbat_pdfs, "bulk_clones_final.pdf")
   ),
 
-    tar_target(subset_numbat_pdfs,
-    convert_numbat_pngs(numbat_rds_files),
-    pattern = map(numbat_rds_files),
-    iteration = "list"
-  ),
-
-  tar_target(subset_numbat_expression,
-    retrieve_numbat_plot_type(subset_numbat_pdfs, "exp_roll_clust.pdf")
-  ),
-
-  tar_target(subset_numbat_bulk_clones,
-      retrieve_numbat_plot_type(subset_numbat_pdfs, "bulk_clones_final.pdf")
-  ),
-  
   tar_target(fig_s05,
     qpdf::pdf_combine(unfiltered_numbat_expression, "results/numbat_expression.pdf")
   ),
@@ -249,8 +235,8 @@ list(
   # --- filtered numbat plots ---
 
   tar_target(filtered_numbat_pdfs,
-    convert_numbat_pngs(numbat_rds_filtered_files),
-    pattern = map(numbat_rds_filtered_files),
+    convert_numbat_pngs(numbat_rds_files),
+    pattern = map(numbat_rds_files),
     iteration = "list"
   ),
 
@@ -259,12 +245,28 @@ list(
   ),
 
   tar_target(filtered_numbat_bulk_clones,
-    retrieve_numbat_plot_type(filtered_numbat_pdfs, "bulk_clones_final.pdf")
+      retrieve_numbat_plot_type(filtered_numbat_pdfs, "bulk_clones_final.pdf")
+  ),
+  
+  # --- low hypoxia numbat plots ---
+
+  tar_target(low_hypoxia_numbat_pdfs,
+    convert_numbat_pngs(numbat_rds_files),
+    pattern = map(numbat_rds_files),
+    iteration = "list"
+  ),
+
+  tar_target(low_hypoxia_numbat_expression,
+    retrieve_numbat_plot_type(low_hypoxia_numbat_pdfs, "exp_roll_clust.pdf")
+  ),
+
+  tar_target(low_hypoxia_numbat_bulk_clones,
+    retrieve_numbat_plot_type(low_hypoxia_numbat_pdfs, "bulk_clones_final.pdf")
   ),
 
   # For each sample, prefer the filtered bulk clones plot when available,
   # falling back to the unfiltered one. This ensures consistency with
-  # fig_s03a_plots, which also prefers the filtered numbat run.
+  # fig_s03a_low_hypoxia_plots, which also prefers the filtered numbat run.
   tar_target(
     preferred_numbat_bulk_clones,
     {
@@ -286,7 +288,7 @@ list(
     pattern = map(nb_paths_s06a)
   ),
 
-  tar_target(ideogram_res_s06a_subset,
+  tar_target(ideogram_res_s06a_filtered,
     make_rb_scna_ideograms(nb_paths_s06a, suffix = "_subset"),
     pattern = map(nb_paths_s06a)
   ),
@@ -295,9 +297,9 @@ list(
     dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
   ),
 
-  tar_target(ideogram_res_s06a_filtered,
-    make_rb_scna_ideograms(nb_paths_s06a_filtered, suffix = "_filtered"),
-    pattern = map(nb_paths_s06a_filtered)
+  tar_target(ideogram_res_s06a_low_hypoxia,
+    make_rb_scna_ideograms(nb_paths_s06a, suffix = "_low_hypoxia"),
+    pattern = map(nb_paths_s06a)
   ),
 
   tar_target(fig_s06a,
@@ -418,36 +420,36 @@ list(
     qpdf::pdf_combine(unfiltered_clone_trees_segments_files, "results/unfiltered_clone_trees_segments.pdf")
   ),
 
-  tar_target(subset_clone_tree_files,
-    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications, label = "_subset_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus),
-    iteration = "list",
-    error = "null"
-  ),
-
-  tar_target(subset_clone_trees_figure,
-    qpdf::pdf_combine(subset_clone_tree_files, "results/subset_clone_trees_files.pdf")
-  ),
-
-  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
-  tar_target(subset_clone_trees_segments_files,
-    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_subset_segment_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus),
-    iteration = "list",
-    error = "null"
-  ),
-
   tar_target(filtered_clone_tree_files,
-    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_filtered_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus_nb_filtered),
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
     iteration = "list",
     error = "null"
+  ),
+
+  tar_target(filtered_clone_trees_figure,
+    qpdf::pdf_combine(filtered_clone_tree_files, "results/filtered_clone_trees.pdf")
   ),
 
   # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
   tar_target(filtered_clone_trees_segments_files,
-    save_clone_tree_from_path(filtered_seus_nb_filtered, numbat_rds_filtered_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus_nb_filtered),
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, NULL, label = "_filtered_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus),
+    iteration = "list",
+    error = "null"
+  ),
+
+  tar_target(low_hypoxia_clone_tree_files,
+    save_clone_tree_from_path(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications, label = "_low_hypoxia_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(seus_low_hypoxia),
+    iteration = "list",
+    error = "null"
+  ),
+
+  # Clone trees with raw NUMBAT segment labels (no SCNA simplification applied).
+  tar_target(low_hypoxia_clone_trees_segments_files,
+    save_clone_tree_from_path(seus_low_hypoxia, numbat_rds_files, NULL, label = "_low_hypoxia_segment_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(seus_low_hypoxia),
     iteration = "list",
     error = "null"
   ),
@@ -551,23 +553,29 @@ list(
   tar_target(sample_summaries,
     collate_sample_summary(
       ideogram_res_s06a_unfiltered,
-      ideogram_res_s06a_subset,
       ideogram_res_s06a_filtered,
+      ideogram_res_s06a_low_hypoxia,
+
       unfiltered_clone_tree_files,
       unfiltered_clone_trees_segments_files,
-      subset_clone_tree_files,
-      subset_clone_trees_segments_files,
+
       filtered_clone_tree_files,
       filtered_clone_trees_segments_files,
+
+      low_hypoxia_clone_tree_files,
+      low_hypoxia_clone_trees_segments_files,
+
       fig_s03a_unfiltered_plots,
       fig_s03a_subset_plots,
-      fig_s03a_plots,
+      fig_s03a_low_hypoxia_plots,
+
       unfiltered_numbat_expression,
-      subset_numbat_expression,
       filtered_numbat_expression,
+      low_hypoxia_numbat_expression,
+
       unfiltered_numbat_bulk_clones,
-      subset_numbat_bulk_clones,
-      filtered_numbat_bulk_clones
+      filtered_numbat_bulk_clones,
+      low_hypoxia_numbat_bulk_clones
     ),
     pattern = map(unfiltered_clone_tree_files),
     iteration = "list",

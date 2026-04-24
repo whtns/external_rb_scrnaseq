@@ -19,12 +19,12 @@ tar_target(filtered_seus,   ..., deployment = "main")
 
 ---
 
-## 2. Pass `numbat_rds_filtered_files` to `fig_s03a_plots` (`R/pipeline_targets_seurat.R`, `R/plot_functions_4.R`)
+## 2. Pass `numbat_rds_filtered_files` to `fig_s03a_low_hypoxia_plots` (`R/pipeline_targets_seurat.R`, `R/plot_functions_4.R`)
 
-**Problem:** `fig_s03a_plots` was not using the filtered numbat RDS files even when available, because `numbat_rds_filtered_files` was not passed through.
+**Problem:** `fig_s03a_low_hypoxia_plots` was not using the filtered numbat RDS files even when available, because `numbat_rds_filtered_files` was not passed through.
 
 **Fix:**
-- Added `numbat_rds_filtered_files = numbat_rds_filtered_files` to the `fig_s03a_plots` target call.
+- Added `numbat_rds_filtered_files = numbat_rds_filtered_files` to the `fig_s03a_low_hypoxia_plots` target call.
 - Added `numbat_rds_filtered_files = NULL` parameter to `make_numbat_heatmaps()`, with logic to substitute the filtered RDS for a given sample when one exists.
 
 ---

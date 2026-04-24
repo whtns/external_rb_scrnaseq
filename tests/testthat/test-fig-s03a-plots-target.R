@@ -1,4 +1,4 @@
-test_that("fig_s03a_plots target is configured for unfiltered numbat heatmaps", {
+test_that("fig_s03a_low_hypoxia_plots target is configured for unfiltered numbat heatmaps", {
   path_candidates <- c(
     "_targets_BB_edit.R",
     "../_targets_BB_edit.R",
@@ -11,7 +11,7 @@ test_that("fig_s03a_plots target is configured for unfiltered numbat heatmaps", 
   text <- paste(lines, collapse = "\n")
 
   # Verify target name and core command contract.
-  expect_match(text, "tar_target\\(fig_s03a_plots,", perl = TRUE)
+  expect_match(text, "tar_target\\(fig_s03a_low_hypoxia_plots,", perl = TRUE)
   expect_match(text, "make_numbat_heatmaps\\(original_seus, numbat_rds_files, p_min = 0\\.9, line_width = 0\\.1, extension = \"_unfiltered\"\\)", perl = TRUE)
 
   # Verify dynamic branching shape for this target.

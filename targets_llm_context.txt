@@ -302,7 +302,7 @@ graph LR
     xa909c51337d2a098>"clone_diff_per_cluster"]:::uptodate --> x59902d1fbcbeaea4>"find_diffex_bw_clones_for_each_cluster"]:::uptodate
     x56ca986e79992061>"tabulate_clone_percent_integrated"]:::uptodate --> xbe890a1841e56a01>"make_table_s05"]:::uptodate
     x2fdba7c839615de0>"read_cluster_dictionary"]:::uptodate --> x743b0ff0621e459b(["cluster_dictionary"]):::uptodate
-    x89a5716e8c241f07["fig_s03a_plots"]:::outdated --> x72cfe7010c26fca1(["fig_s03a"]):::outdated
+    x89a5716e8c241f07["fig_s03a_low_hypoxia_plots"]:::outdated --> x72cfe7010c26fca1(["fig_s03a"]):::outdated
     x47cd3658faff8277["corresponding_clusters_diffex_6p"]:::outdated --> xc8feb659d409a07e["corresponding_clusters_enrichments_6p"]:::outdated
     x5fe6eb35478fad3a(["corresponding_state_6p_seus"]):::outdated --> xc8feb659d409a07e["corresponding_clusters_enrichments_6p"]:::outdated
     x4f750b8f7b1b7328>"plot_corresponding_enrichment"]:::uptodate --> xc8feb659d409a07e["corresponding_clusters_enrichments_6p"]:::outdated
@@ -524,9 +524,9 @@ graph LR
     xf2bf0f3840383541(["states_dictionary_6p"]):::outdated --> x47cd3658faff8277["corresponding_clusters_diffex_6p"]:::outdated
     x0106ad76259eafeb>"compile_cis_trans_enrichment_recurrence_by_cluster"]:::uptodate --> x2f9430c677fbfdd1(["oncoprint_enrich_clusters_plots_hallmark"]):::outdated
     x97d6d13302581163(["oncoprint_enrich_clusters_hallmark"]):::outdated --> x2f9430c677fbfdd1(["oncoprint_enrich_clusters_plots_hallmark"]):::outdated
-    xcbf47039dcef2cf5>"make_numbat_heatmaps"]:::uptodate --> x89a5716e8c241f07["fig_s03a_plots"]:::outdated
-    x4877d68f4725ce51["numbat_rds_files"]:::outdated --> x89a5716e8c241f07["fig_s03a_plots"]:::outdated
-    x86dff2e51cfc415d(["original_seus"]):::outdated --> x89a5716e8c241f07["fig_s03a_plots"]:::outdated
+    xcbf47039dcef2cf5>"make_numbat_heatmaps"]:::uptodate --> x89a5716e8c241f07["fig_s03a_low_hypoxia_plots"]:::outdated
+    x4877d68f4725ce51["numbat_rds_files"]:::outdated --> x89a5716e8c241f07["fig_s03a_low_hypoxia_plots"]:::outdated
+    x86dff2e51cfc415d(["original_seus"]):::outdated --> x89a5716e8c241f07["fig_s03a_low_hypoxia_plots"]:::outdated
     xc5614deb8cf66225["debranched_seus_6p"]:::outdated --> xeb07a67cde997cd4(["cluster_vlns_6p"]):::outdated
     x8d1c5748a55d4fcd(["interesting_genes"]):::outdated --> xeb07a67cde997cd4(["cluster_vlns_6p"]):::outdated
     xc4f5ec815de08aa0>"plot_putative_marker_across_samples"]:::uptodate --> xeb07a67cde997cd4(["cluster_vlns_6p"]):::outdated
@@ -2331,14 +2331,14 @@ tar_plan(
   					 plot_fig_s06a()),
 
     # unfiltered_numbat_heatmaps
-  tar_target(fig_s03a_plots,
+  tar_target(fig_s03a_low_hypoxia_plots,
     make_numbat_heatmaps(original_seus, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "_unfiltered"),
     pattern = map(original_seus),
     iteration = "list"
   ),
   
   # Purpose: Generate output for fig s03a.
-  tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_plots), "results/unfiltered_heatmaps.pdf")),
+  tar_target(fig_s03a, qpdf::pdf_combine(unlist(fig_s03a_low_hypoxia_plots), "results/unfiltered_heatmaps.pdf")),
   
   # Purpose: Build dependency target for debranched samples.
   tar_target(

@@ -165,6 +165,7 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
                                      mito_threshold = c(5, 10),
                                      nCount_threshold = c(500, 1000),
                                      nFeature_threshold = c(500, 1000),
+                                     low_hypoxia_seu_path = NULL,
                                      plot_path = NULL) {
 
   sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
@@ -435,6 +436,51 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
   tmp_path <- tempfile(fileext = ".pdf")
   plot_list["abbreviation_umaps"] <- tmp_path
   ggsave(tmp_path, dimplot_grid, height = 6, width = 4.5 * n_cols)
+
+  # hypoxia filtering dimplots ------------------------------
+  # Show which cells are dropped between filtered_seu and seus_low_hypoxia.
+  # Uses original_filtered_seu (pipeline seu with UMAP) as the "before" object.
+  if (!is.null(low_hypoxia_seu_path) && file.exists(low_hypoxia_seu_path)) {
+    low_hypoxia_seu <- tryCatch(readRDS(low_hypoxia_seu_path), error = function(e) NULL)
+    if (!is.null(low_hypoxia_seu)) {
+      source_seu <- if (!is.null(original_filtered_seu)) original_filtered_seu else filtered_seu
+      kept_barcodes <- colnames(low_hypoxia_seu)
+      source_seu@meta.data$hypoxia_filter_label <- ifelse(
+        colnames(source_seu) %in% kept_barcodes, "kept_low_hypoxia", "dropped_high_hypoxia"
+      )
+      hypoxia_filter_cols <- c(kept_low_hypoxia = "#2166ac", dropped_high_hypoxia = "#d73027")
+
+      p_hypoxia_source <- DimPlot(source_seu, group.by = "hypoxia_filter_label") +
+        scale_color_manual(values = hypoxia_filter_cols) +
+        labs(title = glue::glue("{sample_id} filtered → hypoxia split"), colour = NULL)
+
+      hypoxia_plot_list <- list(p_hypoxia_source)
+
+      if ("hypoxia_score" %in% colnames(source_seu@meta.data)) {
+        p_hypoxia_score <- FeaturePlot(source_seu, features = "hypoxia_score") +
+          labs(title = "hypoxia score (filtered seu)")
+        hypoxia_plot_list[[2]] <- p_hypoxia_score
+      }
+
+      p_low_hypoxia_scna <- DimPlot(low_hypoxia_seu, group.by = "scna") +
+        labs(title = "low hypoxia seu (scna)")
+
+      hypoxia_plot_list[[length(hypoxia_plot_list) + 1]] <- p_low_hypoxia_scna
+
+      hypoxia_grid <- patchwork::wrap_plots(hypoxia_plot_list, ncol = length(hypoxia_plot_list)) +
+        patchwork::plot_annotation(title = glue::glue("{sample_id} — hypoxia filtering"))
+
+      tmp_path <- tempfile(fileext = ".pdf")
+      hyp_ok <- tryCatch({
+        ggsave(tmp_path, hypoxia_grid, height = 4, width = 4.5 * length(hypoxia_plot_list))
+        TRUE
+      }, error = function(e) {
+        warning("hypoxia_filtering_dimplots failed: ", conditionMessage(e))
+        FALSE
+      })
+      if (hyp_ok) plot_list["hypoxia_filtering_dimplots"] <- tmp_path
+    }
+  }
 
   # Filter to only valid, non-empty PDF files before combining
   valid_pdfs <- Filter(function(f) !is.null(f) && file.exists(f) && file.size(f) > 100L,

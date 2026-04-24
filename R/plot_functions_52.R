@@ -633,64 +633,64 @@ make_table_s10 <- make_table_s07
 #' @param density Render density in DPI (default 300)
 #' @return Path to the combined per-sample PDF
 #' @export
-collate_sample_summary <- function(unfiltered_karyogram_files,
-                                   subset_karyogram_files,
-                                   filtered_karyogram_files,
+collate_sample_summary <- function(ideogram_res_s06a_unfiltered,
+                                   ideogram_res_s06a_filtered,
+                                   ideogram_res_s06a_low_hypoxia,
                                    unfiltered_clone_tree_files,
                                    unfiltered_clone_trees_segments_files,
-                                   subset_clone_tree_files,
-                                   subset_clone_trees_segments_files,
                                    filtered_clone_tree_files,
                                    filtered_clone_trees_segments_files,
-                                   fig_s03a_unfiltered_files,
-                                   fig_s03a_subset_files,
-                                   fig_s03a_files,
-                                   numbat_expression_files,
-                                   subset_numbat_expression_files,
-                                   filtered_numbat_expression_files,
-                                   numbat_bulk_clone_files,
-                                   subset_numbat_bulk_clone_files,
-                                   filtered_numbat_bulk_clone_files,
+                                   low_hypoxia_clone_tree_files,
+                                   low_hypoxia_clone_trees_segments_files,
+                                   fig_s03a_unfiltered_plots,
+                                   fig_s03a_subset_plots,
+                                   fig_s03a_low_hypoxia_plots,
+                                   unfiltered_numbat_expression,
+                                   filtered_numbat_expression,
+                                   low_hypoxia_numbat_expression,
+                                   unfiltered_numbat_bulk_clones,
+                                   filtered_numbat_bulk_clones,
+                                   low_hypoxia_numbat_bulk_clones,
                                    density = 300) {
 
   sample_id <- str_extract(unlist(unfiltered_clone_tree_files)[1], "SRR[0-9]*")
   if (is.na(sample_id)) return(NULL)
 
-  clone_trees_unfiltered   <- unlist(unfiltered_clone_tree_files)
-  segment_trees_unfiltered <- unlist(unfiltered_clone_trees_segments_files)
-  clone_trees_subset       <- unlist(subset_clone_tree_files)
-  segment_trees_subset     <- unlist(subset_clone_trees_segments_files)
-  clone_trees_filtered     <- unlist(filtered_clone_tree_files)
-  segment_trees_filtered   <- unlist(filtered_clone_trees_segments_files)
+  clone_trees_unfiltered    <- unlist(unfiltered_clone_tree_files)
+  segment_trees_unfiltered  <- unlist(unfiltered_clone_trees_segments_files)
+  clone_trees_filtered      <- unlist(filtered_clone_tree_files)
+  segment_trees_filtered    <- unlist(filtered_clone_trees_segments_files)
+  clone_trees_low_hypoxia   <- unlist(low_hypoxia_clone_tree_files)
+  segment_trees_low_hypoxia <- unlist(low_hypoxia_clone_trees_segments_files)
 
-  clone_trees_unfiltered   <- clone_trees_unfiltered[!is.na(clone_trees_unfiltered) & str_detect(clone_trees_unfiltered, sample_id)]
-  segment_trees_unfiltered <- segment_trees_unfiltered[!is.na(segment_trees_unfiltered) & str_detect(segment_trees_unfiltered, sample_id)]
-  clone_trees_subset       <- clone_trees_subset[!is.na(clone_trees_subset) & str_detect(clone_trees_subset, sample_id)]
-  segment_trees_subset     <- segment_trees_subset[!is.na(segment_trees_subset) & str_detect(segment_trees_subset, sample_id)]
-  clone_trees_filtered     <- clone_trees_filtered[!is.na(clone_trees_filtered) & str_detect(clone_trees_filtered, sample_id)]
-  segment_trees_filtered   <- segment_trees_filtered[!is.na(segment_trees_filtered) & str_detect(segment_trees_filtered, sample_id)]
+  clone_trees_unfiltered    <- clone_trees_unfiltered[!is.na(clone_trees_unfiltered) & str_detect(clone_trees_unfiltered, sample_id)]
+  segment_trees_unfiltered  <- segment_trees_unfiltered[!is.na(segment_trees_unfiltered) & str_detect(segment_trees_unfiltered, sample_id)]
+  clone_trees_filtered      <- clone_trees_filtered[!is.na(clone_trees_filtered) & str_detect(clone_trees_filtered, sample_id)]
+  segment_trees_filtered    <- segment_trees_filtered[!is.na(segment_trees_filtered) & str_detect(segment_trees_filtered, sample_id)]
+  clone_trees_low_hypoxia   <- clone_trees_low_hypoxia[!is.na(clone_trees_low_hypoxia) & str_detect(clone_trees_low_hypoxia, sample_id)]
+  segment_trees_low_hypoxia <- segment_trees_low_hypoxia[!is.na(segment_trees_low_hypoxia) & str_detect(segment_trees_low_hypoxia, sample_id)]
 
-  # keep unfiltered/subset/filtered separate for three-column layout
-  s03a_filt   <- unlist(fig_s03a_files)
-  s03a_filt   <- s03a_filt[!is.na(s03a_filt) & str_detect(s03a_filt, sample_id)]
-  s03a_subset <- unlist(fig_s03a_subset_files)
-  s03a_subset <- s03a_subset[!is.na(s03a_subset) & str_detect(s03a_subset, sample_id)]
-  s03a_unfilt <- unlist(fig_s03a_unfiltered_files)
-  s03a_unfilt <- s03a_unfilt[!is.na(s03a_unfilt) & str_detect(s03a_unfilt, sample_id)]
+  # keep unfiltered/filtered/low_hypoxia separate for three-column layout
+  s03a_low_hypoxia <- unlist(fig_s03a_low_hypoxia_plots)
+  s03a_low_hypoxia <- s03a_low_hypoxia[!is.na(s03a_low_hypoxia) & str_detect(s03a_low_hypoxia, sample_id)]
+  s03a_filtered    <- unlist(fig_s03a_subset_plots)
+  s03a_filtered    <- s03a_filtered[!is.na(s03a_filtered) & str_detect(s03a_filtered, sample_id)]
+  s03a_unfilt      <- unlist(fig_s03a_unfiltered_plots)
+  s03a_unfilt      <- s03a_unfilt[!is.na(s03a_unfilt) & str_detect(s03a_unfilt, sample_id)]
 
-  expr_unfilt  <- unlist(numbat_expression_files)
-  expr_unfilt  <- expr_unfilt[!is.na(expr_unfilt) & str_detect(expr_unfilt, sample_id)]
-  expr_subset  <- unlist(subset_numbat_expression_files)
-  expr_subset  <- expr_subset[!is.na(expr_subset) & str_detect(expr_subset, sample_id)]
-  expr_filt    <- unlist(filtered_numbat_expression_files)
-  expr_filt    <- expr_filt[!is.na(expr_filt) & str_detect(expr_filt, sample_id)]
+  expr_unfilt      <- unlist(unfiltered_numbat_expression)
+  expr_unfilt      <- expr_unfilt[!is.na(expr_unfilt) & str_detect(expr_unfilt, sample_id)]
+  expr_filtered    <- unlist(filtered_numbat_expression)
+  expr_filtered    <- expr_filtered[!is.na(expr_filtered) & str_detect(expr_filtered, sample_id)]
+  expr_low_hypoxia <- unlist(low_hypoxia_numbat_expression)
+  expr_low_hypoxia <- expr_low_hypoxia[!is.na(expr_low_hypoxia) & str_detect(expr_low_hypoxia, sample_id)]
 
-  bulk_unfilt  <- unlist(numbat_bulk_clone_files)
-  bulk_unfilt  <- bulk_unfilt[!is.na(bulk_unfilt) & str_detect(bulk_unfilt, sample_id)]
-  bulk_subset  <- unlist(subset_numbat_bulk_clone_files)
-  bulk_subset  <- bulk_subset[!is.na(bulk_subset) & str_detect(bulk_subset, sample_id)]
-  bulk_filt    <- unlist(filtered_numbat_bulk_clone_files)
-  bulk_filt    <- bulk_filt[!is.na(bulk_filt) & str_detect(bulk_filt, sample_id)]
+  bulk_unfilt      <- unlist(unfiltered_numbat_bulk_clones)
+  bulk_unfilt      <- bulk_unfilt[!is.na(bulk_unfilt) & str_detect(bulk_unfilt, sample_id)]
+  bulk_filtered    <- unlist(filtered_numbat_bulk_clones)
+  bulk_filtered    <- bulk_filtered[!is.na(bulk_filtered) & str_detect(bulk_filtered, sample_id)]
+  bulk_low_hypoxia <- unlist(low_hypoxia_numbat_bulk_clones)
+  bulk_low_hypoxia <- bulk_low_hypoxia[!is.na(bulk_low_hypoxia) & str_detect(bulk_low_hypoxia, sample_id)]
 
   extract_karyogram_path <- function(karyogram_files, sample_id, fallback_suffix = "") {
     if (is.list(karyogram_files) && length(karyogram_files) > 0 &&
@@ -712,41 +712,41 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
   }
 
   karyogram_unfiltered <- extract_karyogram_path(
-    unfiltered_karyogram_files,
+    ideogram_res_s06a_unfiltered,
     sample_id,
     fallback_suffix = ""
   )
 
-  karyogram_subset <- extract_karyogram_path(
-    subset_karyogram_files,
-    sample_id,
-    fallback_suffix = "_subset"
-  )
-
   karyogram_filtered <- extract_karyogram_path(
-    filtered_karyogram_files,
+    ideogram_res_s06a_filtered,
     sample_id,
     fallback_suffix = "_filtered"
   )
 
+  karyogram_low_hypoxia <- extract_karyogram_path(
+    ideogram_res_s06a_low_hypoxia,
+    sample_id,
+    fallback_suffix = "_low_hypoxia"
+  )
+
   # Fallback: if no fig_s03a, use numbat heatmaps directly from disk
-  if (length(s03a_filt) == 0 && length(s03a_unfilt) == 0) {
+  if (length(s03a_low_hypoxia) == 0 && length(s03a_unfilt) == 0) {
     nb_dir <- glue("results/numbat_sridhar/{sample_id}")
     cands_unfilt <- c(
       glue("{nb_dir}/{sample_id}_unfiltered.pdf"),
       glue("{nb_dir}/{sample_id}_unfiltered_scna_var.pdf")
     )
-    cands_subset <- c(
-      glue("{nb_dir}/{sample_id}_subset.pdf"),
-      glue("{nb_dir}/{sample_id}_subset_scna_var.pdf")
-    )
-    cands_filt <- c(
+    cands_filtered <- c(
       glue("{nb_dir}/{sample_id}_filtered.pdf"),
       glue("{nb_dir}/{sample_id}_filtered_scna_var.pdf")
     )
-    s03a_unfilt <- cands_unfilt[file.exists(cands_unfilt)]
-    s03a_subset <- cands_subset[file.exists(cands_subset)]
-    s03a_filt   <- cands_filt[file.exists(cands_filt)]
+    cands_low_hypoxia <- c(
+      glue("{nb_dir}/{sample_id}_low_hypoxia.pdf"),
+      glue("{nb_dir}/{sample_id}_low_hypoxia_scna_var.pdf")
+    )
+    s03a_unfilt      <- cands_unfilt[file.exists(cands_unfilt)]
+    s03a_filtered    <- cands_filtered[file.exists(cands_filtered)]
+    s03a_low_hypoxia <- cands_low_hypoxia[file.exists(cands_low_hypoxia)]
   }
 
   # Read a PDF and attach a compact label strip above it
@@ -824,8 +824,8 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
   }
 
   has_unfilt_hm <- length(s03a_unfilt) > 0
-  has_filt_hm   <- length(s03a_filt) > 0
-  has_karyo     <- file.exists(karyogram_unfiltered) || file.exists(karyogram_filtered)
+  has_filt_hm   <- length(s03a_low_hypoxia) > 0
+  has_karyo     <- file.exists(karyogram_unfiltered) || file.exists(karyogram_low_hypoxia)
 
   # Build two explicit columns, each with five stacked rows.
   make_summary_col <- function(karyo_path,
@@ -904,27 +904,13 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
     "Unfiltered bulk clones"
   )
 
-  subset_col <- make_summary_col(
-    karyogram_subset,
-    clone_trees_subset,
-    segment_trees_subset,
-    s03a_subset,
-    expr_subset,
-    bulk_subset,
-    "Karyogram (subset)",
-    "Subset",
-    "Subset fig_s03a",
-    "Subset expression",
-    "Subset bulk clones"
-  )
-
-  filt_col <- make_summary_col(
+  filtered_col <- make_summary_col(
     karyogram_filtered,
     clone_trees_filtered,
     segment_trees_filtered,
-    s03a_filt,
-    expr_filt,
-    bulk_filt,
+    s03a_filtered,
+    expr_filtered,
+    bulk_filtered,
     "Karyogram (filtered)",
     "Filtered",
     "Filtered fig_s03a",
@@ -932,8 +918,22 @@ collate_sample_summary <- function(unfiltered_karyogram_files,
     "Filtered bulk clones"
   )
 
+  low_hypoxia_col <- make_summary_col(
+    karyogram_low_hypoxia,
+    clone_trees_low_hypoxia,
+    segment_trees_low_hypoxia,
+    s03a_low_hypoxia,
+    expr_low_hypoxia,
+    bulk_low_hypoxia,
+    "Karyogram (low hypoxia)",
+    "Low hypoxia",
+    "Low hypoxia fig_s03a",
+    "Low hypoxia expression",
+    "Low hypoxia bulk clones"
+  )
+
   # Combine up to three columns, padding each to the same height first
-  all_cols <- purrr::compact(list(unfilt_col, subset_col, filt_col))
+  all_cols <- purrr::compact(list(unfilt_col, filtered_col, low_hypoxia_col))
   if (length(all_cols) > 0) {
     max_col_h <- max(vapply(all_cols, function(col) magick::image_info(col)$height[1L], integer(1L)))
     all_cols <- lapply(all_cols, function(col) {

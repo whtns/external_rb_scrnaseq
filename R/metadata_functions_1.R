@@ -59,13 +59,21 @@ add_hash_metadata <- function(filepath = NULL, seu = NULL, sqlite_path = "batch_
     filepath <- glue::glue("output/seurat/{hash}_seu.rds")
   }
 
+  n_cells <- ncol(seu)
+
   # Write to sqlite
   con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
   on.exit(DBI::dbDisconnect(con), add = TRUE)
-  # Create table if not exists
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS hashes (filepath TEXT PRIMARY KEY, hash TEXT)")
-  # Insert or replace
-  DBI::dbExecute(con, "INSERT OR REPLACE INTO hashes (filepath, hash) VALUES (?, ?)", params = list(filepath, hash))
+  # Add n_cells column if the table predates this change (idempotent)
+  tryCatch(
+    DBI::dbExecute(con, "ALTER TABLE hashes ADD COLUMN n_cells INTEGER"),
+    error = function(e) invisible(NULL)
+  )
+  DBI::dbExecute(con,
+    "INSERT OR REPLACE INTO hashes (filepath, hash, n_cells) VALUES (?, ?, ?)",
+    params = list(filepath, hash, n_cells)
+  )
   saveRDS(seu, filepath)
   return(filepath)
 }
