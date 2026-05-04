@@ -482,6 +482,30 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
     }
   }
 
+  # marker heatmaps at gene_snn_res.0.2 for available inputs ------------------
+  maybe_heatmap_file <- function(seu_path, label) {
+    if (is.null(seu_path) || !file.exists(seu_path)) return(NULL)
+    file_slug <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
+    out_path <- glue::glue("results/{file_slug}_{label}heatmap_phase_scatter_patchwork.pdf")
+    tryCatch({
+      plot_seu_marker_heatmap(seu_path, nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, group.by = "gene_snn_res.0.2", label = label, tmp_plot_path = FALSE)
+      if (file.exists(out_path)) out_path else NULL
+    }, error = function(e) {
+      warning("marker heatmap generation failed for ", seu_path, ": ", conditionMessage(e))
+      NULL
+    })
+  }
+
+  hm_unfiltered <- maybe_heatmap_file(unfiltered_seu_path, "unfiltered_")
+  if (!is.null(hm_unfiltered)) plot_list["marker_heatmap_unfiltered"] <- hm_unfiltered
+
+  hm_filtered <- maybe_heatmap_file(filtered_seu_path, "filtered_")
+  if (!is.null(hm_filtered)) plot_list["marker_heatmap_filtered"] <- hm_filtered
+
+  hm_low_hypoxia <- maybe_heatmap_file(low_hypoxia_seu_path, "low_hypoxia_")
+  if (!is.null(hm_low_hypoxia)) plot_list["marker_heatmap_low_hypoxia"] <- hm_low_hypoxia
+
+
   # Filter to only valid, non-empty PDF files before combining
   valid_pdfs <- Filter(function(f) !is.null(f) && file.exists(f) && file.size(f) > 100L,
                        unlist(plot_list))

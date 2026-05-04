@@ -640,12 +640,13 @@ read_all_hypoxia_scores <- function(files) {
 }
 
 assemble_diploid_seu <- function(filtered_seus_paths,
-                                 out_path = "output/seurat/diploid_seu.rds") {
+                                 out_path = "output/seurat/diploid_seu.rds",
+                                 integrate = TRUE) {
   paths <- unlist(filtered_seus_paths)
   paths <- paths[!is.na(paths)]
   sample_ids <- stringr::str_extract(paths, "SRR[0-9]+")
 
-  seus <- purrr::imap(
+  cone_seus <- purrr::imap(
     purrr::set_names(paths, sample_ids),
     function(path, sample_id) {
       seu <- readRDS(path)
@@ -657,33 +658,98 @@ assemble_diploid_seu <- function(filtered_seus_paths,
           seu[[assay_name]] <- SeuratObject::JoinLayers(seu[[assay_name]])
       }
       seu$sample_source <- sample_id
-      seu
+      seu <- plot_celltype_predictions(seu, sample_id = sample_id, group.by = "gene_snn_res.0.2")$seu
+      cone_mask <- tolower(seu$type) == "cones"
+      if (!any(cone_mask)) return(NULL)
+      seu[, cone_mask]
     }
   ) |>
     purrr::compact()
 
-  join_assay5_layers <- function(s) {
-    for (assay_name in SeuratObject::Assays(s)) {
-      if (inherits(s[[assay_name]], "Assay5"))
-        s[[assay_name]] <- SeuratObject::JoinLayers(s[[assay_name]])
+  if (integrate) {
+    old_assay_version <- getOption("Seurat.object.assay.version")
+    options(Seurat.object.assay.version = "v3")
+    on.exit(options(Seurat.object.assay.version = old_assay_version), add = TRUE)
+
+    cone_seus <- lapply(cone_seus, function(s) {
+      Seurat::DefaultAssay(s) <- "gene"
+      if (inherits(s[["gene"]], "Assay5")) {
+        counts_mat <- GetAssayData(s[["gene"]], layer = "counts")
+        s[["gene"]] <- CreateAssayObject(counts = counts_mat)
+      }
+      s[["SCT"]] <- NULL
+      s
+    })
+
+    seu <- seuratTools::integration_workflow(cone_seus, resolution = c(0.2, 0.4), find_markers = FALSE)
+  } else {
+    seus_list <- as.list(cone_seus)
+    seu <- seus_list[[1]]
+    for (i in seq_along(seus_list)[-1]) {
+      seu <- merge(seu, seus_list[[i]])
+      for (assay_name in SeuratObject::Assays(seu)) {
+        if (inherits(seu[[assay_name]], "Assay5"))
+          seu[[assay_name]] <- SeuratObject::JoinLayers(seu[[assay_name]])
+      }
     }
-    s
   }
-
-  seus_list <- as.list(seus)
-  seu <- seus_list[[1]]
-  for (i in seq_along(seus_list)[-1]) {
-    seu <- merge(seu, seus_list[[i]])
-    seu <- join_assay5_layers(seu)
-  }
-
-  seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
-  seu <- RunPCA(seu, verbose = FALSE)
-  seu <- FindNeighbors(seu, dims = 1:30, verbose = FALSE)
-  seu <- FindClusters(seu, resolution = 0.2, verbose = FALSE)
-  seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
 
   add_hash_metadata(seu = seu, filepath = out_path)
   out_path
+}
+
+merge_hypoxia_with_diploid <- function(hypoxia_seu_path, diploid_seu_path, slug) {
+  sample_id <- stringr::str_extract(hypoxia_seu_path, "SRR[0-9]+")
+
+  old_assay_version <- getOption("Seurat.object.assay.version")
+  options(Seurat.object.assay.version = "v3")
+  on.exit(options(Seurat.object.assay.version = old_assay_version), add = TRUE)
+
+  prep_v3 <- function(s) {
+    Seurat::DefaultAssay(s) <- "gene"
+    if (inherits(s[["gene"]], "Assay5")) {
+      counts_mat <- GetAssayData(s[["gene"]], layer = "counts")
+      s[["gene"]] <- CreateAssayObject(counts = counts_mat)
+    }
+    s[["SCT"]] <- NULL
+    s[["integrated"]] <- NULL
+    s
+  }
+
+  hypoxia_seu <- prep_v3(readRDS(hypoxia_seu_path))
+  diploid_seu  <- prep_v3(readRDS(diploid_seu_path))
+
+  shared_cells <- intersect(colnames(hypoxia_seu), colnames(diploid_seu))
+  if (length(shared_cells) > 0) {
+    diploid_seu <- diploid_seu[, !colnames(diploid_seu) %in% shared_cells]
+  }
+
+  merged <- list(diploid = diploid_seu)
+  merged[[sample_id]] <- hypoxia_seu
+  seu <- seuratTools::integration_workflow(merged, resolution = c(0.2, 0.4), find_markers = FALSE)
+
+  out_path <- glue::glue("output/seurat/{sample_id}_{slug}_diploid_merged.rds")
+  saveRDS(seu, out_path)
+  out_path
+}
+
+#' Add cell cycle Phase to a filtered Seurat object and save
+#'
+#' @param seu_path File path to filtered Seurat RDS
+#' @param organism Character string (default: "human")
+#' @return Path to updated RDS file
+#' @export
+add_phase_to_filtered_seu <- function(seu_path, organism = "human") {
+  if (is.na(seu_path)) return(NA_character_)
+  
+  seu <- readRDS(seu_path)
+  
+  # Add cell cycle phase calculation
+  seu <- annotate_cell_cycle_without_1q(seu, organism = organism)
+  
+  # Save back to disk
+  saveRDS(seu, seu_path)
+  
+  seu_path
 }
 

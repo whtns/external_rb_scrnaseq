@@ -1719,7 +1719,7 @@ plot_fig_02 <- function(seu_path, numbat_rds_files, large_clone_simplifications,
 			aes(x = mean_x, y = mean_y, fill = clusters),
 			size = 6, shape = 23, colour = "black", alpha = 0.7, inherit.aes = FALSE
 		) +
-		facet_wrap(~clusters, nrow = 2, ncol = 6) +
+		facet_wrap(~clusters) +
 		geom_label(
 			data = data.frame(clusters = unique(cc_data$clusters)),
 			aes(label = clusters),
