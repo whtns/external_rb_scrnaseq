@@ -128,8 +128,35 @@ pipeline_targets_seurat <- c(
       cue = tar_cue(command = FALSE, depend = FALSE)  # re-run when unfiltered_seus changes, but not when filter_inspection_metadata changes
     ),
 
+    tar_target(filtered_seus_with_phase,
+      # Calculate Phase (cell cycle) for each filtered_seu before integration
+      add_phase_to_filtered_seu(filtered_seus),
+      pattern = map(filtered_seus),
+      iteration = "list"
+    ),
+
+    tar_target(rod_low_sample_ids,
+      dplyr::bind_rows(table_06) |>
+        dplyr::filter(rod_rich == 0) |>
+        dplyr::pull(sample_id)
+    ),
+
     tar_target(diploid_seu,
-      assemble_diploid_seu(filtered_seus),
+      assemble_diploid_seu(
+        seus_low_hypoxia[grepl(
+          paste(rod_low_sample_ids, collapse = "|"),
+          unlist(seus_low_hypoxia)
+        ) & !grepl(
+          "SRR13633762|SRR13884240|SRR13884241|SRR13884246|SRR17960482",
+          unlist(seus_low_hypoxia)
+        )],
+        integrate = TRUE
+      ),
+      format = "file"
+    ),
+
+    tar_target(diploid_seu_umap_plots,
+      plot_diploid_seu_umaps(diploid_seu, celltype_markers),
       format = "file"
     ),
 

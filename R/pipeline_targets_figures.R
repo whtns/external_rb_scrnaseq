@@ -14,6 +14,7 @@ list(
       clustree_compilation = clustree_compilation,
       collage_compilation = collage_compilation,
       fig_02 = fig_02,     # single-sample multi-panel figure (SRR14800534)
+      fig_02_low_hypoxia_diploid = fig_02_low_hypoxia_diploid,
       fig_04 = fig_04,     # integrated 1q fig for all 1q+ samples
       fig_04_v2 = fig_04_v2, # updated integrated 1q fig for all 1q+ samples
       fig_03 = fig_03,     # integrated 16q- alternative resolutions
@@ -69,13 +70,76 @@ list(
   # Cell cycle space and clone distribution plots for figure 01.
   tar_target(fig_01, plot_fig_01(unlist(seus_low_hypoxia)[grepl("SRR14800534", unlist(seus_low_hypoxia))])),
 
+  tar_target(fig_02_sample_ids,
+    c("SRR27187899", "SRR27187901", "SRR27187902", "SRR13884245",
+      "SRR13884246", "SRR13884249", "SRR14800534", "SRR14800535", "SRR14800536")
+  ),
+
   # Multi-panel single-sample figure: Numbat heatmap, clone tree, UMAPs, CC space, clone distribution.
   tar_target(fig_02,
     plot_fig_02(
-      unlist(seus_low_hypoxia)[grepl("SRR14800534", unlist(seus_low_hypoxia))],
+      unlist(seus_low_hypoxia)[grepl(fig_02_sample_ids, unlist(seus_low_hypoxia))],
       numbat_rds_files,
       large_clone_simplifications
-    )
+    ),
+    pattern = map(fig_02_sample_ids),
+    iteration = "list"
+  ),
+
+  tar_target(fig_02_high_hypoxia,
+    plot_fig_02(
+      unlist(seus_high_hypoxia)[grepl(fig_02_sample_ids, unlist(seus_high_hypoxia))],
+      numbat_rds_files,
+      large_clone_simplifications
+    ),
+    pattern = map(fig_02_sample_ids),
+    iteration = "list"
+  ),
+
+  tar_target(low_hypoxia_diploid_merged_seu,
+    merge_hypoxia_with_diploid(
+      unlist(seus_low_hypoxia)[grepl(fig_02_sample_ids, unlist(seus_low_hypoxia))],
+      diploid_seu,
+      slug = "low_hypoxia"
+    ),
+    pattern = map(fig_02_sample_ids),
+    iteration = "list",
+    format = "file"
+  ),
+
+  tar_target(low_hypoxia_w_diploid_umap_plots,
+    plot_diploid_seu_umaps(low_hypoxia_diploid_merged_seu, celltype_markers, use_integrated_clusters = TRUE),
+    pattern = map(low_hypoxia_diploid_merged_seu),
+    iteration = "list",
+    format = "file"
+  ),
+
+  tar_target(fig_02_low_hypoxia_diploid,
+    plot_fig_02(
+      low_hypoxia_diploid_merged_seu,
+      numbat_rds_files,
+      large_clone_simplifications
+    ),
+    pattern = map(low_hypoxia_diploid_merged_seu),
+    iteration = "list"
+  ),
+
+  tar_target(high_hypoxia_diploid_merged_seu,
+    merge_hypoxia_with_diploid(
+      unlist(seus_high_hypoxia)[grepl(fig_02_sample_ids, unlist(seus_high_hypoxia))],
+      diploid_seu,
+      slug = "high_hypoxia"
+    ),
+    pattern = map(fig_02_sample_ids),
+    iteration = "list",
+    format = "file"
+  ),
+
+  tar_target(high_hypoxia_w_diploid_umap_plots,
+    plot_diploid_seu_umaps(high_hypoxia_diploid_merged_seu, celltype_markers, use_integrated_clusters = TRUE),
+    pattern = map(high_hypoxia_diploid_merged_seu),
+    iteration = "list",
+    format = "file"
   ),
 
   # Plot study-level metadata summary for supplemental figure S04.

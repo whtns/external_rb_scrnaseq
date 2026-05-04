@@ -361,6 +361,15 @@ pipeline_targets_integration <- list(
     rod_rich_samples
   ),
 
+  tar_target(table_06_csv,
+    {
+      out <- "results/table_06.csv"
+      readr::write_csv(table_06, out)
+      out
+    },
+    format = "file"
+  ),
+
   tar_target(celltype_rich_samples,
     score_samples_for_celltype_enrichment(unfiltered_seus, final_seus, celltype_markers),
     pattern = map(unfiltered_seus),
