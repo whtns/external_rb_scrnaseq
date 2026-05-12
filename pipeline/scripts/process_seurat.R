@@ -40,14 +40,14 @@ seu <- RunUMAP(seu, dims = 1:30, verbose = FALSE)
 
 seu <- FindNeighbors(seu, dims = 1:30, verbose = FALSE)
 
-DefaultAssay(seu) <- "SCT"
+DefaultAssay(seu) <- "gene"
 
 seu <- seurat_cluster(seu = seu, resolution = c(0.2, 0.4, 0.6),
                       reduction = "pca")
 
-seu <- find_all_markers(seu, seurat_assay = "SCT")
+seu <- find_all_markers(seu, seurat_assay = "gene", join_layers = FALSE)
 
-seu <- add_percent_mito(seu, seurat_assay = "SCT")
+seu <- add_percent_mito(seu, seurat_assay = "gene")
 
 # seu <- seuratTools::clustering_workflow(seu)
 
