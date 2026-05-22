@@ -31,7 +31,21 @@ runner <- callr::r_bg(
     suppressPackageStartupMessages(library(targets))
     tar_config_set(store = store_path)
     options(targets.ask = FALSE)
-    tar_make(names = all_of(target_names), reporter = "timestamp")
+
+    # Branch hashes (e.g. "parent_abc123def456789a") can't be targeted via
+    # tar_make(names=...) because branches are dynamic. Instead: invalidate the
+    # specific branches via metadata, then run their parent pattern names.
+    is_branch <- grepl("_[0-9a-f]{16}$", target_names)
+    branch_names  <- target_names[is_branch]
+    pattern_names <- target_names[!is_branch]
+
+    if (length(branch_names) > 0) {
+      tar_invalidate(names = any_of(branch_names))
+      parent_names <- unique(sub("_[0-9a-f]{16}$", "", branch_names))
+      pattern_names <- unique(c(pattern_names, parent_names))
+    }
+
+    tar_make(names = all_of(pattern_names), reporter = "timestamp")
   },
   args = list(target_names, store_path),
   stdout = "|",

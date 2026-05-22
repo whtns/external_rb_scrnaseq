@@ -42,3 +42,4 @@ Rb_object
 .codetree/
 pipeline.log
 *.zip
+.claude/

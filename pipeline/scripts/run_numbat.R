@@ -211,6 +211,8 @@ bulk = numbat:::get_bulk(
 )
 
 segs_loh = bulk %>% numbat:::detect_clonal_loh(t = as.numeric(t))
+rm(bulk)
+gc()
 
 # segs_loh = NULL
 

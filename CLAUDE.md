@@ -1,8 +1,9 @@
 R is located at /opt/R/4.3.1/bin/R
 Rscript is located at /opt/R/4.3.1/bin/Rscript
+seuratTools R package is located at /dataVolume/storage/rpkgs/seuratTools
 the targets store is _targets_r431
-use the targets-pipeline skill
-run the targets pipeline with /home/skevin/single_cell_projects/resources/external_rb_scrnaseq_proj/run_targets_bg.R
+use the targets-pipelines skill
+run the targets pipelines with /home/skevin/single_cell_projects/resources/external_rb_scrnaseq_proj/run_targets_bg.R
 ## Function Index
 
 | Function | File |

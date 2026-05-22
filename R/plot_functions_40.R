@@ -166,7 +166,20 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
                                      nCount_threshold = c(500, 1000),
                                      nFeature_threshold = c(500, 1000),
                                      low_hypoxia_seu_path = NULL,
+                                     high_hypoxia_seu_path = NULL,
                                      plot_path = NULL) {
+
+  # Helper function: split label lines at commas with word wrap
+  split_label_line <- function(label, n_comma_values = 3) {
+    if (is.na(label)) return(NA_character_)
+    label_vec <- label %>% stringr::str_split_1(",")
+    label_groups <- ceiling(seq_along(label_vec) / n_comma_values)
+    split_label <- split(label_vec, label_groups) %>%
+      purrr::map(paste, collapse = ", ") %>%
+      paste(collapse = "\n")
+  }
+
+  vec_split_label_line <- Vectorize(split_label_line)
 
   sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
 
@@ -286,43 +299,272 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
   # Skip marker computation for very large objects — presto::wilcoxauc
   # (C++) crashes the process and cannot be caught by tryCatch.
   # Samples with >50k cells are too large to run safely.
-  safe_plot_markers <- function(seu, grp = group.by, max_cells = 50000L, ...) {
+  # Instead of using buggy seuratTools::plot_markers, build heatmap directly from presto results
+  safe_plot_markers <- function(seu, grp = group.by, max_cells = 50000L,
+                                filter_to_clusters = NULL,
+                                force_recompute = FALSE, ...) {
     cat("safe_plot_markers: ncol =", ncol(seu), "\n")
     if (ncol(seu) > max_cells) {
       warning("Skipping marker plot — too many cells (", ncol(seu), ")")
       return(NULL)
     }
-    # Assay5 + joined layers required by seuratTools::find_all_markers
-    if (!is(seu[["gene"]], "Assay5")) {
-      seu[["gene"]] <- tryCatch(as(seu[["gene"]], "Assay5"), error = function(e) seu[["gene"]])
+
+    # Ensure markers are calculated and in seu@misc$markers
+    if (force_recompute ||
+        is.null(seu@misc$markers) ||
+        is.null(seu@misc$markers[[grp]])) {
+      cat("Calculating markers for ", grp, "\n")
+      seu <- tryCatch({
+        if (exists("find_all_markers", mode = "function")) {
+          find_all_markers(seu, grp)
+        } else {
+          seu
+        }
+      }, error = function(e) {
+        warning("find_all_markers failed: ", conditionMessage(e)); seu
+      })
     }
-    seu[["gene"]] <- tryCatch(JoinLayers(seu[["gene"]]), error = function(e) seu[["gene"]])
-    if (nrow(GetAssayData(seu, assay = "gene", layer = "data")) == 0) {
-      seu <- NormalizeData(seu, assay = "gene")
-    }
-    tryCatch(
-      seuratTools::plot_markers(seu, grp, ...),
-      error = function(e) {
-        warning("plot_markers failed: ", conditionMessage(e))
-        NULL
+
+    cat("DEBUG safe_plot_markers: seu@misc$markers is NULL?", is.null(seu@misc$markers), "\n")
+    if (!is.null(seu@misc$markers)) cat("DEBUG: seu@misc$markers[[grp]] is NULL?", is.null(seu@misc$markers[[grp]]), "\n")
+
+    # Extract top markers from presto table; fall back to SCT_snn_res.0.2 if gene_snn_res.0.2 is absent
+    if (is.null(seu@misc$markers[[grp]]) || is.null(seu@misc$markers[[grp]]$presto)) {
+      fallback_grp <- "SCT_snn_res.0.2"
+      if (!is.null(seu@misc$markers[[fallback_grp]]$presto)) {
+        cat("DEBUG: falling back from", grp, "to", fallback_grp, "\n")
+        grp <- fallback_grp
+      } else {
+        warning("No marker table found for ", grp, " and fallback ", fallback_grp, " also absent")
+        return(NULL)
       }
+    }
+
+    top_markers_df <- seu@misc$markers[[grp]]$presto %>%
+      dplyr::group_by(Cluster) %>%
+      dplyr::slice_head(n = 5) %>%
+      dplyr::ungroup() %>%
+      dplyr::arrange(Cluster)
+
+    if (!is.null(filter_to_clusters)) {
+      top_markers_df <- dplyr::filter(
+        top_markers_df, Cluster %in% filter_to_clusters
+      )
+    }
+
+    # Drop markers for clusters not present in this Seurat object.
+    # filtered_seu inherits misc$markers from the unfiltered object, so removed
+    # clusters are still in the presto table. Without this filter, those genes
+    # appear on the y-axis but fail the inner_join in marker_boxes (their cluster
+    # ID isn't in df2), leaving present-cluster columns with no circles.
+    present_clusters <- unique(as.character(seu@meta.data[[grp]]))
+    top_markers_df <- dplyr::filter(
+      top_markers_df, as.character(Cluster) %in% present_clusters
     )
+
+    cat("DEBUG: top_markers_df nrow =", nrow(top_markers_df), "\n")
+
+    if (nrow(top_markers_df) == 0) {
+      warning("No markers found in presto table for ", grp)
+      return(NULL)
+    }
+
+    # Keep cluster information and sort by cluster, then by gene name
+    # This creates a diagonal pattern in the dotplot
+    top_markers_df <- top_markers_df %>%
+      dplyr::arrange(Cluster, Gene.Name)
+    
+    # Create feature list with cluster information
+    features_to_plot <- unique(top_markers_df$Gene.Name)
+    cat("DEBUG: features_to_plot length =", length(features_to_plot), "\n")
+
+    # Filter to genes that exist in the Seurat object, preserving cluster-based order
+    valid_features <- features_to_plot[features_to_plot %in% rownames(seu)]
+    cat("DEBUG: valid_features length =", length(valid_features), "\n")
+    if (length(valid_features) == 0) {
+      warning("No valid marker genes found in Seurat object")
+      return(NULL)
+    }
+    
+    # Primary cluster per gene (first occurrence after arrange by Cluster)
+    gene_primary_cluster <- top_markers_df %>%
+      dplyr::distinct(Gene.Name, .keep_all = TRUE) %>%
+      { setNames(as.character(.$Cluster), .$Gene.Name) }
+    valid_features <- valid_features[
+      order(gene_primary_cluster[valid_features], valid_features)
+    ]
+    cat("DEBUG: valid_features sorted by cluster: ",
+        paste(head(valid_features, 10), collapse = ","), "...\n")
+
+    # Create a simple heatmap using DotPlot or DoHeatmap
+    tryCatch({
+      dp <- DotPlot(seu, features = valid_features, group.by = grp, dot.scale = 8)
+      # Manual calculation of percent-expressed and average expression per group
+      assay_name <- if ("SCT" %in% names(seu@assays)) "SCT" else Seurat::DefaultAssay(seu)
+      cat("DEBUG: assay_name =", assay_name, "\n")
+      mat <- tryCatch(as.matrix(Seurat::GetAssayData(seu, assay = assay_name, slot = "data")[valid_features, , drop = FALSE]), error = function(e) {
+        cat("ERROR fetching assay data:", conditionMessage(e), "\n"); NULL
+      })
+      if (is.null(mat)) {
+        warning("Failed to fetch assay data for manual dotplot (assay=", assay_name, ")")
+        return(NULL)
+      }
+      cat("DEBUG: mat dim =", dim(mat), "\n")
+
+      groups <- as.character(seu@meta.data[[grp]])
+      group_levels <- unique(groups[!is.na(groups)])
+      # Naturally sort group levels: try numeric first, fall back to alphanumeric
+      tryCatch({
+        group_levels <- as.character(sort(as.numeric(group_levels)))
+      }, error = function(e) {
+        # If not all numeric, use alphanumeric (stringi for natural sort if available)
+        if (requireNamespace("stringi", quietly = TRUE)) {
+          group_levels <<- stringi::stri_sort(group_levels, numeric = TRUE)
+        } else {
+          group_levels <<- sort(group_levels)
+        }
+      })
+      cat("DEBUG: group_levels (sorted) =", paste(group_levels, collapse=","), "\n")
+
+      df_list <- list()
+      for (g in group_levels) {
+        cells <- which(groups == g)
+        if (length(cells) == 0) next
+        submat <- mat[valid_features, cells, drop = FALSE]
+        for (i in seq_along(valid_features)) {
+          gene <- valid_features[i]
+          vals <- submat[gene, ]
+          pct_expr <- mean(vals > 0, na.rm = TRUE) * 100
+          avg_exp <- mean(vals, na.rm = TRUE)
+          df_list[[length(df_list) + 1]] <- data.frame(id = g, features.plot = gene, pct_expr = pct_expr, avg.exp = avg_exp, stringsAsFactors = FALSE)
+        }
+      }
+      cat("DEBUG: df_list length =", length(df_list), "\n")
+      df2 <- do.call(rbind, df_list)
+      cat("DEBUG: df2 nrow =", nrow(df2), "\n")
+      # keep ordering consistent with original top markers
+      df2$features.plot <- factor(df2$features.plot, levels = valid_features)
+      df2$id <- factor(df2$id, levels = group_levels)
+
+      # z-score avg expression per gene, matching Seurat's default DotPlot scale
+      df2 <- df2 %>%
+        dplyr::group_by(features.plot) %>%
+        dplyr::mutate(avg.exp.scaled = as.numeric(scale(avg.exp))) %>%
+        dplyr::ungroup()
+
+      # one row per (cluster, gene) pair — circles every cluster where the
+      # gene is a top marker, not just the primary one
+      marker_boxes <- top_markers_df %>%
+        dplyr::filter(Gene.Name %in% valid_features) %>%
+        dplyr::transmute(
+          id            = as.character(Cluster),
+          features.plot = Gene.Name
+        ) %>%
+        dplyr::inner_join(
+          dplyr::mutate(
+            df2[, c("id", "features.plot", "pct_expr")],
+            id            = as.character(id),
+            features.plot = as.character(features.plot)
+          ),
+          by = c("id", "features.plot")
+        ) %>%
+        dplyr::mutate(
+          id            = factor(id,
+                                 levels = levels(df2$id)),
+          features.plot = factor(features.plot,
+                                 levels = levels(df2$features.plot))
+        )
+
+      p <- tryCatch({
+        cat("DEBUG: building ggplot...\n")
+        p_out <- ggplot2::ggplot(df2, ggplot2::aes(x = id, y = features.plot)) +
+          ggplot2::geom_point(ggplot2::aes(size = pct_expr, color = avg.exp.scaled)) +
+          ggplot2::geom_point(
+            data = marker_boxes,
+            ggplot2::aes(size = pct_expr),
+            shape = 21, fill = NA, color = "black", stroke = 1.5
+          ) +
+          ggplot2::scale_size_continuous(range = c(1, 8), breaks = c(0, 25, 50, 75, 100), labels = function(x) paste0(x, "%")) +
+          ggplot2::scale_color_gradient(low = "lightgrey", high = "blue", na.value = "grey90", name = "avg.exp.scaled") +
+          ggplot2::theme_minimal() +
+          ggplot2::theme(
+            axis.text.y = ggplot2::element_text(size = ggplot2::rel(1.0)),
+            plot.margin = ggplot2::unit(c(5.5, 5.5, 5.5, 5.5), "pt"),
+            panel.spacing.y = ggplot2::unit(0.5, "lines")
+          ) +
+          ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = 0.5)) +
+          ggplot2::labs(title = paste("Markers for", grp), x = NULL, y = NULL)
+        cat("DEBUG: ggplot created successfully\n")
+        return(p_out)
+      }, error = function(e) {
+        cat("ERROR building ggplot:", conditionMessage(e), "\n")
+        warning("manual DotPlot construction failed: ", conditionMessage(e)); NULL
+      })
+
+      return(p)
+    }, error = function(e) {
+      warning("DotPlot failed: ", conditionMessage(e))
+      return(NULL)
+    })
   }
 
-  p_unfiltered <- safe_plot_markers(unfiltered_seu, marker_method = "wilcox", return_plotly = FALSE, hide_technical = "all", num_markers = 5)
+  p_unfiltered <- safe_plot_markers(unfiltered_seu,
+    marker_method = "wilcox", return_plotly = FALSE,
+    hide_technical = "all", num_markers = 5)
   gc()
-  p_filtered   <- safe_plot_markers(filtered_seu,   marker_method = "wilcox", return_plotly = FALSE, hide_technical = "all", num_markers = 5)
+  p_filtered <- safe_plot_markers(filtered_seu,
+    force_recompute = TRUE,
+    marker_method = "wilcox", return_plotly = FALSE,
+    hide_technical = "all", num_markers = 5)
   gc()
 
-  if (!is.null(p_unfiltered) && !is.null(p_filtered)) {
-    (p_unfiltered + labs(title = "unfiltered") + theme(legend.position = "none") + NULL) +
-      (p_filtered + labs(title = "filtered") + theme(axis.title.y = element_blank()) + NULL) +
-      plot_annotation(title = sample_id) +
-      plot_layout(guides = "collect")
+  # include low hypoxia seus if available
+  p_low_hypoxia <- NULL
+  if (!is.null(low_hypoxia_seu_path) && file.exists(low_hypoxia_seu_path)) {
+    low_hypoxia_seu <- tryCatch(readRDS(low_hypoxia_seu_path), error = function(e) NULL)
+    if (!is.null(low_hypoxia_seu)) {
+      p_low_hypoxia <- safe_plot_markers(low_hypoxia_seu, marker_method = "wilcox", return_plotly = FALSE, hide_technical = "all", num_markers = 5)
+      gc()
+    }
+  }
+
+  # include high hypoxia seus if available
+  p_high_hypoxia <- NULL
+  if (!is.null(high_hypoxia_seu_path) && file.exists(high_hypoxia_seu_path)) {
+    high_hypoxia_seu <- tryCatch(readRDS(high_hypoxia_seu_path), error = function(e) NULL)
+    if (!is.null(high_hypoxia_seu)) {
+      p_high_hypoxia <- safe_plot_markers(high_hypoxia_seu, marker_method = "wilcox", return_plotly = FALSE, hide_technical = "all", num_markers = 5)
+      gc()
+    }
+  }
+
+  cat("DEBUG: p_unfiltered is NULL?", is.null(p_unfiltered), "\n")
+  cat("DEBUG: p_filtered is NULL?", is.null(p_filtered), "\n")
+  cat("DEBUG: p_low_hypoxia is NULL?", is.null(p_low_hypoxia), "\n")
+  cat("DEBUG: p_high_hypoxia is NULL?", is.null(p_high_hypoxia), "\n")
+
+  # Collect available plots and combine horizontally
+  plot_items <- list()
+  if (!is.null(p_unfiltered)) plot_items[["unfiltered"]] <- p_unfiltered + labs(title = "unfiltered")
+  if (!is.null(p_filtered)) plot_items[["filtered"]] <- p_filtered + labs(title = "filtered")
+  if (!is.null(p_low_hypoxia)) plot_items[["low_hypoxia"]] <- p_low_hypoxia + labs(title = "low_hypoxia")
+  if (!is.null(p_high_hypoxia)) plot_items[["high_hypoxia"]] <- p_high_hypoxia + labs(title = "high_hypoxia")
+
+  if (length(plot_items) > 0) {
+    grid <- patchwork::wrap_plots(plot_items, ncol = length(plot_items)) +
+      patchwork::plot_annotation(title = sample_id) +
+      patchwork::plot_layout(guides = "collect")
 
     tmp_path <- tempfile(fileext = ".pdf")
     plot_list["abbreviation_markers"] <- tmp_path
-    ggsave(tmp_path, height = 6, width = 9)
+    tryCatch({
+      ggsave(tmp_path, grid, height = 10, width = 4 * length(plot_items), units = "in")
+      cat("DEBUG: saved abbreviation_markers to", tmp_path, "\n")
+    }, error = function(e) {
+      warning("Failed to save abbreviation_markers: ", conditionMessage(e))
+    })
+  } else {
+    cat("DEBUG: abbreviation_markers skipped (no plots generated)\n")
   }
 
   # filter_reason umap ------------------------------
@@ -462,10 +704,20 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
         hypoxia_plot_list[[2]] <- p_hypoxia_score
       }
 
-      p_low_hypoxia_scna <- DimPlot(low_hypoxia_seu, group.by = "scna") +
-        labs(title = "low hypoxia seu (scna)")
-
+      p_low_hypoxia_scna <- DimPlot(
+        low_hypoxia_seu, group.by = "scna", reduction = "umap"
+      ) + labs(title = "low hypoxia seu (scna)")
       hypoxia_plot_list[[length(hypoxia_plot_list) + 1]] <- p_low_hypoxia_scna
+
+      p_low_hypoxia_clusters <- DimPlot(
+        low_hypoxia_seu, group.by = group.by, reduction = "umap"
+      ) + labs(title = "low hypoxia seu (clusters)")
+      hypoxia_plot_list[[length(hypoxia_plot_list) + 1]] <- p_low_hypoxia_clusters
+
+      p_low_hypoxia_phase <- DimPlot(
+        low_hypoxia_seu, group.by = "Phase", reduction = "umap"
+      ) + labs(title = "low hypoxia seu (Phase)")
+      hypoxia_plot_list[[length(hypoxia_plot_list) + 1]] <- p_low_hypoxia_phase
 
       hypoxia_grid <- patchwork::wrap_plots(hypoxia_plot_list, ncol = length(hypoxia_plot_list)) +
         patchwork::plot_annotation(title = glue::glue("{sample_id} — hypoxia filtering"))
@@ -479,6 +731,59 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
         FALSE
       })
       if (hyp_ok) plot_list["hypoxia_filtering_dimplots"] <- tmp_path
+    }
+  }
+
+  # high hypoxia filtering dimplots ------------------------------
+  if (!is.null(high_hypoxia_seu_path) && file.exists(high_hypoxia_seu_path)) {
+    high_hypoxia_seu <- tryCatch(readRDS(high_hypoxia_seu_path), error = function(e) NULL)
+    if (!is.null(high_hypoxia_seu)) {
+      source_seu <- if (!is.null(original_filtered_seu)) original_filtered_seu else filtered_seu
+      kept_barcodes <- colnames(high_hypoxia_seu)
+      source_seu@meta.data$hypoxia_filter_label <- ifelse(
+        colnames(source_seu) %in% kept_barcodes, "kept_high_hypoxia", "dropped_low_hypoxia"
+      )
+      hypoxia_filter_cols_hh <- c(kept_high_hypoxia = "#d73027", dropped_low_hypoxia = "#2166ac")
+
+      p_hypoxia_source_hh <- DimPlot(source_seu, group.by = "hypoxia_filter_label") +
+        scale_color_manual(values = hypoxia_filter_cols_hh) +
+        labs(title = glue::glue("{sample_id} filtered → high hypoxia"), colour = NULL)
+
+      hypoxia_plot_list_hh <- list(p_hypoxia_source_hh)
+
+      if ("hypoxia_score" %in% colnames(source_seu@meta.data)) {
+        p_hypoxia_score_hh <- FeaturePlot(source_seu, features = "hypoxia_score") +
+          labs(title = "hypoxia score (filtered seu)")
+        hypoxia_plot_list_hh[[2]] <- p_hypoxia_score_hh
+      }
+
+      p_high_hypoxia_scna <- DimPlot(
+        high_hypoxia_seu, group.by = "scna", reduction = "umap"
+      ) + labs(title = "high hypoxia seu (scna)")
+      hypoxia_plot_list_hh[[length(hypoxia_plot_list_hh) + 1]] <- p_high_hypoxia_scna
+
+      p_high_hypoxia_clusters <- DimPlot(
+        high_hypoxia_seu, group.by = group.by, reduction = "umap"
+      ) + labs(title = "high hypoxia seu (clusters)")
+      hypoxia_plot_list_hh[[length(hypoxia_plot_list_hh) + 1]] <- p_high_hypoxia_clusters
+
+      p_high_hypoxia_phase <- DimPlot(
+        high_hypoxia_seu, group.by = "Phase", reduction = "umap"
+      ) + labs(title = "high hypoxia seu (Phase)")
+      hypoxia_plot_list_hh[[length(hypoxia_plot_list_hh) + 1]] <- p_high_hypoxia_phase
+
+      hypoxia_grid_hh <- patchwork::wrap_plots(hypoxia_plot_list_hh, ncol = length(hypoxia_plot_list_hh)) +
+        patchwork::plot_annotation(title = glue::glue("{sample_id} — high hypoxia filtering"))
+
+      tmp_path <- tempfile(fileext = ".pdf")
+      hyp_ok_hh <- tryCatch({
+        ggsave(tmp_path, hypoxia_grid_hh, height = 4, width = 4.5 * length(hypoxia_plot_list_hh))
+        TRUE
+      }, error = function(e) {
+        warning("high_hypoxia_filtering_dimplots failed: ", conditionMessage(e))
+        FALSE
+      })
+      if (hyp_ok_hh) plot_list["high_hypoxia_filtering_dimplots"] <- tmp_path
     }
   }
 
@@ -505,10 +810,14 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
   hm_low_hypoxia <- maybe_heatmap_file(low_hypoxia_seu_path, "low_hypoxia_")
   if (!is.null(hm_low_hypoxia)) plot_list["marker_heatmap_low_hypoxia"] <- hm_low_hypoxia
 
+  hm_high_hypoxia <- maybe_heatmap_file(high_hypoxia_seu_path, "high_hypoxia_")
+  if (!is.null(hm_high_hypoxia)) plot_list["marker_heatmap_high_hypoxia"] <- hm_high_hypoxia
 
   # Filter to only valid, non-empty PDF files before combining
   valid_pdfs <- Filter(function(f) !is.null(f) && file.exists(f) && file.size(f) > 100L,
                        unlist(plot_list))
+  cat("DEBUG: plot_list keys:", names(plot_list), "\n")
+  cat("DEBUG: valid_pdfs to combine:", valid_pdfs, "\n")
   if (length(valid_pdfs) == 0) {
     warning("No valid PDF pages produced for ", sample_id)
     return(NULL)

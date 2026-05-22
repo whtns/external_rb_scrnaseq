@@ -96,6 +96,7 @@ pipeline_targets_seurat <- c(
       pattern = map(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample, large_filter_expressions_per_sample),
       iteration = "list",
       deployment = "main",
+      error = "null",
       cue = tar_cue(command = FALSE, depend = FALSE)
     ),
 
@@ -132,7 +133,9 @@ pipeline_targets_seurat <- c(
       # Calculate Phase (cell cycle) for each filtered_seu before integration
       add_phase_to_filtered_seu(filtered_seus),
       pattern = map(filtered_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null",
+      cue = tar_cue(command = FALSE)
     ),
 
     tar_target(rod_low_sample_ids,
@@ -141,7 +144,7 @@ pipeline_targets_seurat <- c(
         dplyr::pull(sample_id)
     ),
 
-    tar_target(diploid_seu,
+    tar_target(ks_diploid_seu,
       assemble_diploid_seu(
         seus_low_hypoxia[grepl(
           paste(rod_low_sample_ids, collapse = "|"),
@@ -152,6 +155,11 @@ pipeline_targets_seurat <- c(
         )],
         integrate = TRUE
       ),
+      format = "file"
+    ),
+
+    tar_target(diploid_seu,
+      "output/seurat/filtered_diploid_seu_01.rds",
       format = "file"
     ),
 
@@ -329,7 +337,9 @@ pipeline_targets_seurat <- c(
     tar_target(regressed_seus,
       regress_filtered_seu(final_seus),
       pattern = map(final_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null",
+      cue = tar_cue(command = FALSE)
     ),
 
     tar_target(effect_of_filtering,
@@ -342,11 +352,26 @@ pipeline_targets_seurat <- c(
         lh_paths <- unlist(seus_low_hypoxia)
         low_hypoxia_path <- lh_paths[grepl(sample_id, lh_paths)]
         if (length(low_hypoxia_path) == 0) low_hypoxia_path <- NULL
+        hh_paths <- unlist(seus_high_hypoxia)
+        high_hypoxia_path <- hh_paths[grepl(sample_id, hh_paths)]
+        if (length(high_hypoxia_path) == 0) high_hypoxia_path <- NULL
         plot_effect_of_filtering(path, filtered_path, cluster_dictionary = cluster_dictionary,
-                                 low_hypoxia_seu_path = low_hypoxia_path)
+                                 low_hypoxia_seu_path = low_hypoxia_path,
+                                 high_hypoxia_seu_path = high_hypoxia_path)
       },
       pattern = map(unfiltered_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
+    ),
+
+    tar_target(effect_of_filtering_collated,
+      {
+        paths <- unlist(effect_of_filtering)
+        paths <- paths[!sapply(paths, is.null) & file.exists(paths)]
+        out_path <- "results/effect_of_filtering_markers.pdf"
+        qpdf::pdf_combine(paths, out_path)
+      },
+      format = "file"
     ),
 
     # Cell counts at each filtering stage.
@@ -354,88 +379,8 @@ pipeline_targets_seurat <- c(
     # Stages 3-4 query batch_hashes.sqlite, populated by add_hash_metadata
     # when filtered_seus / seus_low_hypoxia are computed.
     tar_target(filtering_cell_counts_table,
-      {
-        filter_meta <- Filter(
-          function(x) inherits(x, "data.frame") && nrow(x) > 0,
-          filter_inspection_metadata
-        )
-
-        base <- if (length(filter_meta) == 0) {
-          tibble::tibble(
-            sample_id = character(),
-            n_unfiltered = integer(),
-            n_annotation_filtered = integer()
-          )
-        } else {
-          dplyr::bind_rows(filter_meta) |>
-            dplyr::group_by(sample_id) |>
-            dplyr::summarise(
-              n_unfiltered = dplyr::n(),
-              n_annotation_filtered = if ("filter_keep" %in% names(
-                dplyr::pick(dplyr::everything())
-              )) {
-                sum(filter_keep, na.rm = TRUE)
-              } else {
-                sum(
-                  !clone_opt_is_na &
-                    percent.mt < 10 & nCount_gene > 1000 &
-                    nFeature_gene > 1000 &
-                    !cluster_remove_flag & !is_malat1 & !in_manual_exclude
-                )
-              },
-              .groups = "drop"
-            )
-        }
-
-        filtered_paths  <- na.omit(unlist(filtered_seus))
-        lh_paths        <- na.omit(unlist(seus_low_hypoxia))
-        all_paths       <- c(filtered_paths, lh_paths)
-
-        db_rows <- if (length(all_paths) == 0) {
-          tibble::tibble(filepath = character(), n_cells = integer())
-        } else {
-          con <- DBI::dbConnect(RSQLite::SQLite(), "batch_hashes.sqlite")
-          on.exit(DBI::dbDisconnect(con), add = TRUE)
-          placeholders <- paste(rep("?", length(all_paths)), collapse = ", ")
-          DBI::dbGetQuery(
-            con,
-            glue::glue(
-              "SELECT filepath, n_cells FROM hashes ",
-              "WHERE filepath IN ({placeholders})"
-            ),
-            params = as.list(unname(all_paths))
-          )
-        }
-
-        extract_counts <- function(paths, col) {
-          out <- db_rows[db_rows$filepath %in% paths, ] |>
-            dplyr::mutate(
-              sample_id = stringr::str_extract(filepath, "SRR[0-9]+")
-            ) |>
-            dplyr::select(sample_id, n_cells)
-          names(out)[names(out) == "n_cells"] <- col
-          out
-        }
-
-        base |>
-          dplyr::left_join(
-            extract_counts(filtered_paths, "n_pipeline_filtered"),
-            by = "sample_id"
-          ) |>
-          dplyr::left_join(
-            extract_counts(lh_paths, "n_low_hypoxia"),
-            by = "sample_id"
-          ) |>
-          dplyr::mutate(
-            pct_annotation_filtered =
-              round(n_annotation_filtered / n_unfiltered * 100, 1),
-            pct_pipeline_filtered =
-              round(n_pipeline_filtered / n_unfiltered * 100, 1),
-            pct_low_hypoxia =
-              round(n_low_hypoxia / n_unfiltered * 100, 1)
-          ) |>
-          dplyr::arrange(sample_id)
-      }
+      generate_filtering_cell_counts(filtered_seus, seus_low_hypoxia, filter_inspection_metadata),
+      format = "file"
     ),
 
     tar_target(regression_effect_plots,
@@ -573,7 +518,9 @@ pipeline_targets_seurat <- c(
       # Persist hypoxia-scored Seurat objects for downstream thresholded analyses.
       load_and_save_hypoxia_score(filtered_seus),
       pattern = map(filtered_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null",
+      cue = tar_cue(command = FALSE)
     ),
 
     tar_target(
@@ -588,10 +535,13 @@ pipeline_targets_seurat <- c(
       subset_seu_by_expression(
         hypoxia_seus, run_hypoxia_clustering = TRUE,
         hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}"),
-        slug = "hypoxia_low"
+        slug = "hypoxia_low",
+        assay = "gene"
       ),
       pattern = map(hypoxia_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null",
+      cue = tar_cue(command = FALSE)
     ),
 
     tar_target(seus_high_hypoxia,
@@ -601,7 +551,9 @@ pipeline_targets_seurat <- c(
         slug = "hypoxia_high"
       ),
       pattern = map(hypoxia_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null",
+      cue = tar_cue(command = FALSE)
     ),
 
     tar_target(heatmap_collages_hypoxia,
@@ -619,6 +571,13 @@ pipeline_targets_seurat <- c(
       ),
       pattern = map(seus_low_hypoxia),
       iteration = "list"
+    ),
+
+    tar_target(hypoxia_gene_heatmap_low_hypoxia,
+      plot_hypoxia_gene_heatmap(seus_low_hypoxia),
+      pattern = map(seus_low_hypoxia),
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(heatmap_collages_high_hypoxia,
@@ -734,7 +693,9 @@ pipeline_targets_seurat <- c(
         hypoxia_sym, scna_of_interest = scna,
         large_clone_comparisons,
         filter_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}")
-      )
+      ),
+      error = "null",
+      cue = tar_cue(command = FALSE)
     )
   ),
 

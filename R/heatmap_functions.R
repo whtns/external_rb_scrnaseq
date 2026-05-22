@@ -162,6 +162,56 @@ add_hypoxia_score <- function(seu) {
 #' @return The input Seurat object with `hypoxia`, `MT`, and `hypoxia_score` added to `@meta.data`.
 #' @export
 
+plot_hypoxia_gene_heatmap <- function(seu_path, group.by = "gene_snn_res.0.2", n_genes = 50) {
+  if (is.na(seu_path)) return(NA_character_)
+
+  sample_id <- stringr::str_extract(seu_path, "SRR[0-9]+")
+  out_dir <- "results/hypoxia_gene_heatmaps"
+  fs::dir_create(out_dir)
+  out_path <- glue::glue("{out_dir}/{sample_id}_hypoxia_gene_heatmap.pdf")
+
+  seu <- readRDS(seu_path)
+  Seurat::DefaultAssay(seu) <- "gene"
+
+  # Same gene set used in add_hypoxia_score
+  msig_db_human <- msigdbr::msigdbr(species = "Homo sapiens")
+  hypoxia_genes <- msig_db_human %>%
+    dplyr::filter(gs_name == "HALLMARK_HYPOXIA") %>%
+    dplyr::pull(gene_symbol)
+
+  available_genes <- intersect(hypoxia_genes, rownames(seu))
+  if (length(available_genes) == 0) {
+    warning("No HALLMARK_HYPOXIA genes found in: ", seu_path)
+    return(NA_character_)
+  }
+
+  # Rank by cross-cell variance; keep top n_genes
+  if (length(available_genes) > n_genes) {
+    gene_mat <- Seurat::GetAssayData(seu, assay = "gene", layer = "data")[available_genes, , drop = FALSE]
+    gene_vars <- apply(gene_mat, 1, var)
+    available_genes <- names(sort(gene_vars, decreasing = TRUE))[seq_len(n_genes)]
+  }
+
+  # Fall back to a valid grouping column if requested one is absent
+  if (!group.by %in% colnames(seu@meta.data)) {
+    group.by <- grep("_snn_res\\.", colnames(seu@meta.data), value = TRUE)[1]
+  }
+
+  seu <- Seurat::ScaleData(seu, assay = "gene", features = available_genes, verbose = FALSE)
+
+  p <- Seurat::DoHeatmap(seu, features = available_genes, group.by = group.by,
+                         assay = "gene", slot = "scale.data") +
+    ggplot2::ggtitle(glue::glue("{sample_id}: HALLMARK_HYPOXIA (low-hypoxia cells)")) +
+    ggplot2::theme(plot.title = ggplot2::element_text(size = 10),
+                   axis.text.y  = ggplot2::element_text(size = 6))
+
+  ggplot2::ggsave(out_path, p,
+                  width  = 14,
+                  height = max(6, length(available_genes) * 0.18),
+                  limitsize = FALSE)
+  out_path
+}
+
 subset_to_1q <- function(seu, file_id = NULL, slug="", ...) {
   clone_selection <- tribble(
       ~batch, ~clone_opt,

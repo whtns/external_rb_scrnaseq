@@ -120,6 +120,75 @@ R packages are declared in `packages.R`. Key dependencies:
 
 ---
 
+## Docker-based numbat workflow (portable)
+
+The current `Snakefile` runs numbat CNV inference inside a self-contained Docker
+image. It is independent of the host R installation and CONDA environment.
+
+### What runs inside the container
+
+| Rule | What it does |
+|---|---|
+| `numbat_sridhar` | Numbat CNV inference (expression + allele) |
+| `numbat_sridhar_rds` | Serialize results to `<sample>_numbat.rds` |
+
+`pileup_and_phasing` and `seurat` are **excluded** — their outputs are pre-computed
+and mounted into the container at run time.
+
+### Required inputs
+
+**Pre-computed per-sample files** (produced outside Docker):
+
+| File | Config key | Notes |
+|---|---|---|
+| `<output>/numbat/<sample>_allele_counts.tsv.gz` | — | Output of `pileup_and_phase.R` |
+| `<output>/seurat/<sample>_seu.rds` | — | Output of `process_seurat.R` |
+| `<cellranger_output>/<sample>/outs/count/filtered_feature_bc_matrix/matrix.mtx.gz` | `cellranger_output` | CellRanger output |
+
+**Reference file** (mount read-only, do not copy into the image):
+
+| File | Config key | Source |
+|---|---|---|
+| `sridhar_ref.rds` | `sridhar_ref_path` | [numbat resources](https://github.com/kharchenkolab/numbat) — normal-cell expression reference from Sridhar et al. |
+
+You do **not** need `gmap`, `snpvcf`, `paneldir`, or `celltype_ref` for Docker runs;
+those are only consumed by the two excluded rules.
+
+**Sample metadata** (`data/metadata.tsv`, set by `metatsv`):
+
+| Column | Description |
+|---|---|
+| `Run` | Sample ID matching the CellRanger folder name |
+| `num_clone` | Expected clone count for numbat `init_k` |
+| `subset_bad_cell_types` | *(optional)* Per-sample boolean override |
+
+### Build
+
+```bash
+cd pipeline/
+docker build -t numbat-pipeline .
+```
+
+### Run
+
+```bash
+docker run --rm \
+  --memory=55g --memory-swap=55g \
+  --ulimit nofile=65536:65536 \
+  -v /path/to/project:/proj \
+  -v /path/to/sridhar_ref.rds:/ref/sridhar_ref.rds:ro \
+  -w /proj/pipeline \
+  numbat-pipeline \
+  snakemake --snakefile Snakefile --cores 6
+```
+
+Set `sridhar_ref_path: /ref/sridhar_ref.rds` in `config.yaml` to match the mount above.
+
+`numbat_mem_mb` in `config.yaml` (default 51200 MB) sets a `ulimit -v` ceiling inside
+the numbat rule. `--memory` on `docker run` must be at least as large.
+
+---
+
 ## Legacy: ARMOR upstream pre-processing (this directory)
 
 This `pipeline/` subdirectory contains the **ARMOR** Snakemake workflow used for

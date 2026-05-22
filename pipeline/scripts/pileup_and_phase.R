@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+#!/opt/R/4.3.1/bin/Rscript
 
 library(argparse)
 
@@ -15,8 +15,9 @@ parser$add_argument('--outdir', type = "character", required = TRUE, help = "Out
 parser$add_argument('--ncores', type = "integer", required = TRUE, help = "Number of cores")
 parser$add_argument('--UMItag', default = "Auto", required = FALSE, type = "character", help = "UMI tag in bam. Should be Auto for 10x and XM for Slide-seq")
 parser$add_argument('--cellTAG', default = "CB", required = FALSE, type = "character", help = "Cell tag in bam. Should be CB for 10x and XC for Slide-seq")
-parser$add_argument('--smartseq', action = 'store_true', help = "running with SMART-seq mode")
-parser$add_argument('--bulk', action = 'store_true', help = "running with bulk RNA-seq mode")
+parser$add_argument('--smartseq',    action = 'store_true', help = "running with SMART-seq mode")
+parser$add_argument('--bulk',        action = 'store_true', help = "running with bulk RNA-seq mode")
+parser$add_argument('--pileup_only', action = 'store_true', help = "stop after cellsnp-lite pileup; skip phasing and allele count generation")
 args <- parser$parse_args()
 
 suppressPackageStartupMessages({
@@ -141,6 +142,11 @@ tryCatch({
 warning = function(w){
     stop('Pileup failed')
 })
+
+if (args$pileup_only) {
+    message('--pileup_only set: stopping after pileup.')
+    quit(save = 'no', status = 0)
+}
 
 ## VCF creation
 cat('Creating VCFs\n')
