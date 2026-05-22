@@ -58,7 +58,8 @@ list(
       table_s07 = table_s07, # 1q+ clone percentage per cluster
       table_s09 = table_s09, # 16q- clone percentage per cluster
       table_s10 = table_s10,  # 2p+ clone percentage per cluster
-      sample_summaries = sample_summaries  # collated per-sample summary of key results (ideograms, clone trees, numbat plots, etc.
+      sample_summaries = sample_summaries,  # collated per-sample summary of key results (ideograms, clone trees, numbat plots, etc.
+      cell_counts_table = filtering_cell_counts_table
     )
   ),
 

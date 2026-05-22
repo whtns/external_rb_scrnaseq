@@ -602,20 +602,52 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2), ass
 
   # Optionally re-run clustering on the hypoxia-subsetted object
   if (!is.null(hypoxia_expr) && isTRUE(run_hypoxia_clustering)) {
-    message("Re-running clustering on hypoxia-subsetted object at resolutions: ", paste(cluster_resolutions, collapse = ", "))
-    seu <- seurat_cluster(seu, resolution = cluster_resolutions, seurat_assay = assay)
-    seu <- tryCatch(
-      find_all_markers(seu, seurat_assay = assay),
-      error = function(e) {
-        if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
-          warning("SCT marker JoinLayers failed; using PrepSCTFindMarkers fallback.")
-          seu <- PrepSCTFindMarkers(seu)
-          seu@misc$markers[["clusters"]] <- FindAllMarkers(seu, assay = assay, verbose = FALSE)
-          return(seu)
-        }
-        stop(e)
+    n_cells <- ncol(seu)
+    if (n_cells < 10) {
+      warning("Too few cells (", n_cells, ") after hypoxia subsetting; skipping clustering")
+    } else {
+      message("Re-running clustering on hypoxia-subsetted object at resolutions: ", paste(cluster_resolutions, collapse = ", "))
+      Seurat::DefaultAssay(seu) <- assay
+      if (!"data" %in% SeuratObject::Layers(seu[[assay]])) {
+        seu <- Seurat::NormalizeData(seu, assay = assay, verbose = FALSE)
       }
-    )
+      k_param <- min(20L, n_cells - 1L)
+      graph_names <- paste0(assay, c("_nn", "_snn"))
+      seu <- Seurat::FindNeighbors(seu, dims = 1:30, reduction = "pca", graph.name = graph_names, k.param = k_param)
+      for (res in cluster_resolutions) {
+        seu <- Seurat::FindClusters(seu, graph.name = paste0(assay, "_snn"), resolution = res)
+      }
+      message("Re-running UMAP on hypoxia-subsetted object")
+      n_neighbors <- min(30L, n_cells - 1L)
+      seu <- Seurat::RunUMAP(seu, reduction = "pca", dims = 1:30, n.neighbors = n_neighbors)
+      cat("DEBUG: After clustering, computing markers for all resolutions...\n")
+      seu <- tryCatch(
+        find_all_markers(seu, seurat_assay = assay),
+        error = function(e) {
+          if (grepl("JoinLayers", conditionMessage(e), fixed = TRUE)) {
+            warning("SCT marker JoinLayers failed; using PrepSCTFindMarkers fallback.")
+            seu <- PrepSCTFindMarkers(seu)
+            seu@misc$markers[["clusters"]] <- FindAllMarkers(seu, assay = assay, verbose = FALSE)
+            return(seu)
+          }
+          stop(e)
+        }
+      )
+      cat("DEBUG: Markers computed. Keys in seu@misc$markers:", paste(names(seu@misc$markers), collapse=", "), "\n")
+      # When clustering used SCT, gene_snn_res.0.2 is inherited from the parent and
+      # safe_plot_markers in plot_effect_of_filtering looks under that key — compute
+      # gene-assay markers for it here. Skip when assay == "gene" because the main
+      # find_all_markers call above already covered all gene_snn_res.* columns.
+      if (assay != "gene" && "gene_snn_res.0.2" %in% colnames(seu[[]])) {
+        seu <- tryCatch(
+          find_all_markers(seu, metavar = "gene_snn_res.0.2", seurat_assay = "gene"),
+          error = function(e) {
+            warning("gene-assay markers for gene_snn_res.0.2 failed: ", conditionMessage(e))
+            seu
+          }
+        )
+      }
+    }
   }
 
   new_filepath <- str_replace(seu_path, "_seu.*.rds", paste0("_", slug, "_seu.rds"))
