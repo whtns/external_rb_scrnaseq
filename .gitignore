@@ -43,3 +43,5 @@ Rb_object
 pipeline.log
 *.zip
 .claude/
+fastq/
+ncbi/
