@@ -1,0 +1,58 @@
+# Version control
+.git/
+.gitignore
+
+# R project / IDE
+.Rproj.user/
+.Rhistory
+.RData
+*.Rproj
+
+# targets pipeline store (large, runtime-mounted)
+_targets*/
+
+# Snakemake
+pipeline/.snakemake/
+
+# Large output files
+*.pdf
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.svg
+figures/
+doc/
+
+# R data objects and databases
+*.rds
+*.RDS
+*.h5
+*.h5ad
+*.h5seurat
+*.sqlite
+*.loom
+
+# Raw / processed data (mounted at runtime)
+data/
+cache/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Secrets and environment
+.env
+*.pem
+*.key
+
+# Claude / editor tooling
+.claude/
+.codetree/
+copilot-instructions.md
+
+# Scratch / ad-hoc scripts
+delete_later_*/
+BB_*.R
+scripts/rsync_*.sh
