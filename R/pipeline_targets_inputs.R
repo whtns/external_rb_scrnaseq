@@ -175,6 +175,17 @@ pipeline_targets_inputs <- c(
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
+    tarchetypes::tar_file(hypoxia_thresholds_file, "config/hypoxia_thresholds.yaml"),
+    tar_target(hypoxia_thresholds, yaml::read_yaml(hypoxia_thresholds_file)),
+    tar_target(
+      hypoxia_threshold_per_sample,
+      {
+        srr <- stringr::str_extract(numbat_rds_files, "SRR[0-9]+")
+        as.numeric(hypoxia_thresholds[[srr]] %||% 0.5)
+      },
+      pattern = map(numbat_rds_files),
+      iteration = "vector"
+    ),
     tar_target(clone_comparison_table,
       tabulate_clone_comparisons(large_clone_comparisons)
     ),

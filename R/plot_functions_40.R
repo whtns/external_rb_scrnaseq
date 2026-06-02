@@ -188,8 +188,9 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
     plot_path <- glue::glue("results/effect_of_filtering/{sample_id}_effect_of_filtering.pdf")
   }
 
+  has_original_filtered <- !is.null(filtered_seu_path) && file.exists(filtered_seu_path)
   unfiltered_seu <- readRDS(unfiltered_seu_path)
-  original_filtered_seu <- if (!is.null(filtered_seu_path)) readRDS(filtered_seu_path) else NULL
+  original_filtered_seu <- NULL
 
   # Replace missing/empty scna with differential GT_opt labels
   # For each unique GT_opt value, show only the segments not in its nearest parent clone.

@@ -525,8 +525,8 @@ pipeline_targets_seurat <- c(
 
     tar_target(
       hypoxia_score_plots,
-      plot_hypoxia_score(hypoxia_seus, threshold = hypoxia_threshold),
-      pattern = map(hypoxia_seus),
+      plot_hypoxia_score(hypoxia_seus, threshold = hypoxia_threshold_per_sample),
+      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
       iteration = "list"
     ),
 
@@ -534,11 +534,11 @@ pipeline_targets_seurat <- c(
       # Low-hypoxia partition is later remapped into SCNA-specific subsets.
       subset_seu_by_expression(
         hypoxia_seus, run_hypoxia_clustering = TRUE,
-        hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}"),
+        hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold_per_sample}"),
         slug = "hypoxia_low",
         assay = "gene"
       ),
-      pattern = map(hypoxia_seus),
+      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
       iteration = "list",
       error = "null",
       cue = tar_cue(command = FALSE)
@@ -547,10 +547,10 @@ pipeline_targets_seurat <- c(
     tar_target(seus_high_hypoxia,
       subset_seu_by_expression(
         hypoxia_seus, run_hypoxia_clustering = TRUE,
-        hypoxia_expr = glue::glue("hypoxia_score > {hypoxia_threshold}"),
+        hypoxia_expr = glue::glue("hypoxia_score > {hypoxia_threshold_per_sample}"),
         slug = "hypoxia_high"
       ),
-      pattern = map(hypoxia_seus),
+      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
       iteration = "list",
       error = "null",
       cue = tar_cue(command = FALSE)

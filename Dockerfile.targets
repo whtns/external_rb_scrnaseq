@@ -1,0 +1,105 @@
+# Dockerfile for the targets pipeline (R 4.4.1 + pak.lock)
+#
+# Distinct from pipeline/Dockerfile which serves the Snakemake/numbat workflow.
+#
+# Build (from project root — pak.lock must be present here):
+#   docker build -f Dockerfile.targets -t targets-pipeline .
+#
+# Run:
+#   docker run --rm \
+#     -v /path/to/project:/proj \
+#     -w /proj \
+#     targets-pipeline \
+#     Rscript run_targets_bg.R
+
+FROM ubuntu:focal
+
+LABEL description="targets pipeline — R 4.4.1, packages from pak.lock"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    PATH="/opt/R/4.4.1/bin:${PATH}"
+
+# ---------------------------------------------------------------------------
+# System libraries required by packages in pak.lock
+#   libcurl4-openssl-dev  — curl, httr, httr2
+#   libssl-dev            — openssl
+#   libxml2-dev           — xml2
+#   libhdf5-dev           — hdf5r (SeuratDisk)
+#   libglpk-dev libgmp-dev — igraph (Seurat, numbat)
+#   libharfbuzz-dev libfribidi-dev libfontconfig1-dev — textshaping (ggplot2)
+#   libfreetype6-dev      — freetype / ragg
+#   libpng-dev            — png
+#   libmagick++-dev       — magick
+#   libbz2-dev zlib1g-dev liblzma-dev — Rsamtools, Biostrings
+#   libgsl-dev            — Bioc packages
+#   libudunits2-dev       — units (plyranges dep chain)
+#   git ca-certificates wget — GitHub installs, R download
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libhdf5-dev \
+    libglpk-dev \
+    libgmp-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libmagick++-dev \
+    libbz2-dev \
+    zlib1g-dev \
+    liblzma-dev \
+    libgsl-dev \
+    libudunits2-dev \
+    git \
+    ca-certificates \
+    wget \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# R 4.4.1 — Posit pre-built .deb (same source as /opt/R/4.4.1 on the host)
+# ---------------------------------------------------------------------------
+RUN wget -q -O /tmp/r-4.4.1.deb \
+      https://cdn.rstudio.com/r/ubuntu-2004/pkgs/r-4.4.1_1_amd64.deb \
+    && dpkg -i /tmp/r-4.4.1.deb \
+    && rm /tmp/r-4.4.1.deb \
+    && ln -s /opt/R/4.4.1/bin/R       /usr/local/bin/R \
+    && ln -s /opt/R/4.4.1/bin/Rscript /usr/local/bin/Rscript
+
+# ---------------------------------------------------------------------------
+# pak — install from r-lib binary repo to avoid source-compile issues
+# ---------------------------------------------------------------------------
+RUN Rscript -e "\
+    install.packages( \
+      'pak', \
+      repos = sprintf( \
+        'https://r-lib.github.io/p/pak/stable/%s/%s/%s', \
+        .Platform\$pkgType, R.Version()\$os, R.Version()\$arch \
+      ) \
+    )"
+
+# ---------------------------------------------------------------------------
+# Install all 430 packages from the lockfile
+# sysreqs = TRUE lets pak auto-install any missing system libs
+# ---------------------------------------------------------------------------
+COPY pak.lock /pak.lock
+
+RUN Rscript -e "pak::lockfile_install('/pak.lock', sysreqs = TRUE)"
+
+# ---------------------------------------------------------------------------
+# Smoke-test: verify key packages across CRAN / Bioc / GitHub
+# ---------------------------------------------------------------------------
+RUN Rscript -e "\
+    pkgs <- c( \
+      'targets', 'tarchetypes', 'crew', \
+      'Seurat', 'numbat', 'seuratTools', 'SeuratDisk', \
+      'DESeq2', 'clusterProfiler', 'AnnotationHub', \
+      'plyranges', 'plotgardener', 'magick' \
+    ); \
+    missing <- pkgs[!sapply(pkgs, requireNamespace, quietly = TRUE)]; \
+    if (length(missing)) stop('Missing packages: ', paste(missing, collapse = ', '))"
+
+WORKDIR /proj

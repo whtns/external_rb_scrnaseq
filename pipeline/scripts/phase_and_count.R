@@ -22,8 +22,6 @@ suppressPackageStartupMessages({
     library(numbat)
 })
 
-source("scripts/patch_numbat_dplyr.R")
-
 label   <- args$label
 samples <- str_split(args$samples, ',')[[1]]
 outdir  <- args$outdir

@@ -51,7 +51,7 @@ ncores: 6
 ## Numbat allele pileup and phasing inputs
 ##--------------------------------------------------------------------------------------------
 ## Genetic map for Eagle2 phasing
-gmap: /usr/local/bin/TOOLS/Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz
+gmap: /dataVolume/storage/Homo_sapiens/numbat/genetic_map_hg38_withX.txt.gz
 
 ## Population SNP VCF (heterozygous SNP positions)
 snpvcf: /dataVolume/storage/Homo_sapiens/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.chrPrefix.vcf.gz
