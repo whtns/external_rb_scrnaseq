@@ -37,10 +37,10 @@ plot_phase_wo_arm <- function(seu_path, pdf_path = NULL) {
 #' @param color_by Color specification
 #' @return ggplot2 plot object
 #' @export
-plot_cc_space_plot <- function(seu_path = "output/seurat/SRR14800534_filtered_seu.rds", facet = FALSE, group_by = "clusters", color_by = "clusters") {
+plot_cc_space_plot <- function(seu_path = "output/seurat/SRX11133594_filtered_seu.rds", facet = FALSE, group_by = "clusters", color_by = "clusters") {
   
   
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 

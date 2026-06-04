@@ -25,7 +25,7 @@ tabulate_diffex_clones <- function(cluster_diffex_clones,
     tibble::enframe("phase_of_gene", "symbol") %>%
     tidyr::unnest(symbol)
 
-  sample_ids <- str_extract(cluster_diffex_clones, "SRR[0-9]*")
+  sample_ids <- str_extract(cluster_diffex_clones, "SR[RX][0-9]+")
 
   
 #' Perform differential expression analysis
@@ -72,7 +72,7 @@ annotate_percent_segment_diffex <- function(diffex) {
   # cluster ------------------------------
   cluster_diffex_clones <-
     cluster_diffex_clones %>%
-    set_names(str_extract(., "SRR[0-9]*")) %>%
+    set_names(str_extract(., "SR[RX][0-9]+")) %>%
     map(read_csv) %>%
     purrr::keep(~ nrow(.x) > 0) %>%
     map(dplyr::filter, p_val_adj < 1) %>%
@@ -211,7 +211,7 @@ make_volcano_diffex_clones <- function(cluster_diffex_clones,
     tibble::enframe("phase_of_gene", "symbol") %>%
     tidyr::unnest(symbol)
 
-  sample_ids <- str_extract(cluster_diffex_clones, "SRR[0-9]*")
+  sample_ids <- str_extract(cluster_diffex_clones, "SR[RX][0-9]+")
 
   # total ------------------------------
   total_diffex_clones <-
@@ -230,7 +230,7 @@ make_volcano_diffex_clones <- function(cluster_diffex_clones,
   # cluster------------------------------
   cluster_diffex_clones <-
     cluster_diffex_clones %>%
-    set_names(str_extract(., "SRR[0-9]*")) %>%
+    set_names(str_extract(., "SR[RX][0-9]+")) %>%
     map(read_csv) %>%
     purrr::keep(~ nrow(.x) > 0) %>%
     map(dplyr::left_join, cc_genes, by = "symbol") %>%

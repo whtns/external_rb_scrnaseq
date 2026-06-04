@@ -38,18 +38,18 @@ study_scanpy_dirs = {
 metadata  = pd.read_csv("results/cell_clusters.csv")
 
 adatas = {
-  "SRR13884242" : "output/scanpy/wu_merged/SRR13884242.h5ad",
-  "SRR13884243" : "output/scanpy/wu_merged/SRR13884243.h5ad",
-  "SRR13884247" : "output/scanpy/wu_merged/SRR13884247.h5ad",
-  "SRR13884249" : "output/scanpy/wu_merged/SRR13884249.h5ad",
-  "SRR14800534" : "output/scanpy/yang_merged/SRR14800534.h5ad",
-  "SRR14800535" : "output/scanpy/yang_merged/SRR14800535.h5ad",
-  "SRR14800536" : "output/scanpy/yang_merged/SRR14800536.h5ad",
-  "SRR14800540" : "output/scanpy/yang_merged/SRR14800540.h5ad",
-  "SRR14800541" : "output/scanpy/yang_merged/SRR14800541.h5ad",
-  "SRR14800543" : "output/scanpy/yang_merged/SRR14800543.h5ad",
-  "SRR17960481" : "output/scanpy/field_merged/SRR17960481.h5ad",
-  "SRR17960484" : "output/scanpy/field_merged/SRR17960484.h5ad"
+  "SRX10264519" : "output/scanpy/wu_merged/SRX10264519.h5ad",
+  "SRX10264520" : "output/scanpy/wu_merged/SRX10264520.h5ad",
+  "SRX10264524" : "output/scanpy/wu_merged/SRX10264524.h5ad",
+  "SRX10264526" : "output/scanpy/wu_merged/SRX10264526.h5ad",
+  "SRX11133594" : "output/scanpy/yang_merged/SRX11133594.h5ad",
+  "SRX11133593" : "output/scanpy/yang_merged/SRX11133593.h5ad",
+  "SRX11133592" : "output/scanpy/yang_merged/SRX11133592.h5ad",
+  "SRX11133588" : "output/scanpy/yang_merged/SRX11133588.h5ad",
+  "SRX11133587" : "output/scanpy/yang_merged/SRX11133587.h5ad",
+  "SRX11133585" : "output/scanpy/yang_merged/SRX11133585.h5ad",
+  "SRX14116947" : "output/scanpy/field_merged/SRX14116947.h5ad",
+  "SRX14116944" : "output/scanpy/field_merged/SRX14116944.h5ad"
 }
 
 for k,v in adatas.items():

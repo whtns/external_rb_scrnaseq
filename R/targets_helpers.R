@@ -54,7 +54,7 @@ generate_filtering_cell_counts <- function(filtered_seus, seus_low_hypoxia, filt
   extract_counts <- function(paths, col) {
     out <- db_rows[db_rows$filepath %in% paths, ] |>
       dplyr::mutate(
-        sample_id = stringr::str_extract(filepath, "SRR[0-9]+")
+        sample_id = stringr::str_extract(filepath, "SR[RX][0-9]+")
       ) |>
       dplyr::select(sample_id, n_cells)
     names(out)[names(out) == "n_cells"] <- col

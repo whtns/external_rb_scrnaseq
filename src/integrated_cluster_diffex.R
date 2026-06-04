@@ -7,7 +7,7 @@ source("packages.R")
 source("functions.R")
 
 
-pull_scna_segments <- function(nb_path = "output/numbat_sridhar/SRR14800534_numbat.rds", chrom = "1"){
+pull_scna_segments <- function(nb_path = "output/numbat_sridhar/SRX11133594_numbat.rds", chrom = "1"){
 	mynb <- readRDS(nb_path)
 	
 	segments <- mynb$clone_post %>%
@@ -60,9 +60,9 @@ diffex_per_cluster <- function(seu, ident_1 = "w_scna", ident_2 = "wo_scna", myc
 
 # 16q  ------------------------------
 
-segs_16q <- sapply(c("output/numbat_sridhar/SRR14800534_numbat.rds",
-										 "output/numbat_sridhar/SRR14800535_numbat.rds",
-										 "output/numbat_sridhar/SRR14800536_numbat.rds"), pull_scna_segments, chrom = "16") |> 
+segs_16q <- sapply(c("output/numbat_sridhar/SRX11133594_numbat.rds",
+										 "output/numbat_sridhar/SRX11133593_numbat.rds",
+										 "output/numbat_sridhar/SRX11133592_numbat.rds"), pull_scna_segments, chrom = "16") |> 
 	as("GRangesList") |> 
 	unlist() |> 
 	reduce_ranges()

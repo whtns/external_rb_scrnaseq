@@ -49,58 +49,58 @@ pipeline_targets_integration <- list(
 
   tar_target(corresponding_seus_2p,
     c(
-      # "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds",
-      # "SRR13884247_branch_6_filtered_seu" = "output/seurat/SRR13884247_branch_6_filtered_seu.rds",
-      "SRR13884248_filtered_seu_2p" = "output/seurat/SRR13884248_filtered_seu_2p.rds",
-      "SRR17960484_filtered_seu_2p.rds" = "output/seurat/SRR17960484_filtered_seu_2p.rds"
+      # "output/seurat/SRX10264523_branch_5_filtered_seu_2p.rds",
+      # "SRX10264524_branch_6_filtered_seu" = "output/seurat/SRX10264524_branch_6_filtered_seu.rds",
+      "SRX10264525_filtered_seu_2p" = "output/seurat/SRX10264525_filtered_seu_2p.rds",
+      "SRX14116944_filtered_seu_2p.rds" = "output/seurat/SRX14116944_filtered_seu_2p.rds"
       # "output/seurat/integrated_2p/seurat_2p_integrated_duo.rds"
     )
   ),
 
   tar_target(corresponding_seus_6p,
     c(
-      "SRR13884248_filtered_seu_6p.rds" = "output/seurat/SRR13884248_filtered_seu_6p.rds",
-      "SRR17960484_filtered_seu_6p.rds" = "output/seurat/SRR17960484_filtered_seu_6p.rds"
+      "SRX10264525_filtered_seu_6p.rds" = "output/seurat/SRX10264525_filtered_seu_6p.rds",
+      "SRX14116944_filtered_seu_6p.rds" = "output/seurat/SRX14116944_filtered_seu_6p.rds"
     )
   ),
 
   tar_target(corresponding_seus,
     list(
-      # "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds",
-      "output/seurat/SRR13884247_branch_6_filtered_seu.rds",
-      "output/seurat/SRR13884248_filtered_seu_2p.rds",
-      "output/seurat/SRR17960484_filtered_seu_2p.rds",
-      "output/seurat/SRR13884247_filtered_seu.rds",
-      "output/seurat/SRR17960484_filtered_seu_6p.rds",
+      # "output/seurat/SRX10264523_branch_5_filtered_seu_2p.rds",
+      "output/seurat/SRX10264524_branch_6_filtered_seu.rds",
+      "output/seurat/SRX10264525_filtered_seu_2p.rds",
+      "output/seurat/SRX14116944_filtered_seu_2p.rds",
+      "output/seurat/SRX10264524_filtered_seu.rds",
+      "output/seurat/SRX14116944_filtered_seu_6p.rds",
       "output/seurat/integrated_2p/seurat_2p_integrated_duo.rds",
       "output/seurat/integrated_6p/integrated_seu_6p_duo.rds",
-      "output/seurat/SRR13884248_filtered_seu_6p.rds"
+      "output/seurat/SRX10264525_filtered_seu_6p.rds"
     )
   ),
 
   tar_target(corresponding_states_dictionary,
     make_corresponding_states_dictionary(tibble::tribble(
       ~file_name, ~w_scna, ~wo_scna, ~scna_of_interest,
-      # # "SRR13884246_branch_5_filtered_seu_2p.rds", "g1_1-g1_0-g1_3-g1_11", "g1_2-g1_5", "2p",
-      # # "SRR13884246_branch_5_filtered_seu_2p.rds",     "s_g2_7-s_9",      "s_g2_8", "2p",
+      # # "SRX10264523_branch_5_filtered_seu_2p.rds", "g1_1-g1_0-g1_3-g1_11", "g1_2-g1_5", "2p",
+      # # "SRX10264523_branch_5_filtered_seu_2p.rds",     "s_g2_7-s_9",      "s_g2_8", "2p",
 
-      "SRR13884247_branch_6_filtered_seu.rds", "g1_3-g1_6", "g1_5", "2p",
-      # "SRR13884247_branch_6_filtered_seu.rds", "g1_3", "g1_5", "2p",
-      # "SRR13884247_branch_6_filtered_seu.rds", "g1_6", "g1_5", "2p",
+      "SRX10264524_branch_6_filtered_seu.rds", "g1_3-g1_6", "g1_5", "2p",
+      # "SRX10264524_branch_6_filtered_seu.rds", "g1_3", "g1_5", "2p",
+      # "SRX10264524_branch_6_filtered_seu.rds", "g1_6", "g1_5", "2p",
 
-      "SRR13884248_filtered_seu_2p.rds",   "g1_1",    "g1_6-g1_7", "2p",
-      # "SRR13884248_filtered_seu_2p.rds",   "g1_1",    "g1_6", "2p",
-      # "SRR13884248_filtered_seu_2p.rds",   "g1_1",    "g1_7", "2p",
+      "SRX10264525_filtered_seu_2p.rds",   "g1_1",    "g1_6-g1_7", "2p",
+      # "SRX10264525_filtered_seu_2p.rds",   "g1_1",    "g1_6", "2p",
+      # "SRX10264525_filtered_seu_2p.rds",   "g1_1",    "g1_7", "2p",
 
-      "SRR17960484_filtered_seu_2p.rds",     "g1_3",    "g1_1-g1_5", "2p",
-      # "SRR17960484_filtered_seu_2p.rds",     "g1_3",    "g1_1", "2p",
-      # "SRR17960484_filtered_seu_2p.rds",     "g1_3",    "g1_5", "2p",
-      # "SRR17960484_filtered_seu_2p.rds",     "s_6",      "s_7", "2p",
+      "SRX14116944_filtered_seu_2p.rds",     "g1_3",    "g1_1-g1_5", "2p",
+      # "SRX14116944_filtered_seu_2p.rds",     "g1_3",    "g1_1", "2p",
+      # "SRX14116944_filtered_seu_2p.rds",     "g1_3",    "g1_5", "2p",
+      # "SRX14116944_filtered_seu_2p.rds",     "s_6",      "s_7", "2p",
 
-      "SRR13884247_filtered_seu.rds",   "g1_5-g1_7",    "g1_4-g1_0", "6p",
+      "SRX10264524_filtered_seu.rds",   "g1_5-g1_7",    "g1_4-g1_0", "6p",
 
-      "SRR17960484_filtered_seu_6p.rds",     "g1_0",      "g1_1", "6p",
-      # "SRR17960484_filtered_seu_6p.rds",     "s_4",      "s_6", "6p",
+      "SRX14116944_filtered_seu_6p.rds",     "g1_0",      "g1_1", "6p",
+      # "SRX14116944_filtered_seu_6p.rds",     "s_4",      "s_6", "6p",
 
       "seurat_2p_integrated_duo.rds",     "g1_1-g1_4",      "g1_9", "2p",
       "seurat_2p_integrated_duo.rds",     "g1_4",      "g1_9", "2p",
@@ -109,7 +109,7 @@ pipeline_targets_integration <- list(
 
       "integrated_seu_6p_duo.rds",     "g1_4",      "g1_3", "6p",
 
-      "SRR13884248_filtered_seu_6p.rds",   "g1_0",    "g1_2", "6p"
+      "SRX10264525_filtered_seu_6p.rds",   "g1_0",    "g1_2", "6p"
     ))
   ),
 
@@ -152,15 +152,15 @@ pipeline_targets_integration <- list(
   tar_target(states_dictionary_6p,
     make_corresponding_states_dictionary(tibble::tribble(
       ~file_name,                        ~w_scna,     ~wo_scna,    ~scna_of_interest,
-      "SRR13884247_filtered_seu.rds",    "g1_0-g1_1", "g1_4-g1_5", "6p",
-      "SRR17960484_filtered_seu_6p.rds", "g1_0",      "g1_1",      "6p"
+      "SRX10264524_filtered_seu.rds",    "g1_0-g1_1", "g1_4-g1_5", "6p",
+      "SRX14116944_filtered_seu_6p.rds", "g1_0",      "g1_1",      "6p"
     ))
   ),
 
   tar_target(corresponding_state_6p_seus,
     list(
-      "output/seurat/SRR13884247_filtered_seu.rds",
-      "output/seurat/SRR17960484_filtered_seu_6p.rds"
+      "output/seurat/SRX10264524_filtered_seu.rds",
+      "output/seurat/SRX14116944_filtered_seu_6p.rds"
     )
   ),
 
@@ -408,7 +408,7 @@ pipeline_targets_integration <- list(
       corresponding_clusters_diffex, corresponding_clusters_enrichments,
       recurrence_threshold = 3, plot_path = "results/fig_09.pdf",
       widths = rep(4, 3), heights = rep(8, 3),
-      common_seus = c("SRR13884248_filtered_seu_2p.rds", "SRR17960484_filtered_seu_2p.rds")
+      common_seus = c("SRX10264525_filtered_seu_2p.rds", "SRX14116944_filtered_seu_2p.rds")
     )
   ),
 
@@ -418,7 +418,7 @@ pipeline_targets_integration <- list(
       corresponding_clusters_diffex, corresponding_clusters_enrichments,
       recurrence_threshold = 2, plot_path = "results/fig_10.pdf",
       widths = rep(4, 3), heights = c(12, 4, 12),
-      common_seus = c("SRR13884247_filtered_seu_6p.rds", "SRR17960484_filtered_seu_6p.rds")
+      common_seus = c("SRX10264524_filtered_seu_6p.rds", "SRX14116944_filtered_seu_6p.rds")
     )
   )
 

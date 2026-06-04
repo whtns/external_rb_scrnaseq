@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # Generate large_clone_simplifications YAML from numbat output
-# Usage: Rscript src/generate_clone_simplifications.R SRR14800534
+# Usage: Rscript src/generate_clone_simplifications.R SRX11133594
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -36,7 +36,7 @@ parse_genotypes <- function(genotypes) {
 
 #' Generate YAML genotype→simplification mappings for a single sample
 #'
-#' @param sample_id SRR sample ID (e.g. "SRR14800534")
+#' @param sample_id SRR sample ID (e.g. "SRX11133594")
 #' @param numbat_rds_path Path to the numbat RDS file
 #' @return List (in YAML format) mapping genotypes to simplifications
 #'
@@ -45,7 +45,7 @@ parse_genotypes <- function(genotypes) {
 #' and assigns a suffix letter (a, b, c, ...) based on clone ordering.
 #'
 #' Example output:
-#'   SRR14800534:
+#'   SRX11133594:
 #'     1q+: 1b
 #'     16q-: 16c
 #'
@@ -116,7 +116,7 @@ generate_simplifications_for_sample <- function(sample_id, numbat_rds_path) {
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
   cat("Usage: Rscript src/generate_clone_simplifications.R <sample_id>\n")
-  cat("Example: Rscript src/generate_clone_simplifications.R SRR14800534\n")
+  cat("Example: Rscript src/generate_clone_simplifications.R SRX11133594\n")
   quit(status = 1)
 }
 

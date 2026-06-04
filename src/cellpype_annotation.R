@@ -8,8 +8,8 @@ library(cellpypes)
 
 pdf("results/cell_pype_annotations.pdf")
 
-# SRR13633759 ------------------------------
-seu <- normal_seus$SRR13633759
+# SRX10031191 ------------------------------
+seu <- normal_seus$SRX10031191
 
 obj <- list(
   raw      =SeuratObject::GetAssayData(seu, "counts"),
@@ -31,14 +31,14 @@ pype <- obj %>%
   # rule("Memory CD4+",  "S100A4", ">", 13,  parent="CD4+ T") %>%
   identity()
 
-classes_plot <- plot_classes(pype)+ggtitle("SRR13633759 annotated with cellpypes")
+classes_plot <- plot_classes(pype)+ggtitle("SRX10031191 annotated with cellpypes")
 
 celltypes <- classify(pype)
 
 seu <- AddMetaData(seu, celltypes, col.name = "CellType_predict")
 
-# SRR14800540 ------------------------------
-seu <- normal_seus$SRR14800540
+# SRX11133588 ------------------------------
+seu <- normal_seus$SRX11133588
 
 obj <- list(
   raw      =SeuratObject::GetAssayData(seu, "counts"),
@@ -56,11 +56,11 @@ pype <- obj %>%
   # rule("Memory CD4+",  "S100A4", ">", 13,  parent="CD4+ T") %>%
   identity()
 
-plot_classes(pype)+ggtitle("SRR14800540 annotated with cellpypes")
+plot_classes(pype)+ggtitle("SRX11133588 annotated with cellpypes")
 
 
-# SRR14800541 ------------------------------
-seu <- normal_seus$SRR14800541
+# SRX11133587 ------------------------------
+seu <- normal_seus$SRX11133587
 
 obj <- list(
   raw      =SeuratObject::GetAssayData(seu, "counts"),
@@ -78,11 +78,11 @@ pype <- obj %>%
   # rule("Memory CD4+",  "S100A4", ">", 13,  parent="CD4+ T") %>%
   identity()
 
-plot_classes(pype)+ggtitle("SRR14800541 annotated with cellpypes")
+plot_classes(pype)+ggtitle("SRX11133587 annotated with cellpypes")
 
 
-# SRR14800542 ------------------------------
-seu <- normal_seus$SRR14800542
+# SRX11133586 ------------------------------
+seu <- normal_seus$SRX11133586
 
 obj <- list(
   raw      =SeuratObject::GetAssayData(seu, "counts"),
@@ -102,11 +102,11 @@ pype <- obj %>%
   # rule("Memory CD4+",  "S100A4", ">", 13,  parent="CD4+ T") %>%
   identity()
 
-plot_classes(pype)+ggtitle("SRR14800542 annotated with cellpypes")
+plot_classes(pype)+ggtitle("SRX11133586 annotated with cellpypes")
 
 
-# SRR14800543 ------------------------------
-seu <- normal_seus$SRR14800543
+# SRX11133585 ------------------------------
+seu <- normal_seus$SRX11133585
 
 obj <- list(
   raw      =SeuratObject::GetAssayData(seu, "counts"),
@@ -127,7 +127,7 @@ pype <- obj %>%
   # rule("Memory CD4+",  "S100A4", ">", 13,  parent="CD4+ T") %>%
   identity()
 
-plot_classes(pype)+ggtitle("SRR14800543 annotated with cellpypes")
+plot_classes(pype)+ggtitle("SRX11133585 annotated with cellpypes")
 
 dev.off()
 
@@ -170,7 +170,7 @@ pype <- obj %>%
   # plot_last() %>%
   identity()
 
-plot_classes(pype)+ggtitle("SRR14800543 annotated with cellpypes")
+plot_classes(pype)+ggtitle("SRX11133585 annotated with cellpypes")
 
 
 merged_normal_seu <- readRDS("output/seurat/merged_normal_seu.rds")

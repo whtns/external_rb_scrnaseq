@@ -7,7 +7,7 @@ library(patchwork)
 library(Seurat)
 library(ggpubr)
 
-seu <- readRDS("output/seurat/SRR14800535_filtered_seu.rds")
+seu <- readRDS("output/seurat/SRX11133593_filtered_seu.rds")
 
 # total ------------------------------
 total_genes <- c("MT2A", "CENPF", "NEK2")

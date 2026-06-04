@@ -4,7 +4,7 @@ source("packages.R")
 source("functions.R")
 library(targets)
 
-seu <- readRDS("output/seurat/SRR14800534_filtered_seu.rds")
+seu <- readRDS("output/seurat/SRX11133594_filtered_seu.rds")
 
 library(cluster, quietly = TRUE)
 

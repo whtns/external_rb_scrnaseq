@@ -14,7 +14,7 @@ library(purrr)
 library(tidyverse)
 library(seuratTools)
 
-seu_path = "output/seurat/SRR27187899_filtered_seu.rds"
+seu_path = "output/seurat/SRX22868105_filtered_seu.rds"
 
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in seq_len(length(args))) {

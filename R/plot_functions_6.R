@@ -60,7 +60,7 @@ make_filtered_numbat_plots <- function(output_file, sample_id, myseus, mynbs, me
 #' @examples
 retrieve_numbat_seurat <- function(numbat_rds_file, cluster_dictionary) {
   #
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 
@@ -203,7 +203,7 @@ plot_seu_marker_heatmap_integrated <- function(seu_path = NULL, cluster_order = 
 
   kept_phases <- kept_phases %||% phase_levels
 
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -466,7 +466,7 @@ plot_seu_marker_heatmap_by_scna_ara <- function(seu_path = NULL, cluster_order =
 
   file_id <- fs::path_file(seu_path)
   
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   

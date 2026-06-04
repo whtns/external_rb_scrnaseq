@@ -26,9 +26,9 @@ plae_ref <- AggregateExpression(plae_human_fetal_seu, group.by = "CellType_predi
 
 test0 <- readRDS("/dataVolume/storage/scEiad/human_droplet_data_fetal_seu.rds")
 
-# seu <- readRDS("output/seurat/SRR13884242_regressed_seu.rds")
+# seu <- readRDS("output/seurat/SRX10264519_regressed_seu.rds")
 
-seu <- readRDS("output/seurat/SRR13884242_filtered_seu.rds")
+seu <- readRDS("output/seurat/SRX10264519_filtered_seu.rds")
 
 clone_2_v_3_genes <-
   large_all_diffex_clones$large_all_diffex_clones_c2bf52b0$`3_v_2_8p+_11p+` %>%
@@ -142,9 +142,9 @@ celltype_prediction_by_var <- function(seu_path, plae_ref, group.by = "SCT_snn_r
 # plot_celltype_predictions(seu, plae_ref, query_genes = clone_2_v_3_genes)
 # rgc_genes <- c("DPYSL2", "ELAVL2", "ELAVL3",  "GNG3", "LY6H", "PCM1", "RTN1", "STMN4")
 
-seu_path <- "output/seurat/SRR14800534_regressed_seu.rds"
+seu_path <- "output/seurat/SRX11133594_regressed_seu.rds"
 seu <- readRDS(seu_path)
 
-test4 <- plot_celltype_predictions(seu, "SRR14800534", plae_ref)
+test4 <- plot_celltype_predictions(seu, "SRX11133594", plae_ref)
 
 # test3 <- celltype_prediction_by_var(seu_path, plae_ref)

@@ -13,12 +13,12 @@ tar_load("cluster_orders")
 source("src/heatmap_functions.R")
 
 # seus <- c(
-#     "SRR13884249" = "output/seurat/SRR13884249_filtered_seu.rds",
-# 	"SRR14800534" = "output/seurat/SRR14800534_filtered_seu.rds",
-# 	"SRR14800535" = "output/seurat/SRR14800535_filtered_seu.rds",
-#     "SRR14800536" = "output/seurat/SRR14800536_filtered_seu.rds",
-#     "SRR13884246" = "output/seurat/SRR13884246_filtered_seu.rds",
-#     "SRR17960484" = "output/seurat/SRR17960484_filtered_seu.rds"
+#     "SRX10264526" = "output/seurat/SRX10264526_filtered_seu.rds",
+# 	"SRX11133594" = "output/seurat/SRX11133594_filtered_seu.rds",
+# 	"SRX11133593" = "output/seurat/SRX11133593_filtered_seu.rds",
+#     "SRX11133592" = "output/seurat/SRX11133592_filtered_seu.rds",
+#     "SRX10264523" = "output/seurat/SRX10264523_filtered_seu.rds",
+#     "SRX14116944" = "output/seurat/SRX14116944_filtered_seu.rds"
 # ) |> 
 # 	set_names()
 # 
@@ -37,12 +37,12 @@ source("src/heatmap_functions.R")
 # # integrated 1q_16q seu ------------------------------
 # 
 # seus <- map2(seus, list(
-# 	"SRR13884249" = c(1,2),
-# 	"SRR14800534" = c(1,2,3),
-# 	"SRR14800535" = c(1,2,3),
-# 	"SRR14800536" = c(1,2,3),
-# 	"SRR13884246" = c(1,2),
-# 	"SRR17960484" = c(1,2)
+# 	"SRX10264526" = c(1,2),
+# 	"SRX11133594" = c(1,2,3),
+# 	"SRX11133593" = c(1,2,3),
+# 	"SRX11133592" = c(1,2,3),
+# 	"SRX10264523" = c(1,2),
+# 	"SRX14116944" = c(1,2)
 # 	),
 # 	subset_seu_by_clones)
 # 
@@ -190,12 +190,12 @@ qpdf::pdf_combine(c(pdf1, pdf2, pdf3, pdf4, pdf5, pdf6, pdf7, pdf8, pdf9, pdf10)
 
 # # trio seu ------------------------------
 # 
-# seus <- seus[c("SRR14800534", "SRR14800535", "SRR14800536")]
+# seus <- seus[c("SRX11133594", "SRX11133593", "SRX11133592")]
 # 
 # trio_seus <- map2(seus, list(
-#     "SRR14800534" = c(1,2,3),
-#     "SRR14800535" = c(1,2,3),
-#     "SRR14800536" = c(1,2,3)
+#     "SRX11133594" = c(1,2,3),
+#     "SRX11133593" = c(1,2,3),
+#     "SRX11133592" = c(1,2,3)
 # ),
 # subset_seu_by_clones)
 # 
@@ -216,9 +216,9 @@ qpdf::pdf_combine(c(pdf1, pdf2, pdf3, pdf4, pdf5, pdf6, pdf7, pdf8, pdf9, pdf10)
 # 
 # clone_selection <- tribble(
 #     ~batch, ~clone_opt,
-#     "SRR14800534", c(1,2),
-#     "SRR14800535", c(1,2),
-#     "SRR14800536", c(1,2)
+#     "SRX11133594", c(1,2),
+#     "SRX11133593", c(1,2),
+#     "SRX11133592", c(1,2)
 # ) |> 
 #     tidyr::unnest(clone_opt)
 # 

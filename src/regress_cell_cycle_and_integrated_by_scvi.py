@@ -61,18 +61,18 @@ metadata = metadata.merge(cluster_dictionary, on = ['sample_id', 'cluster'])
 metadata.cluster = metadata['sample_id'].astype(str) + '_' + metadata['abbreviation'].astype(str)
 
 adata_paths = {
-  "SRR13884242" : "output/scanpy/SRR13884242.h5ad",
-  "SRR13884243" : "output/scanpy/SRR13884243.h5ad",
-  "SRR13884247" : "output/scanpy/SRR13884247.h5ad",
-  "SRR13884249" : "output/scanpy/SRR13884249.h5ad",
-  "SRR14800534" : "output/scanpy/SRR14800534.h5ad",
-  "SRR14800535" : "output/scanpy/SRR14800535.h5ad",
-  "SRR14800536" : "output/scanpy/SRR14800536.h5ad",
-  "SRR14800540" : "output/scanpy/SRR14800540.h5ad",
-  "SRR14800541" : "output/scanpy/SRR14800541.h5ad",
-  "SRR14800543" : "output/scanpy/SRR14800543.h5ad",
-  "SRR17960481" : "output/scanpy/SRR17960481.h5ad",
-  "SRR17960484" : "output/scanpy/SRR17960484.h5ad"
+  "SRX10264519" : "output/scanpy/SRX10264519.h5ad",
+  "SRX10264520" : "output/scanpy/SRX10264520.h5ad",
+  "SRX10264524" : "output/scanpy/SRX10264524.h5ad",
+  "SRX10264526" : "output/scanpy/SRX10264526.h5ad",
+  "SRX11133594" : "output/scanpy/SRX11133594.h5ad",
+  "SRX11133593" : "output/scanpy/SRX11133593.h5ad",
+  "SRX11133592" : "output/scanpy/SRX11133592.h5ad",
+  "SRX11133588" : "output/scanpy/SRX11133588.h5ad",
+  "SRX11133587" : "output/scanpy/SRX11133587.h5ad",
+  "SRX11133585" : "output/scanpy/SRX11133585.h5ad",
+  "SRX14116947" : "output/scanpy/SRX14116947.h5ad",
+  "SRX14116944" : "output/scanpy/SRX14116944.h5ad"
 }
 
 def plot_dend(sample_id, adata):

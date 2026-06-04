@@ -1,7 +1,7 @@
 integration_by_scna_clones <- function(seu_paths, scna_of_interest = "1q", clone_comparisons, ...){
 	seus <- seu_paths |> 
 		set_names()  |> 
-		set_names(str_extract, "SRR[0-9]*")
+		set_names(str_extract, "SR[RX][0-9]+")
 	
 	seus <- seus |> 
 		map(readRDS)

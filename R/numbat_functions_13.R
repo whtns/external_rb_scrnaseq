@@ -28,7 +28,7 @@ make_table_s02 <- function(meta_path = "data/metadata.tsv") {
 												"LibraryLayout", "Platform", "BioProject", "BioSample", "num_clone")
 	
 	field_bulk_samples <- glue("SRR17960{seq(497,512,1)}")
-	collin_bad_samples <- c("SRR13633761", "SRR13633762")
+	collin_bad_samples <- c("SRX10031193", "SRX10031194")
 	
 	collated_metadata <-
 		meta_path |> 
@@ -58,7 +58,7 @@ make_table_s02 <- function(meta_path = "data/metadata.tsv") {
 #' @export
 check_cluster_marker_gene <- function(seu_path, cluster_dictionary){
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	seu <- readRDS(seu_path)
 	
 	df0 <- cluster_dictionary[[tumor_id]] |> 
@@ -94,10 +94,10 @@ check_cluster_marker_gene <- function(seu_path, cluster_dictionary){
 make_table_s03 <- function(cluster_dictionary,
                            table_path = "results/table_s03.csv",
                            sqlite_path = "batch_hashes.sqlite") {
-	myseunames <- c("SRR13884242", "SRR13884243", "SRR13884246", "SRR13884247",
-		"SRR13884248", "SRR13884249", "SRR14800534", "SRR14800535", "SRR14800536",
-		"SRR14800540", "SRR14800541", "SRR14800543", "SRR17960481", "SRR17960484",
-		"SRR27187899", "SRR27187902")
+	myseunames <- c("SRX10264519", "SRX10264520", "SRX10264523", "SRX10264524",
+		"SRX10264525", "SRX10264526", "SRX11133594", "SRX11133593", "SRX11133592",
+		"SRX11133588", "SRX11133587", "SRX11133585", "SRX14116947", "SRX14116944",
+		"SRX22868105", "SRX22868102")
 	
 	if (!file.exists(sqlite_path)) {
 		stop(glue::glue("SQLite database not found: {sqlite_path}"))
@@ -270,10 +270,10 @@ retrieve_genes_in_cis <- function(nb_path, tumor_id = "asdf"){
 #' @return Function result
 #' @export
 make_table_s08 <- function(table_path = "results/table_s04.csv"){
-	numbat_names <- c("SRR13884242", "SRR13884243", "SRR13884246", "SRR13884247", 
-		"SRR13884248", "SRR13884249", "SRR14800534", "SRR14800535", "SRR14800536", 
-		"SRR14800540", "SRR14800541", "SRR14800543", "SRR17960481", "SRR17960484", 
-		"SRR27187899", "SRR27187902")
+	numbat_names <- c("SRX10264519", "SRX10264520", "SRX10264523", "SRX10264524", 
+		"SRX10264525", "SRX10264526", "SRX11133594", "SRX11133593", "SRX11133592", 
+		"SRX11133588", "SRX11133587", "SRX11133585", "SRX14116947", "SRX14116944", 
+		"SRX22868105", "SRX22868102")
 	
 	nb_paths <- fs::path("output/numbat_sridhar/", glue("{numbat_names}_numbat.rds")) |> 
 		set_names(numbat_names)

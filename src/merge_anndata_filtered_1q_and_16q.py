@@ -22,9 +22,9 @@ import pymde
 import scrb
  
 adata_paths = {
-  "SRR14800534" : "output/scanpy/SRR14800534_filtered_scanpy.h5ad", 
-  "SRR14800536" : "output/scanpy/SRR14800536_filtered_scanpy.h5ad", 
-  "SRR14800535" : "output/scanpy/SRR14800535_filtered_scanpy.h5ad", 
+  "SRX11133594" : "output/scanpy/SRX11133594_filtered_scanpy.h5ad", 
+  "SRX11133592" : "output/scanpy/SRX11133592_filtered_scanpy.h5ad", 
+  "SRX11133593" : "output/scanpy/SRX11133593_filtered_scanpy.h5ad", 
 }
 
 

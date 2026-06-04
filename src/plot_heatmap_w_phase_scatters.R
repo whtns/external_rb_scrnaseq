@@ -4,17 +4,17 @@ source("functions.R")
 library(targets)
 tar_load(c("filtered_seus", "cluster_orders"))
 
-# SRR14800534 ------------------------------
+# SRX11133594 ------------------------------
 
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800534_filtered_seu.rds", cluster_order = cluster_orders["SRR14800534"], mygene = "TFF1", height = 10, width = 16, equalize_scna_clones = FALSE)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133594_filtered_seu.rds", cluster_order = cluster_orders["SRX11133594"], mygene = "TFF1", height = 10, width = 16, equalize_scna_clones = FALSE)
 
-browseURL("results/SRR14800534_filtered_heatmap_phase_scatter_patchwork.pdf")
+browseURL("results/SRX11133594_filtered_heatmap_phase_scatter_patchwork.pdf")
 
-# SRR13884246 ------------------------------
+# SRX10264523 ------------------------------
 
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR13884246_filtered_seu.rds", mygene = "TFF1", height = 10, width = 16, equalize_scna_clones = FALSE, group.by = "SCT_snn_res.0.4")
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX10264523_filtered_seu.rds", mygene = "TFF1", height = 10, width = 16, equalize_scna_clones = FALSE, group.by = "SCT_snn_res.0.4")
 
-browseURL("results/SRR14800534_filtered_heatmap_phase_scatter_patchwork.pdf")
+browseURL("results/SRX11133594_filtered_heatmap_phase_scatter_patchwork.pdf")
 
 # filtered plot files w/ cluster names ------------------------------
 filtered_plot_files <- map2(filtered_seus, cluster_orders, plot_seu_marker_heatmap, group.by = "SCT_snn_res.0.6", equalize_scna_clones = FALSE)
@@ -68,15 +68,15 @@ browseURL("results/heatmap_phase_scatter_patchworks_filtered_0.2.pdf")
 
 # end integrated ------------------------------
 
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800535_filtered_seu.rds", cluster_orders$SRR14800535, mygene = "TFF1", height = 10, width = 16, equalize_scna_clones = FALSE)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133593_filtered_seu.rds", cluster_orders$SRX11133593, mygene = "TFF1", height = 10, width = 16, equalize_scna_clones = FALSE)
 
-browseURL("results/SRR14800535_filtered_heatmap_phase_scatter_patchwork.pdf")
+browseURL("results/SRX11133593_filtered_heatmap_phase_scatter_patchwork.pdf")
 
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800536_wo_15q_19q_filtered_seu.rds", cluster_orders$SRR14800536, mygene = "TFF1", height = 10, width = 16)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133592_wo_15q_19q_filtered_seu.rds", cluster_orders$SRX11133592, mygene = "TFF1", height = 10, width = 16)
 
-browseURL("results/SRR14800536_filtered_heatmap_phase_scatter_patchwork.pdf")
+browseURL("results/SRX11133592_filtered_heatmap_phase_scatter_patchwork.pdf")
 
-SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order = c("G1" = 0,
+SRX11133594_SRX11133593_SRX11133592_wo_15q_cluster_order = c("G1" = 0,
                                                              "S" = 1,
                                                              "G2" = 4,
                                                              "S*" = 5,
@@ -84,9 +84,9 @@ SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order = c("G1" = 0,
                                                              "HSP"= 3)
 
 # undebug(plot_seu_marker_heatmap)
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds", cluster_order = SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order, group.by = "integrated_snn_res.0.2", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds", cluster_order = SRX11133594_SRX11133593_SRX11133592_wo_15q_cluster_order, group.by = "integrated_snn_res.0.2", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
 
-SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order = c("G1" = 0,
+SRX11133594_SRX11133593_SRX11133592_wo_15q_cluster_order = c("G1" = 0,
                                                              "G1" = 5,
                                                              "G1-S" = 1,
                                                              "S" = 2,
@@ -96,17 +96,17 @@ SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order = c("G1" = 0,
                                                              "HSP"= 3)
 
 # undebug(plot_seu_marker_heatmap)
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds", cluster_order = SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order, group.by = "integrated_snn_res.0.4", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds", cluster_order = SRX11133594_SRX11133593_SRX11133592_wo_15q_cluster_order, group.by = "integrated_snn_res.0.4", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
 
 browseURL(test0)
 
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds", group.by = "integrated_snn_res.0.4", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds", group.by = "integrated_snn_res.0.4", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
 
 browseURL(test0)
 
-test0 <- plot_seu_marker_heatmap("output/seurat/SRR14800536_filtered_seu.rds", cluster_orders$SRR14800536, mygene = "TFF1", height = 10, width = 16, equalized_scna_clones = FALSE)
+test0 <- plot_seu_marker_heatmap("output/seurat/SRX11133592_filtered_seu.rds", cluster_orders$SRX11133592, mygene = "TFF1", height = 10, width = 16, equalized_scna_clones = FALSE)
 
-browseURL("results/SRR14800536_filtered_heatmap_phase_scatter_patchwork.pdf")
+browseURL("results/SRX11133592_filtered_heatmap_phase_scatter_patchwork.pdf")
 
 # regressed plot files ------------------------------
 regressed_plot_files <- map(regressed_seus, plot_seu_marker_heatmap, label = "_regressed_")

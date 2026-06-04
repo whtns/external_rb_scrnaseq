@@ -150,7 +150,11 @@ if (args$pileup_only) {
 
 ## VCF creation
 cat('Creating VCFs\n')
-vcfs = lapply(samples, function(sample){vcfR::read.vcfR(glue('{outdir}/pileup/{sample}/cellSNP.base.vcf'), verbose = F)})
+vcfs = lapply(samples, function(sample){
+    vcf <- vcfR::read.vcfR(glue('{outdir}/pileup/{sample}/cellSNP.base.vcf'), verbose = F)
+    vcf@fix[, 1] <- sub("^chr", "", vcf@fix[, 1])
+    vcf
+})
 
 numbat:::genotype(label, samples, vcfs, glue('{outdir}/phasing'))
 

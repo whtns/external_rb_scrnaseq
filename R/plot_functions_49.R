@@ -182,7 +182,7 @@ find_candidate_all_in_clustree_diffexes <- function(clustree_diffexes, gene_loca
 #' @return Differential expression results
 #' @export
 select_genes_from_arbitrary_diffex <- function(oncoprint_input_by_scna_unfiltered) {
-  samples_1q_without_preceding_16q <- c("SRR14800534", "SRR14800535", "SRR14800536")
+  samples_1q_without_preceding_16q <- c("SRX11133594", "SRX11133593", "SRX11133592")
 
   
 #' Perform arrange by recurrence operation

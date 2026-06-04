@@ -49,7 +49,7 @@ interleave_lists <- function(list1, list2) {
 #' @return Function result
 #' @export
 assign_designated_phase_clusters <- function(seu_path, cluster_orders, resolution_dictionary) {
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   file_id <- fs::path_file(seu_path)
 
@@ -71,7 +71,7 @@ plot_seu_gene_heatmap <- function(seu_path, large_clone_comparisons, scna_of_int
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   seu <- readRDS(seu_path)
 

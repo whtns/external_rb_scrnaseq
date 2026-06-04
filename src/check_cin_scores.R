@@ -1,6 +1,6 @@
-# seu <- readRDS("output/seurat/SRR14800534_unfiltered_seu.rds")
+# seu <- readRDS("output/seurat/SRX11133594_unfiltered_seu.rds")
 
-# seu <- readRDS("output/seurat/SRR13884247_unfiltered_seu.rds")
+# seu <- readRDS("output/seurat/SRX10264524_unfiltered_seu.rds")
 
 score_chrom_instability <- function(seu_path) {
 
@@ -31,5 +31,5 @@ score_chrom_instability <- function(seu_path) {
   return(plot_path)
 }
 
-score_chrom_instability("output/seurat/SRR13884242_unfiltered_seu.rds")
+score_chrom_instability("output/seurat/SRX10264519_unfiltered_seu.rds")
 

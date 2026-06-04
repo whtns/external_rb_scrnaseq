@@ -15,7 +15,7 @@ save_cc_space_plot_from_path <- function(seu_path, clone_simplifications, label 
   }
   
   seu <- readRDS(seu_path)
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   plot_cc_space_plot(seu, tumor_id = tumor_id, sample_id = sample_id, ...)
@@ -206,7 +206,7 @@ find_diffex_from_clustree <- function(to_SCT_snn_res. = 1, to_clust = "1_10", sa
 #' @return Differential expression results
 #' @export
 find_all_diffex_from_clustree <- function(table_set, debranched_seus, ...) {
-  tumor_id <- str_extract(names(table_set), "SRR[0-9]*")
+  tumor_id <- str_extract(names(table_set), "SR[RX][0-9]+")
   message(tumor_id)
 
   sample_id <- names(table_set)

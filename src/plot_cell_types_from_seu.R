@@ -101,7 +101,7 @@ wu_celltype_proportions <-
   set_names(path_file(.)) %>%
   map(calc_celltype_proportion)
 
-wu_celltype_proportions$SRR13884246_infercnv_numbat_seu.rds$GT_opt <- as.character(wu_celltype_proportions$SRR13884246_infercnv_numbat_seu.rds$GT_opt)
+wu_celltype_proportions$SRX10264523_infercnv_numbat_seu.rds$GT_opt <- as.character(wu_celltype_proportions$SRX10264523_infercnv_numbat_seu.rds$GT_opt)
 
 wu_celltype_proportions <-
   wu_celltype_proportions %>%

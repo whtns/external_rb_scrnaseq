@@ -33,8 +33,8 @@ myreadxl <- function(excel_file, skip = 0) {
 #' @return Function result
 #' @export
 set_final_seus <- function(interesting_samples) {
-  final_seus <- fs::dir_ls("output/seurat/", regexp = ".*SRR[0-9]*_filtered_seu.rds") %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+  final_seus <- fs::dir_ls("output/seurat/", regexp = ".*SR[RX][0-9]+_filtered_seu.rds") %>%
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   final_seus[names(final_seus) %in% interesting_samples]
 }

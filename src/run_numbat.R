@@ -25,7 +25,7 @@ tau = 0.3
 init_k = 3
   
 study = "wu"
-sample_id = "SRR13884244"
+sample_id = "SRX10264521"
 out_dir = glue("output/numbat/{study}_et_al/{sample_id}")
 
 matrix_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/cellranger/{sample_id}/outs/filtered_feature_bc_matrix/")

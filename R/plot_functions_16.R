@@ -61,7 +61,7 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4, suffix = ""
 	chrom_lengths = seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene)
 	maxChromSize <- max(chrom_lengths)
 	
-	tumor_id <- str_extract(nb_path, "SRR[0-9]*")
+	tumor_id <- str_extract(nb_path, "SR[RX][0-9]+")
 	
 	plot_path <- glue("results/{tumor_id}{suffix}_karyogram.pdf")
 	
@@ -167,7 +167,7 @@ make_rb_scna_ideograms <- function(nb_path, midline_threshold = 0.4, suffix = ""
 #' @export
 make_rb_scna_ideograms_old <- function(consensus_file, suffix = "") {
 	
-	tumor_id <- str_extract(consensus_file, "SRR[0-9]*")
+	tumor_id <- str_extract(consensus_file, "SR[RX][0-9]+")
 	
 	plot_path <- glue("results/{tumor_id}{suffix}_karyogram.pdf")
 	
@@ -402,7 +402,7 @@ make_volcano_plots <- function(myres, mysubtitle, sample_id, color_by_chrom = TR
 make_numbat_heatmaps_old <- function(numbat_rds_file, filter_expressions = NULL, cluster_dictionary, p_min = 0.9, line_width = 0.1, extension = ""){
   #
 
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 

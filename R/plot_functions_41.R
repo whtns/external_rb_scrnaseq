@@ -17,7 +17,7 @@ ora_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, reso
 
   plot_list <- list()
 
-  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(filtered_seu_path, "SR[RX][0-9]+")
 
   filtered_seu <- readRDS(filtered_seu_path)
 
@@ -136,7 +136,7 @@ score_samples_for_celltype_enrichment <- function(unfiltered_seu_path, filtered_
   
   
   #
-  sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(unfiltered_seu_path, "SR[RX][0-9]+")
 
   unfiltered_seu <- readRDS(unfiltered_seu_path) %>%
     Seurat::AddModuleScore(features = celltype_markers, name = "celltype")
@@ -156,7 +156,7 @@ score_samples_for_celltype_enrichment <- function(unfiltered_seu_path, filtered_
   (FeaturePlot(unfiltered_seu, names(celltype_markers)) +
     plot_annotation(subtitle = "unfiltered"))
 
-  file_tag <- str_extract(unfiltered_seu_path, "SRR[0-9]*_[a-z]*")
+  file_tag <- str_extract(unfiltered_seu_path, "SR[RX][0-9]+_[a-z]*")
   dir_create("results/celltype_plots")
   unfiltered_celltype_plot_path <- glue("results/celltype_plots/{file_tag}_featureplot.pdf")
   ggsave(unfiltered_celltype_plot_path, height = 8, width = 8)
@@ -165,7 +165,7 @@ score_samples_for_celltype_enrichment <- function(unfiltered_seu_path, filtered_
   (FeaturePlot(filtered_seu, names(celltype_markers)) +
     plot_annotation(subtitle = "filtered"))
 
-  file_tag <- str_extract(filtered_seu_path, "SRR[0-9]*_[a-z]*")
+  file_tag <- str_extract(filtered_seu_path, "SR[RX][0-9]+_[a-z]*")
   dir_create("results/celltype_plots")
   filtered_celltype_plot_path <- glue("results/celltype_plots/{file_tag}_featureplot.pdf")
   ggsave(filtered_celltype_plot_path, height = 8, width = 8)
@@ -177,7 +177,7 @@ score_samples_for_celltype_enrichment <- function(unfiltered_seu_path, filtered_
   (DimPlot(unfiltered_seu, group.by = paste0(names(celltype_markers), "_id")) +
     plot_annotation(subtitle = "unfiltered"))
 
-  file_tag <- str_extract(unfiltered_seu_path, "SRR[0-9]*_[a-z]*")
+  file_tag <- str_extract(unfiltered_seu_path, "SR[RX][0-9]+_[a-z]*")
   dir_create("results/celltype_plots")
   unfiltered_celltype_plot_path <- glue("results/celltype_plots/{file_tag}_dimplot.pdf")
   ggsave(unfiltered_celltype_plot_path, height = 8, width = 8)
@@ -186,7 +186,7 @@ score_samples_for_celltype_enrichment <- function(unfiltered_seu_path, filtered_
   (DimPlot(filtered_seu, group.by = paste0(names(celltype_markers), "_id")) +
     plot_annotation(subtitle = "filtered"))
 
-  file_tag <- str_extract(filtered_seu_path, "SRR[0-9]*_[a-z]*")
+  file_tag <- str_extract(filtered_seu_path, "SR[RX][0-9]+_[a-z]*")
   dir_create("results/celltype_plots")
   filtered_celltype_plot_path <- glue("results/celltype_plots/{file_tag}_dimplot.pdf")
   ggsave(filtered_celltype_plot_path, height = 8, width = 8)
@@ -292,7 +292,7 @@ simplify_gt <- function(mynb, rb_scnas = c("1" = "1q", "2" = "2p", "6" = "6p", "
   return(mynb)
 }
 
-seu_integrate_rbs <- function(numbat_dir = "output/numbat_sridhar", kept_samples = c("SRR14800534", "SRR14800535", "SRR14800536"), cluster_dictionary = cluster_dictionary) {
+seu_integrate_rbs <- function(numbat_dir = "output/numbat_sridhar", kept_samples = c("SRX11133594", "SRX11133593", "SRX11133592"), cluster_dictionary = cluster_dictionary) {
   numbat_rds_files <- retrieve_numbat_rds_files(numbat_dir, kept_samples)
 
   seus <- map(numbat_rds_files, retrieve_numbat_seurat, cluster_dictionary)

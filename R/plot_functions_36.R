@@ -14,17 +14,17 @@ plot_scna_violins <- function(., readRDS, FeaturePlot, .x, .y, VlnPlot) {
   # plot drivers ------------------------------
 
   samples_1q <- c(
-    "SRR14800534", "SRR14800536", "SRR14800535", "SRR13884249",
-    "SRR17960484"
+    "SRX11133594", "SRX11133592", "SRX11133593", "SRX10264526",
+    "SRX14116944"
   )
 
-  samples_2p <- c("SRR13884249", "SRR17960484", "SRR17960481", "SRR13884247")
+  samples_2p <- c("SRX10264526", "SRX14116944", "SRX14116947", "SRX10264524")
 
-  samples_6p <- c("SRR17960484", "SRR13884247", "SRR17960481")
+  samples_6p <- c("SRX14116944", "SRX10264524", "SRX14116947")
 
-  samples_16q <- c("SRR14800540", "SRR13884242", "SRR14800535", "SRR14800534", "SRR14800543", "SRR14800536", "SRR13884243")
+  samples_16q <- c("SRX11133588", "SRX10264519", "SRX11133593", "SRX11133594", "SRX11133585", "SRX11133592", "SRX10264520")
 
-  # samples_16q <- c("SRR14800540", "SRR14800543", "SRR14800536")
+  # samples_16q <- c("SRX11133588", "SRX11133585", "SRX11133592")
 
   
 #' Generate a feature plot
@@ -37,7 +37,7 @@ plot_markers_featureplot <- function(sample_ids, features) {
     #
 
     seus <- glue("output/seurat/{sample_ids}_filtered_seu.rds") %>%
-      set_names(str_extract(., "SRR[0-9]*")) %>%
+      set_names(str_extract(., "SR[RX][0-9]+")) %>%
       map(readRDS) %>%
       identity()
 
@@ -300,7 +300,7 @@ compile_cis_trans_enrichment_recurrence_by_cluster <- function(enrichment_tables
 score_and_vlnplot_seu <- function(seu_path, nb_path, clone_simplifications, gene_lists, ...) {
   #
 
-  mysample <- str_extract(seu_path, "SRR[0-9]*")
+  mysample <- str_extract(seu_path, "SR[RX][0-9]+")
 
   seu <- readRDS(seu_path)
 
@@ -518,7 +518,7 @@ heatmap_marker_genes_debug <- function(seu, gene_lists, label = "", marker_col =
 heatmap_marker_genes <- function(seu_path, common_genes, gene_lists, label = "", sample_id = NULL, marker_col = "SCT_snn_res.0.4", group.by = c("SCT_snn_res.0.4", "scna", "subtype1", "subtype2"), col_arrangement = c("SCT_snn_res.0.4", "scna")) {
   #
   if (is.null(sample_id)) {
-    sample_id <- str_extract(seu_path, "SRR[0-9]*")
+    sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
   }
 
   seu <- readRDS(seu_path)
@@ -584,7 +584,7 @@ find_diffex_bw_divergent_clusters <- function(sample_id, tumor_id, seu, mynb, to
   return(diffex)
 }
 
-find_diffex_bw_clones_for_each_cluster_integrated <- function(seu_path, kept_samples = c("SRR14800534", "SRR14800535", "SRR14800536"), clone_comparisons = list("2_v_1_16q-" = c("16c", "16b"), "3_v_2_1q+" = c("1b")), location = "cis", scna_of_interest = "1q") {
+find_diffex_bw_clones_for_each_cluster_integrated <- function(seu_path, kept_samples = c("SRX11133594", "SRX11133593", "SRX11133592"), clone_comparisons = list("2_v_1_16q-" = c("16c", "16b"), "3_v_2_1q+" = c("1b")), location = "cis", scna_of_interest = "1q") {
 
   seu <- readRDS(seu_path)
 

@@ -13,7 +13,7 @@ list(
       cluster_comparisons_by_phase_for_disctinct_clones = cluster_comparisons_by_phase_for_disctinct_clones,
       clustree_compilation = clustree_compilation,
       collage_compilation = collage_compilation,
-      fig_02 = fig_02,     # single-sample multi-panel figure (SRR14800534)
+      fig_02 = fig_02,     # single-sample multi-panel figure (SRX11133594)
       fig_02_low_hypoxia_diploid = fig_02_low_hypoxia_diploid,
       fig_04 = fig_04,     # integrated 1q fig for all 1q+ samples
       fig_04_v2 = fig_04_v2, # updated integrated 1q fig for all 1q+ samples
@@ -69,11 +69,11 @@ list(
   tar_target(study_cell_stats, collect_study_metadata()),
 
   # Cell cycle space and clone distribution plots for figure 01.
-  tar_target(fig_01, plot_fig_01(unlist(seus_low_hypoxia)[grepl("SRR14800534", unlist(seus_low_hypoxia))])),
+  tar_target(fig_01, plot_fig_01(unlist(seus_low_hypoxia)[grepl("SRX11133594", unlist(seus_low_hypoxia))])),
 
   tar_target(fig_02_sample_ids,
-    c("SRR27187899", "SRR27187901", "SRR27187902", "SRR13884245",
-      "SRR13884246", "SRR13884249", "SRR14800534", "SRR14800535", "SRR14800536")
+    c("SRX22868105", "SRX22868103", "SRX22868102", "SRX10264522",
+      "SRX10264523", "SRX10264526", "SRX11133594", "SRX11133593", "SRX11133592")
   ),
 
   # Multi-panel single-sample figure: Numbat heatmap, clone tree, UMAPs, CC space, clone distribution.
@@ -335,9 +335,9 @@ list(
   tar_target(
     preferred_numbat_bulk_clones,
     {
-      filt_ids <- str_extract(filtered_numbat_bulk_clones, "SRR[0-9]*")
+      filt_ids <- str_extract(filtered_numbat_bulk_clones, "SR[RX][0-9]+")
       purrr::map_chr(unfiltered_numbat_bulk_clones, function(path) {
-        sid <- str_extract(path, "SRR[0-9]*")
+        sid <- str_extract(path, "SR[RX][0-9]+")
         filt_match <- filtered_numbat_bulk_clones[filt_ids == sid]
         if (length(filt_match) > 0) filt_match[[1]] else path
       })
@@ -345,7 +345,7 @@ list(
   ),
 
   tar_target(nb_paths_s06a,
-    dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
+    dir_ls("output/numbat_sridhar/", regexp = ".*SR[RX][0-9]+_numbat.rds", recurse = TRUE) |> sort()
   ),
 
   tar_target(ideogram_res_s06a_unfiltered,
@@ -359,7 +359,7 @@ list(
   ),
 
   tar_target(nb_paths_s06a_filtered,
-    dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |> sort()
+    dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SR[RX][0-9]+_numbat.rds", recurse = TRUE) |> sort()
   ),
 
   tar_target(ideogram_res_s06a_low_hypoxia,
@@ -373,7 +373,7 @@ list(
       odd_idx <- seq(1, length(ideogram_res_s06a_unfiltered), by = 2)
       plot_paths <- as.character(ideogram_res_s06a_unfiltered[odd_idx])
       tables <- ideogram_res_s06a_unfiltered[odd_idx + 1] |>
-        set_names(str_extract(plot_paths, "SRR[0-9]*"))
+        set_names(str_extract(plot_paths, "SR[RX][0-9]+"))
       writexl::write_xlsx(tables, "results/table_s12.xlsx")
       qpdf::pdf_combine(plot_paths, "results/fig_s06a.pdf")
       list("results/fig_s06a.pdf", "results/table_s12.xlsx")
@@ -399,7 +399,7 @@ list(
   ),
 
   tar_target(filtering_timelines,
-    qpdf::pdf_combine(dir_ls("results", regexp = ".*SRR[0-9]*_filtering_timeline.pdf"), "results/filtering_timelines.pdf")
+    qpdf::pdf_combine(dir_ls("results", regexp = ".*SR[RX][0-9]+_filtering_timeline.pdf"), "results/filtering_timelines.pdf")
   ),
 
   # --- clone distribution and pearls ---
@@ -575,7 +575,7 @@ list(
   tar_target(fig_04_09,
     plot_fig_04_05(
       c("output/seurat/integrated_2p/seurat_2p_integrated_duo.rds",
-        "output/seurat/SRR13884247_branch_6_filtered_seu.rds"),
+        "output/seurat/SRX10264524_branch_6_filtered_seu.rds"),
       corresponding_clusters_enrichments[[6]],
       plot_path = "results/fig_04_09.pdf",
       integrated_seu_paths = integrated_seus_2p,

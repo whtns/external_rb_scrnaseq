@@ -164,7 +164,7 @@ extract_full_segmentation <- function(numbat_rds_files, table_path = "results/ta
 	
 	segmentation_table <- 
 		numbat_rds_files |> 
-		set_names(str_extract(numbat_rds_files, "SRR[0-9]*")) |> 
+		set_names(str_extract(numbat_rds_files, "SR[RX][0-9]+")) |> 
 		map(retrieve_segmentation) |> 
 		# dplyr::bind_rows(.id = "sample_id") |> 
 		identity()
@@ -177,7 +177,7 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
 
   file_id <- fs::path_file(seu_path)
   
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   
@@ -231,7 +231,7 @@ plot_seu_marker_heatmap_by_scna <- function(seu_path = NULL, cluster_order = NUL
 
   if(!is.null(nb_paths)){
   	nb_paths <- nb_paths %>%
-  		set_names(str_extract(., "SRR[0-9]*"))
+  		set_names(str_extract(., "SR[RX][0-9]+"))
   	
   	nb_path <- nb_paths[[tumor_id]]	
   }
@@ -668,7 +668,7 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
 
   file_id <- fs::path_file(seu_path)
 
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   
@@ -684,7 +684,7 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
   seu <- readRDS(seu_path)
 
   nb_paths <- nb_paths %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   nb_path <- nb_paths[[tumor_id]]
 
@@ -971,9 +971,9 @@ run_hypoxia_clustering = FALSE, cluster_resolutions = seq(0.2, 1, by = 0.2)) {
 dummy_cluster_order <- function(seu_path, kept_phases = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), integrated = FALSE) {
   file_id <- fs::path_file(seu_path)
   
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   if(integrated){
     resolution = "integrated_snn_res.0.4"
@@ -1012,7 +1012,7 @@ numeric_col_fun <- function(myvec, color) {
 plot_hypoxia_score <- function(seu_path, threshold = 0.5) {
     if (is.na(seu_path)) return(NA_character_)
     seu <- readRDS(seu_path)
-    sample_id <- str_extract(seu_path, "SRR[0-9]*")
+    sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
     p <- seu@meta.data |> 
         tibble::rownames_to_column("cell") |> 
         dplyr::arrange(hypoxia_score) |> 

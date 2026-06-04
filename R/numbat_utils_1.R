@@ -6,8 +6,8 @@
 #' @return Function result
 #' @export
 retrieve_numbat_rds_files <- function(numbat_dir, kept_samples = NULL) {
-  numbat_rds_files <- fs::dir_ls(numbat_dir, regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+  numbat_rds_files <- fs::dir_ls(numbat_dir, regexp = ".*SR[RX][0-9]+_numbat.rds", recurse = TRUE) %>%
+    set_names(str_extract(., "SR[RX][0-9]+"))
   if (!is.null(kept_samples)) {
     numbat_rds_files <- numbat_rds_files[names(numbat_rds_files) %in% kept_samples]
   }
@@ -21,8 +21,8 @@ retrieve_numbat_rds_files <- function(numbat_dir, kept_samples = NULL) {
 #' @return Modified Seurat object
 #' @export
 retrieve_seus <- function(seu_dir, kept_samples = NULL) {
-  seus <- fs::dir_ls(seu_dir, regexp = "./SRR[0-9]*_seu.rds", recurse = TRUE) %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+  seus <- fs::dir_ls(seu_dir, regexp = "SR[RX][0-9]+_filtered_seu\\.rds", recurse = TRUE) %>%
+    set_names(str_extract(., "SR[RX][0-9]+"))
   if (!is.null(kept_samples)) {
     seus <- seus[names(seus) %in% kept_samples]
   }
@@ -51,7 +51,7 @@ retrieve_numbat_plot_type <- function(numbat_plots, plot_type = "exp_roll_clust.
 #' @return Function result
 #' @export
 reroute_done_to_results_pdf <- function(numbat_rds_file, label = "") {
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
   numbat_pdfs <- dir_ls(glue("results/{numbat_dir}/{sample_id}/"), glob = "*.pdf")
   results_file <- glue("results/{numbat_dir}/{sample_id}{label}.pdf")

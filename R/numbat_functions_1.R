@@ -83,7 +83,7 @@ pull_branches <- function(branch_dictionary_file = "data/branch_dictionary.csv")
 #' @export
 debranch_seus <- function(filtered_seus, branch_dictionary, ...) {
   filtered_seus <- filtered_seus %>%
-    purrr::set_names(str_extract(., "SRR[0-9]*"))
+    purrr::set_names(str_extract(., "SR[RX][0-9]+"))
 
   debranched_seus <- map(filtered_seus, split_seu_by_branch, branch_dictionary, ...)
 
@@ -137,7 +137,7 @@ prep_seu_branch <- function(debranched_seu, ...) {
 #' @return Modified Seurat object
 #' @export
 split_seu_by_branch <- function(seu_path, branches, ...) {
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   branches <- branches[[tumor_id]]
 

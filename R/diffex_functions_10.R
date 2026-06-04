@@ -131,30 +131,30 @@ collect_study_metadata <- function() {
   #
 
   seus <-
-    dir_ls("output/seurat/", regexp = "\\/SRR[0-9]*_seu.rds") %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    dir_ls("output/seurat/", regexp = "\\/SR[RX][0-9]+_seu.rds") %>%
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   # collin ------------------------------
 
-  collin_cell_stats <- seus[c("SRR13633759", "SRR13633760", "SRR13633761", "SRR13633762")] %>%
+  collin_cell_stats <- seus[c("SRX10031191", "SRX10031192", "SRX10031193", "SRX10031194")] %>%
     map_dfr(retrieve_cell_stats, .id = "sample_id")
 
   # field ------------------------------
 
-  field_cell_stats <- seus[c("SRR17960480", "SRR17960481", "SRR17960482", "SRR17960483", "SRR17960484")] %>%
+  field_cell_stats <- seus[c("SRX14116948", "SRX14116947", "SRX14116946", "SRX14116945", "SRX14116944")] %>%
     map_dfr(retrieve_cell_stats, .id = "sample_id")
 
   # wu ------------------------------
 
-  wu_cell_stats <- seus[c("SRR13884240", "SRR13884241", "SRR13884242", "SRR13884243", "SRR13884244", "SRR13884245", "SRR13884246", "SRR13884247", "SRR13884248", "SRR13884249")] %>%
+  wu_cell_stats <- seus[c("SRX10264517", "SRX10264518", "SRX10264519", "SRX10264520", "SRX10264521", "SRX10264522", "SRX10264523", "SRX10264524", "SRX10264525", "SRX10264526")] %>%
     map_dfr(retrieve_cell_stats, .id = "sample_id")
 
   # yang ------------------------------
 
-  yang_cell_stats <- seus[c("SRR14800534", "SRR14800535", "SRR14800536", "SRR14800537", "SRR14800538", "SRR14800539", "SRR14800540", "SRR14800541", "SRR14800542", "SRR14800543")] %>%
+  yang_cell_stats <- seus[c("SRX11133594", "SRX11133593", "SRX11133592", "SRX11133591", "SRX11133590", "SRX11133589", "SRX11133588", "SRX11133587", "SRX11133586", "SRX11133585")] %>%
     map_dfr(retrieve_cell_stats, .id = "sample_id")
 
-  liu_cell_stats <- seus[c("SRR27187899", "SRR27187900", "SRR27187901", "SRR27187902")] %>%
+  liu_cell_stats <- seus[c("SRX22868105", "SRX22868104", "SRX22868103", "SRX22868102")] %>%
     map_dfr(retrieve_cell_stats, .id = "sample_id")
 
   # combined ------------------------------

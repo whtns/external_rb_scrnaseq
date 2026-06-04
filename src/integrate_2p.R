@@ -14,7 +14,7 @@ seu <- readRDS(seu_path)
 seus <- SplitObject(seu, split.by = "batch")
 
 seu_duo <-
-	seus[c("SRR13884248", "SRR17960484")] |> 
+	seus[c("SRX10264525", "SRX14116944")] |> 
 	integration_workflow() |> 
 	find_all_markers(seurat_assay = "integrated")
 

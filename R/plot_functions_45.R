@@ -17,10 +17,10 @@ tidy_eval_arrange <- function(.data, ...) {
 #' @param group.by Character string (default: "SCT_snn_res.0.6")
 #' @return ggplot2 plot object
 #' @export
-run_speckle <- function(seu_path = "output/seurat/SRR14800534_filtered_seu.rds", group.by = "SCT_snn_res.0.6") {
+run_speckle <- function(seu_path = "output/seurat/SRX11133594_filtered_seu.rds", group.by = "SCT_snn_res.0.6") {
   #
   seu <- readRDS(seu_path)
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   if (!"sample_id" %in% colnames(seu@meta.data)) {
     seu <- AddMetaData(seu, sample(2, ncol(seu), replace = TRUE), "sample_id")

@@ -54,11 +54,11 @@ table_cluster_markers <- function(seu, assay = "SCT") {
 #' @export
 make_numbat_plot_files <- function(seu_path, numbat_rds_files, cluster_dictionary, filter_expressions = NULL, clone_simplifications = NULL, extension = "") {
 
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   tryCatch({
 
-  names(numbat_rds_files) <- str_extract(numbat_rds_files, "SRR[0-9]*")
+  names(numbat_rds_files) <- str_extract(numbat_rds_files, "SR[RX][0-9]+")
   numbat_rds_file <- numbat_rds_files[[sample_id]]
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]

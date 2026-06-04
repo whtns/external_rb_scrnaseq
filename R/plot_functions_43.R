@@ -54,7 +54,7 @@ plot_celltype_predictions <- function(seu_path, sample_id, plae_ref = NULL, grou
   if (inherits(seu[[DefaultAssay(seu)]], "Assay5")) {
     seu_mat <- GetAssayData(seu, layer = "data")
   } else {
-    seu_mat <- GetAssayData(seu, slot = "data")
+    seu_mat <- GetAssayData(seu, layer = "data")
   }
 
   sub_annotable <-

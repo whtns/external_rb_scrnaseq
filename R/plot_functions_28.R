@@ -52,10 +52,10 @@ make_expression_heatmap_comparison <- function(large_numbat_pdfs, heatmaps, mont
     identity()
 
   expression_files <- map(large_numbat_pdfs, 6)
-  names(expression_files) <- str_extract(expression_files, "SRR[0-9]*")
+  names(expression_files) <- str_extract(expression_files, "SR[RX][0-9]+")
 
   heatmaps <- map(heatmaps, 1)
-  names(heatmaps) <- str_extract(heatmaps, "SRR[0-9]*")
+  names(heatmaps) <- str_extract(heatmaps, "SR[RX][0-9]+")
   
   heatmaps <- heatmaps[names(heatmaps) %in% names(expression_files)]
   

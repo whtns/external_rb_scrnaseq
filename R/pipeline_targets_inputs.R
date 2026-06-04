@@ -9,7 +9,7 @@ pipeline_targets_inputs <- c(
   tarchetypes::tar_files(seus_all, retrieve_seus("output/seurat/"), format = "file"),
   tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples), format = "file"),
   tarchetypes::tar_files(numbat_rds_filtered_files, retrieve_numbat_rds_files("output/numbat_sridhar_filtered/", interesting_samples), format = "file"),
-  # Subset of Seurat files for interesting_samples; entries are named by SRR ID.
+  # Subset of Seurat files for interesting_samples; entries are named by SRX ID.
   tarchetypes::tar_files(seus_interesting, retrieve_seus("output/seurat/", interesting_samples), format = "file"),
 
   list(
@@ -17,119 +17,106 @@ pipeline_targets_inputs <- c(
     # --- sample definitions ---
     tar_target(interesting_samples,
       c(
-        "SRR13884242", 
-        "SRR13884243", 
-        "SRR13884244", 
-        "SRR13884245",
-        "SRR13884246", 
-        "SRR13884247", 
-        "SRR13884248", 
-        "SRR13884249",
-        "SRR14800534", 
-        "SRR14800535", 
-        "SRR14800536",
-        "SRR14800540", 
-        "SRR14800541", 
-        "SRR14800543",
-        "SRR17960481", 
-        "SRR17960484",
-        "SRR27187899", 
-        "SRR27187900", 
-        "SRR27187901", 
-        "SRR27187902",
-        "SRR14800538",  # no numbat output; needs full pipeline re-run
-        "SRR14800539",
-        "SRR17960482",
-        "SRR17960483",
-        "SRR17960480",
-        "SRR14800542",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
-        "SRR13633760",  # numbat stopped: no CNV after entropy filter; needs re-run with higher max_entropy
-        "SRR13633762",
-        "SRR13884240",
-        "SRR13884241"
+        "SRX10031194",
+        "SRX10264517", "SRX10264518", "SRX10264519", "SRX10264520",
+        "SRX10264521", "SRX10264522", "SRX10264523", "SRX10264524",
+        "SRX10264525", "SRX10264526",
+        "SRX11133585", "SRX11133587", "SRX11133588", "SRX11133589",
+        "SRX11133592", "SRX11133593", "SRX11133594",
+        "SRX14116944", "SRX14116945", "SRX14116946",
+        "SRX14116947", "SRX14116948",
+        "SRX22868102", "SRX22868103", "SRX22868104", "SRX22868105"
       )
     ),
 
     # tar_target(interesting_samples,
     #   c(
-    #     "SRR13884242", "SRR13884243", "SRR13884244", "SRR13884245",
-    #     "SRR13884246", "SRR13884247", "SRR13884248", "SRR13884249",
-    #     "SRR14800534", "SRR14800535", "SRR14800536",
-    #     "SRR14800540", "SRR14800541", "SRR14800543",
-    #     "SRR17960481", "SRR17960484",
-    #     "SRR27187899", "SRR27187900", "SRR27187901", "SRR27187902"
+    #     "SRX10264519", "SRX10264520", "SRX10264521", "SRX10264522",
+    #     "SRX10264523", "SRX10264524", "SRX10264525", "SRX10264526",
+    #     "SRX11133594", "SRX11133593", "SRX11133592",
+    #     "SRX11133588", "SRX11133587", "SRX11133585",
+    #     "SRX14116947", "SRX14116944",
+    #     "SRX22868105", "SRX22868104", "SRX22868103", "SRX22868102"
     #   )
     # ),
 
     tar_target(original_seus,
       c(
-        "output/seurat/SRR13884242_unfiltered_seu.rds",
-        "output/seurat/SRR13884243_unfiltered_seu.rds",
-        "output/seurat/SRR13884246_unfiltered_seu.rds",
-        "output/seurat/SRR13884247_unfiltered_seu.rds",
-        "output/seurat/SRR13884248_unfiltered_seu.rds",
-        "output/seurat/SRR13884249_unfiltered_seu.rds",
-        "output/seurat/SRR14800534_unfiltered_seu.rds",
-        "output/seurat/SRR14800535_unfiltered_seu.rds",
-        "output/seurat/SRR14800536_unfiltered_seu.rds",
-        "output/seurat/SRR14800540_unfiltered_seu.rds",
-        "output/seurat/SRR14800541_unfiltered_seu.rds",
-        "output/seurat/SRR14800543_unfiltered_seu.rds",
-        "output/seurat/SRR17960481_unfiltered_seu.rds",
-        "output/seurat/SRR17960484_unfiltered_seu.rds",
-        "output/seurat/SRR27187899_unfiltered_seu.rds",
-        "output/seurat/SRR27187902_unfiltered_seu.rds"
+        "output/seurat/SRX10264519_filtered_seu.rds",
+        "output/seurat/SRX10264520_filtered_seu.rds",
+        "output/seurat/SRX10264523_filtered_seu.rds",
+        "output/seurat/SRX10264524_filtered_seu.rds",
+        "output/seurat/SRX10264525_filtered_seu.rds",
+        "output/seurat/SRX10264526_filtered_seu.rds",
+        "output/seurat/SRX11133594_filtered_seu.rds",
+        "output/seurat/SRX11133593_filtered_seu.rds",
+        "output/seurat/SRX11133592_filtered_seu.rds",
+        "output/seurat/SRX11133588_filtered_seu.rds",
+        "output/seurat/SRX11133587_filtered_seu.rds",
+        "output/seurat/SRX11133585_filtered_seu.rds",
+        "output/seurat/SRX14116947_filtered_seu.rds",
+        "output/seurat/SRX14116944_filtered_seu.rds",
+        "output/seurat/SRX22868105_filtered_seu.rds",
+        "output/seurat/SRX22868102_filtered_seu.rds"
       )
     ),
 
     # Samples excluded from analysis (lack a diploid ancestral clone).
     tar_target(excluded_samples,
-      c("SRR14800541")  # no diploid ancestral clone; only diploid are B2M and APOE
+      c("SRX11133587")  # no diploid ancestral clone; only diploid are B2M and APOE
     ),
 
     # IDs for per-branch debranched Seurat objects.
+    # New samples (SRX10264517/18, SRX11133589, SRX14116945/46/48, SRX22868103/04)
+    # have no branch analysis yet — listed by sample ID only as placeholders.
     tar_target(debranched_ids,
       c(
-        "SRR13884242", "SRR13884243",
-        "SRR13884246_branch_5", "SRR13884246_branch_6",
-        "SRR13884247_branch_6", "SRR13884247_branch_4", "SRR13884247_branch_5",
-        "SRR13884248", "SRR13884249",
-        "SRR14800534", "SRR14800535", "SRR14800536",
-        "SRR14800540_branch_2", "SRR14800540_branch_3",
-        "SRR14800541_branch_4", "SRR14800541_branch_7",
-        "SRR14800543_branch_3", "SRR14800543_branch_4",
-        "SRR17960481", "SRR17960484",
-        "SRR27187899",
-        "SRR27187902_branch_3", "SRR27187902_branch_4"
+        "SRX10031194",
+        "SRX10264517", "SRX10264518",
+        "SRX10264519", "SRX10264520",
+        "SRX10264521", "SRX10264522",
+        "SRX10264523_branch_5", "SRX10264523_branch_6",
+        "SRX10264524_branch_6", "SRX10264524_branch_4", "SRX10264524_branch_5",
+        "SRX10264525", "SRX10264526",
+        "SRX11133585_branch_3", "SRX11133585_branch_4",
+        "SRX11133587_branch_4", "SRX11133587_branch_7",
+        "SRX11133588_branch_2", "SRX11133588_branch_3",
+        "SRX11133589",
+        "SRX11133592", "SRX11133593", "SRX11133594",
+        "SRX14116944", "SRX14116945", "SRX14116946",
+        "SRX14116947", "SRX14116948",
+        "SRX22868102_branch_3", "SRX22868102_branch_4",
+        "SRX22868103", "SRX22868104", "SRX22868105"
       )
     ),
 
-    # Which samples carry each SCNA.
+    # Which samples carry each SCNA (based on numbat results for known samples).
+    # New samples without confirmed SCNA status are omitted until analyzed.
     tar_target(rb_scna_samples,
       list(
-        "1q"  = c("SRR13884246", "SRR13884249", "SRR14800534", "SRR14800535", "SRR14800536"),
-        "2p"  = c("SRR13884246", "SRR13884247", "SRR13884248", "SRR13884249", "SRR17960481", "SRR17960484"),
-        "6p"  = c("SRR13884247", "SRR13884248", "SRR17960484"),
-        "16q" = c("SRR14800534", "SRR14800535", "SRR14800536")
+        "1q"  = c("SRX10264523", "SRX10264526", "SRX11133594", "SRX11133593", "SRX11133592"),
+        "2p"  = c("SRX10264523", "SRX10264524", "SRX10264525", "SRX10264526", "SRX14116947", "SRX14116944"),
+        "6p"  = c("SRX10264524", "SRX10264525", "SRX14116944"),
+        "16q" = c("SRX11133594", "SRX11133593", "SRX11133592")
       )
     ),
 
-    # Durable, LLM-readable mapping of branch IDs to SRR IDs.
+    # Durable, LLM-readable mapping of branch IDs to SRX IDs.
     tarchetypes::tar_file(branch_registry_file, "config/branch_registry.csv"),
     tar_target(branch_registry,
       readr::read_csv(branch_registry_file, show_col_types = FALSE)
     ),
     tar_target(branch_registry_validated,
       {
-        missing_srr <- setdiff(interesting_samples, unique(branch_registry$srr_id))
+        missing_srx <- setdiff(interesting_samples, unique(branch_registry$srx_id))
         stopifnot(
           !anyNA(branch_registry$branch_id),
-          !anyNA(branch_registry$srr_id),
+          !anyNA(branch_registry$srx_id),
           !anyNA(branch_registry$seu_path),
           !anyDuplicated(branch_registry$branch_id),
           !anyDuplicated(branch_registry$seu_path),
-          all(startsWith(branch_registry$branch_id, branch_registry$srr_id)),
-          length(missing_srr) == 0
+          all(startsWith(branch_registry$branch_id, branch_registry$srx_id)),
+          length(missing_srx) == 0
         )
         branch_registry
       }
@@ -163,7 +150,7 @@ pipeline_targets_inputs <- c(
     tar_target(large_clone_simplifications, yaml::read_yaml(large_clone_simplifications_file)),
     tar_target(
       large_clone_simplifications_per_sample,
-      large_clone_simplifications[stringr::str_extract(numbat_rds_files, "SRR[0-9]+")],
+      large_clone_simplifications[stringr::str_extract(numbat_rds_files, "SR[RX][0-9]+")],
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
@@ -171,7 +158,7 @@ pipeline_targets_inputs <- c(
     tar_target(large_filter_expressions, yaml::read_yaml(large_filter_expressions_file)),
     tar_target(
       large_filter_expressions_per_sample,
-      large_filter_expressions[stringr::str_extract(numbat_rds_files, "SRR[0-9]+")],
+      large_filter_expressions[stringr::str_extract(numbat_rds_files, "SR[RX][0-9]+")],
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
@@ -185,7 +172,7 @@ pipeline_targets_inputs <- c(
     tar_target(cluster_dictionary, read_cluster_dictionary(cluster_dictionary_file)),
     tar_target(
       cluster_dictionary_per_sample,
-      cluster_dictionary[stringr::str_extract(numbat_rds_files, "SRR[0-9]+")],
+      cluster_dictionary[stringr::str_extract(numbat_rds_files, "SR[RX][0-9]+")],
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),

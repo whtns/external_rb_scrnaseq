@@ -27,21 +27,21 @@ scna_map_values <- tibble::tibble(
 
 # Values tibble for tarchetypes::tar_map() over debranched sample/branch IDs.
 # Columns:
-#   id       - sample/branch label used in target names (e.g. clustree_SRR13884242)
+#   id       - sample/branch label used in target names (e.g. clustree_SRX10264519)
 #   seu_path - path to the filtered Seurat RDS for that sample/branch
 debranched_map_values <- tibble::tibble(
   id = c(
-    "SRR13884242",          "SRR13884243",
-    "SRR13884246_branch_5", "SRR13884246_branch_6",
-    "SRR13884247_branch_6", "SRR13884247_branch_4", "SRR13884247_branch_5",
-    "SRR13884248",          "SRR13884249",
-    "SRR14800534",          "SRR14800535",          "SRR14800536",
-    "SRR14800540_branch_2", "SRR14800540_branch_3",
-    "SRR14800541_branch_4", "SRR14800541_branch_7",
-    "SRR14800543_branch_3", "SRR14800543_branch_4",
-    "SRR17960481",          "SRR17960484",
-    "SRR27187899",
-    "SRR27187902_branch_3", "SRR27187902_branch_4"
+    "SRX10264519",          "SRX10264520",
+    "SRX10264523_branch_5", "SRX10264523_branch_6",
+    "SRX10264524_branch_6", "SRX10264524_branch_4", "SRX10264524_branch_5",
+    "SRX10264525",          "SRX10264526",
+    "SRX11133594",          "SRX11133593",          "SRX11133592",
+    "SRX11133588_branch_2", "SRX11133588_branch_3",
+    "SRX11133587_branch_4", "SRX11133587_branch_7",
+    "SRX11133585_branch_3", "SRX11133585_branch_4",
+    "SRX14116947",          "SRX14116944",
+    "SRX22868105",
+    "SRX22868102_branch_3", "SRX22868102_branch_4"
   )
 ) |>
   dplyr::mutate(seu_path = paste0("output/seurat/", id, "_filtered_seu.rds"))

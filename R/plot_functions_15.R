@@ -144,7 +144,7 @@ plot_diffex_genes_on_split_integrated_seu <- function(plot_path = "results/fig_0
 		dplyr::filter(symbol %in% top_genes) |> 
 		dplyr::mutate(mean_FC = abs_mean_FC*sign) |> 
 		dplyr::arrange(mean_FC) |> 
-		dplyr::mutate(tumor_id = str_extract(sample_id, "SRR[0-9]*")) |> 
+		dplyr::mutate(tumor_id = str_extract(sample_id, "SR[RX][0-9]+")) |> 
 		ggplot(aes(y = symbol, x = tumor_id, size = neg_log_p_val_adj, color = avg_log2FC)) + 
 		geom_point() +
 		theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
@@ -219,7 +219,7 @@ plot_fig_08d <- function(plot_path = "results/fig_08d.pdf", integrated_seu_path 
 		dplyr::filter(symbol %in% top_genes) |> 
 		dplyr::mutate(mean_FC = abs_mean_FC*sign) |> 
 		dplyr::arrange(mean_FC) |> 
-		dplyr::mutate(tumor_id = str_extract(sample_id, "SRR[0-9]*")) |> 
+		dplyr::mutate(tumor_id = str_extract(sample_id, "SR[RX][0-9]+")) |> 
 		ggplot(aes(y = symbol, x = tumor_id, size = neg_log_p_val_adj, color = avg_log2FC)) + 
 		geom_point() +
 		theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
@@ -296,7 +296,7 @@ simplify_gt_col <- function(gt_val, scna_key) {
 make_integrated_numbat_plots <- function(seu_path, extension = "") {
   #
 
-  sample_id <- str_extract(seu_path, "SRR.*(?=_seu.rds)")
+  sample_id <- str_extract(seu_path, "SRX.*(?=_seu.rds)")
 
   dir_create(glue("results/numbat_sridhar/{sample_id}"))
 

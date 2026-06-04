@@ -8,17 +8,17 @@ library(ggraph)
 library(targets)
 tar_load(c("filtered_seus"))
 
-# seu <- readRDS("output/seurat/SRR14800534_SRR14800535_SRR14800536_seu.rds")
+# seu <- readRDS("output/seurat/SRX11133594_SRX11133593_SRX11133592_seu.rds")
 #
 # seu <- seu[,seu$scna != "16q-,1q+,15q+,19q-"]
 #
-# saveRDS(seu, "output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds")
+# saveRDS(seu, "output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds")
 
 filtered_seus <-
-  c(filtered_seus, "output/seurat/SRR14800536_wo_15q_19q_filtered_seu.rds") %>%
+  c(filtered_seus, "output/seurat/SRX11133592_wo_15q_19q_filtered_seu.rds") %>%
   set_names(str_extract(., "SRR[0-9]*"))
 
-run_speckle <- function(seu_path = "output/seurat/SRR14800534_filtered_seu.rds", group.by = "SCT_snn_res.0.6") {
+run_speckle <- function(seu_path = "output/seurat/SRX11133594_filtered_seu.rds", group.by = "SCT_snn_res.0.6") {
   # browser()
   seu <- readRDS(seu_path)
   sample_id = str_extract(seu_path, "SRR[0-9]*")
@@ -51,11 +51,11 @@ run_speckle <- function(seu_path = "output/seurat/SRR14800534_filtered_seu.rds",
 
 safe_run_speckle <- purrr::safely(run_speckle)
 
-# run_speckle("output/seurat/SRR14800534_filtered_seu.rds")
+# run_speckle("output/seurat/SRX11133594_filtered_seu.rds")
 
-seu_paths <- c("output/seurat/SRR14800534_filtered_seu.rds",
-               "output/seurat/SRR14800535_filtered_seu.rds",
-               "output/seurat/SRR14800536_wo_15q_19q_filtered_seu.rds")
+seu_paths <- c("output/seurat/SRX11133594_filtered_seu.rds",
+               "output/seurat/SRX11133593_filtered_seu.rds",
+               "output/seurat/SRX11133592_wo_15q_19q_filtered_seu.rds")
 
 # propeller results ------------------------------
 
@@ -144,7 +144,7 @@ make_clustree_for_speckle_set <- function(seu_path, mylabel = "sample_id", assay
 safe_make_clustree_for_speckle_set <- safely(make_clustree_for_speckle_set)
 
 debug(make_clustree_for_speckle_set)
-combined_clustree <- safe_make_clustree_for_speckle_set("output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds", assay = "integrated", mylabel = "integrated_1q+_16q-")
+combined_clustree <- safe_make_clustree_for_speckle_set("output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds", assay = "integrated", mylabel = "integrated_1q+_16q-")
 
 # combined_clustree$result + labs(title = "integrated_1q+_16q-")
 
@@ -365,7 +365,7 @@ speckle_seu_marker_heatmap <- function(seu, cluster_order = NULL, group.by = "SC
 }
 
 
-# SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order = c("G1" = 0,
+# SRX11133594_SRX11133593_SRX11133592_wo_15q_cluster_order = c("G1" = 0,
 #                                                              "G1" = 1,
 #                                                              "S" = 2,
 #                                                              "G2" = 3,
@@ -373,10 +373,10 @@ speckle_seu_marker_heatmap <- function(seu, cluster_order = NULL, group.by = "SC
 #                                                              "S*" = 5)
 
 # undebug(speckle_seu_marker_heatmap)
-# test0 <- speckle_seu_marker_heatmap("output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds", cluster_order = SRR14800534_SRR14800535_SRR14800536_wo_15q_cluster_order, group.by = "integrated_snn_res.0.2", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
+# test0 <- speckle_seu_marker_heatmap("output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds", cluster_order = SRX11133594_SRX11133593_SRX11133592_wo_15q_cluster_order, group.by = "integrated_snn_res.0.2", assay = "integrated", mygene = "TFF1", height = 10, width = 16)
 
 
-seu <- readRDS(glue("output/seurat/SRR14800534_SRR14800535_SRR14800536_wo_15q_seu.rds"))
+seu <- readRDS(glue("output/seurat/SRX11133594_SRX11133593_SRX11133592_wo_15q_seu.rds"))
 heatmap_plots <- list()
 for (i in glue("integrated_snn_res.{seq(0.2, 2.0, by = 0.2)}")){
   print(i)

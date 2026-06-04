@@ -12,10 +12,10 @@
 #' @return ggplot2 plot object
 #' @export
 make_numbat_heatmaps <- function(seu_path, numbat_rds_files, p_min = 0.9, line_width = 0.1, extension = "", midline_threshold = 0.4, show_segment_names_on_x = FALSE, numbat_rds_filtered_files = NULL) {
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
-  names(numbat_rds_files) <- str_extract(numbat_rds_files, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
+  names(numbat_rds_files) <- str_extract(numbat_rds_files, "SR[RX][0-9]+")
   if (!is.null(numbat_rds_filtered_files) && length(numbat_rds_filtered_files) > 0) {
-    names(numbat_rds_filtered_files) <- str_extract(numbat_rds_filtered_files, "SRR[0-9]*")
+    names(numbat_rds_filtered_files) <- str_extract(numbat_rds_filtered_files, "SR[RX][0-9]+")
     filt_idx <- which(names(numbat_rds_filtered_files) == sample_id)
     if (length(filt_idx) > 0) {
       numbat_rds_files[[sample_id]] <- numbat_rds_filtered_files[[filt_idx[[1]]]]

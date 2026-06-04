@@ -13,7 +13,7 @@
 score_and_heatmap_seu <- function(seu_path, gene_lists, group.by = "SCT_snn_res.0.4", leiden_cluster_file = NULL) {
   #
 
-  mysample <- str_extract(seu_path, "SRR[0-9]*")
+  mysample <- str_extract(seu_path, "SR[RX][0-9]+")
 
   # for(geneset in names(gene_lists)){
   #   # seu <- Seurat::MetaFeature(seu, features = gene_lists[[geneset]], meta.name = geneset)

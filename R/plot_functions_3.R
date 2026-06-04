@@ -100,11 +100,11 @@ annotate_filter_reason <- function(
 
 filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove, extension = "", leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv", ...) {
   
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
   dir_create(glue("results/{numbat_dir}"))
   dir_create(glue("results/{numbat_dir}/{sample_id}"))
-  names(seus) <- str_extract(seus, "SRR[0-9]*")
+  names(seus) <- str_extract(seus, "SR[RX][0-9]+")
   seu_path <- seus[[sample_id]]
   if (is.null(seu_path) || is.na(seu_path)) {
     message("No unfiltered seu for ", sample_id, "; returning NA")
@@ -240,8 +240,8 @@ filter_cluster_save_seu <- function(numbat_rds_file, seus, cluster_dictionary, l
 #' @return Modified Seurat object
 #' @export
 prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone_simplifications, filter_expressions = NULL, cells_to_remove = NULL, extension = "") {
-  
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  options(future.globals.maxSize = Inf)
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
   dir_create(glue("results/{numbat_dir}"))
   dir_create(glue("results/{numbat_dir}/{sample_id}"))
@@ -358,7 +358,7 @@ prep_unfiltered_seu <- function(numbat_rds_file, cluster_dictionary, large_clone
 #' @return Modified Seurat object
 #' @export
 regress_filtered_seu <- function(filtered_seu_path) {
-  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(filtered_seu_path, "SR[RX][0-9]+")
   regressed_seu_path <- str_replace(filtered_seu_path, "_filtered", "_regressed")
   regressed_seu <- readRDS(filtered_seu_path)
 
@@ -433,7 +433,7 @@ extract_filter_metadata <- function(
   large_clone_simplifications
 ) {
   if (is.na(seu_path)) return(NA)
-  sample_id <- stringr::str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- stringr::str_extract(seu_path, "SR[RX][0-9]+")
   seu <- readRDS(seu_path)
 
   meta <- seu@meta.data |>
@@ -644,7 +644,7 @@ assemble_diploid_seu <- function(filtered_seus_paths,
                                  integrate = TRUE) {
   paths <- unlist(filtered_seus_paths)
   paths <- paths[!is.na(paths)]
-  sample_ids <- stringr::str_extract(paths, "SRR[0-9]+")
+  sample_ids <- stringr::str_extract(paths, "SR[RX][0-9]+")
 
   cone_seus <- purrr::imap(
     purrr::set_names(paths, sample_ids),
@@ -699,7 +699,7 @@ assemble_diploid_seu <- function(filtered_seus_paths,
 }
 
 merge_hypoxia_with_diploid <- function(hypoxia_seu_path, diploid_seu_path, slug) {
-  sample_id <- stringr::str_extract(hypoxia_seu_path, "SRR[0-9]+")
+  sample_id <- stringr::str_extract(hypoxia_seu_path, "SR[RX][0-9]+")
 
   old_assay_version <- getOption("Seurat.object.assay.version")
   options(Seurat.object.assay.version = "v3")

@@ -156,9 +156,9 @@ process_diffex <- function(df, leukocyte_genes = c("HLA-A", "HLA-B", "HLA-C", "H
 pdf("results/annotation_attempt.pdf")
 
 
-# SRR13633759 normal control ------------------------------
+# SRX10031191 normal control ------------------------------
 study = "collin"
-sample_id = "SRR13633759"
+sample_id = "SRX10031191"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -172,9 +172,9 @@ nb <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/n
 # safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 
 
-# SRR13633760 normal control ------------------------------
+# SRX10031192 normal control ------------------------------
 study = "collin"
-sample_id = "SRR13633760"
+sample_id = "SRX10031192"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -187,9 +187,9 @@ nb <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/n
 #
 # safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 
-# SRR13633761 FAILED ------------------------------
+# SRX10031193 FAILED ------------------------------
 study = "collin"
-sample_id = "SRR13633761"
+sample_id = "SRX10031193"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -203,9 +203,9 @@ myannot = nb$clone_post[,c("cell", "GT_opt")]
 safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 
 
-# SRR13633762 FAILED------------------------------
+# SRX10031194 FAILED------------------------------
 study = "collin"
-sample_id = "SRR13633762"
+sample_id = "SRX10031194"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -218,9 +218,9 @@ myannot = nb$clone_post[,c("cell", "GT_opt")]
 
 safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 
-# # SRR13884244 FAILED------------------------------
+# # SRX10264521 FAILED------------------------------
 # study = "wu"
-# # sample_id = "SRR13884244"
+# # sample_id = "SRX10264521"
 # # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 # #
 # # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -236,11 +236,11 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 # #
 # #   safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 #
-# # SRR13884246 FAILED ------------------------------
+# # SRX10264523 FAILED ------------------------------
 # # too many SCNAs
 #
 # study = "wu"
-# sample_id = "SRR13884246"
+# sample_id = "SRX10264523"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -253,12 +253,12 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 #
 # safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 #
-# # SRR13884247 focal RB1-, focal MYCNA ------------------------------
+# # SRX10264524 focal RB1-, focal MYCNA ------------------------------
 # # focal RB deletion?
 # # MYCNA?
 #
 # study = "wu"
-# sample_id = "SRR13884247"
+# sample_id = "SRX10264524"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -271,11 +271,11 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 #
 # safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 #
-# # SRR13884248 FAILED ------------------------------
+# # SRX10264525 FAILED ------------------------------
 # # focal deletion of 13q; no other SCNAs
 #
 # study = "wu"
-# sample_id = "SRR13884248"
+# sample_id = "SRX10264525"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -288,10 +288,10 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 #
 # safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 
-# # SRR14800536 FAILED ------------------------------
+# # SRX11133592 FAILED ------------------------------
 # # no subclonal SCNAs
 #
-# sample_id = "SRR14800536"
+# sample_id = "SRX11133592"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 # #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -307,10 +307,10 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 #
 #   safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 #
-# # SRR14800539 FAILED ------------------------------
+# # SRX11133589 FAILED ------------------------------
 # # no subclonal SCNAs
 #
-# sample_id = "SRR14800539"
+# sample_id = "SRX11133589"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -325,11 +325,11 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 #   safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 #
 #
-# # SRR14800541 FAILED ------------------------------
+# # SRX11133587 FAILED ------------------------------
 # # too many spurious SCNAs
 # # likely very few normal cells
 #
-# sample_id = "SRR14800541"
+# sample_id = "SRX11133587"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -359,10 +359,10 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 #   process_diffex()
 #
 #
-# # SRR17960482 FAILED  ------------------------------
+# # SRX14116946 FAILED  ------------------------------
 # # very weird looking
 #
-# sample_id = "SRR17960482"
+# sample_id = "SRX14116946"
 # seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 #
 # # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -379,11 +379,11 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE)
 
 # 1q+ start ------------------------------
 
-#* SRR13884243 wu 1q+ ------------------------------
+#* SRX10264520 wu 1q+ ------------------------------
 # small quantity of 1qNULL cells
 
 study = "wu"
-sample_id = "SRR13884243"
+sample_id = "SRX10264520"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -398,7 +398,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884243_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264520_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -432,12 +432,12 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 # clone 1 vs. clone 2
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR13884243_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3"), group.by = "clone_opt") %>%
+SRX10264520_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR13884243_one_q_markers_gsea <- run_gsea(rownames(seu), SRR13884243_one_q_markers)
+SRX10264520_one_q_markers_gsea <- run_gsea(rownames(seu), SRX10264520_one_q_markers)
 
-SRR13884243_one_q_markers_go_plot <- plot_go(SRR13884243_one_q_markers_gsea,
+SRX10264520_one_q_markers_go_plot <- plot_go(SRX10264520_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
@@ -464,34 +464,34 @@ pype <- obj %>%
   # plot_last() %>%
   identity()
 
-plot_classes(pype)+ggtitle("SRR14800543 annotated with cellpypes")
+plot_classes(pype)+ggtitle("SRX11133585 annotated with cellpypes")
 
-SRR13884243_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264520_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 
 
-matching_genes <- intersect(SRR14800534_one_q_markers$symbol,
-                            SRR13884243_one_q_markers$symbol)
+matching_genes <- intersect(SRX11133594_one_q_markers$symbol,
+                            SRX10264520_one_q_markers$symbol)
 
 gsea_1q <-
   list(
-    "SRR13884242" = SRR13884242_one_q_markers_gsea,
-    "SRR13884243" = SRR13884243_one_q_markers_gsea,
-    "SRR14800534" = SRR14800534_one_q_markers_gsea,
-    "SRR14800537" = SRR14800537_one_q_markers_gsea,
-    "SRR17960481" = SRR17960481_one_q_markers_gsea) %>%
+    "SRX10264519" = SRX10264519_one_q_markers_gsea,
+    "SRX10264520" = SRX10264520_one_q_markers_gsea,
+    "SRX11133594" = SRX11133594_one_q_markers_gsea,
+    "SRX11133591" = SRX11133591_one_q_markers_gsea,
+    "SRX14116947" = SRX14116947_one_q_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   identity()
 
-#* SRR14800534 !!! 1q+------------------------------
+#* SRX11133594 !!! 1q+------------------------------
 # large fraction of cells lacking 1q+
 # almost all of the top genes are g2m genes down in clone 1!!
 # 1q+ correlated with G2M?
-# is this the same sample as SRR13884243?
+# is this the same sample as SRX10264520?
 
 study = "yang"
-sample_id = "SRR14800534"
+sample_id = "SRX11133594"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -510,7 +510,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR14800534_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX11133594_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -534,23 +534,23 @@ GT_by_cluster_plot / (cluster_plot + GT_plot)
 # clone 1 vs. all
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR14800534_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = "2", group.by = "clone_opt") %>%
+SRX11133594_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = "2", group.by = "clone_opt") %>%
   process_diffex()
 
-SRR14800534_one_q_markers_gsea <- run_gsea(rownames(seu), SRR14800534_one_q_markers)
+SRX11133594_one_q_markers_gsea <- run_gsea(rownames(seu), SRX11133594_one_q_markers)
 
-SRR14800534_one_q_markers_go_plot <- plot_go(SRR14800534_one_q_markers_gsea,
+SRX11133594_one_q_markers_go_plot <- plot_go(SRX11133594_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR14800534_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX11133594_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
-#* SRR17960481 !!! 1q+, 6p+ ------------------------------
+#* SRX14116947 !!! 1q+, 6p+ ------------------------------
 # notable fraction of 1q NULL cell
 # PLK1 negative in clone 2 lacking 1q+
 
 study = "field"
-sample_id = "SRR17960481"
+sample_id = "SRX14116947"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -569,7 +569,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR17960481_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116947_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1", "2") ~ "scna_null",
@@ -578,7 +578,7 @@ SRR17960481_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0
   janitor::tabyl(`gene_snn_res.0.2`, diffex_group) %>%
   identity()
 
-SRR17960481_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116947_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -606,12 +606,12 @@ DimPlot(seu, group.by = "Phase") + labs(title = sample_id)
 # clone 1,2 vs. 3
 # clones 1,2 lack 1q+
 # negative means higher in clone 3 (1q+); positive higher in clone 2 (1qNULL)
-SRR17960481_one_q_markers <- FindMarkers(seu, ident.1 = c("2"), ident.2 = "3", group.by = "clone_opt") %>%
+SRX14116947_one_q_markers <- FindMarkers(seu, ident.1 = c("2"), ident.2 = "3", group.by = "clone_opt") %>%
   process_diffex()
 
-SRR17960481_one_q_markers_gsea <- run_gsea(rownames(seu), SRR17960481_one_q_markers)
+SRX14116947_one_q_markers_gsea <- run_gsea(rownames(seu), SRX14116947_one_q_markers)
 
-SRR17960481_one_q_markers_go_plot <- plot_go(SRR17960481_one_q_markers_gsea,
+SRX14116947_one_q_markers_go_plot <- plot_go(SRX14116947_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
@@ -619,33 +619,33 @@ SRR17960481_one_q_markers_go_plot <- plot_go(SRR17960481_one_q_markers_gsea,
 # clone 1 vs. 2,3
 # clone 1 lacks 6p+
 # negative means lower in (6pNULL); positive lower in (6p+)
-SRR17960481_six_p_markers <- FindMarkers(seu, ident.1 = c("1"), ident.2 = c("2", "3"), group.by = "clone_opt") %>%
+SRX14116947_six_p_markers <- FindMarkers(seu, ident.1 = c("1"), ident.2 = c("2", "3"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR17960481_six_p_markers_gsea <- run_gsea(rownames(seu), SRR17960481_six_p_markers)
+SRX14116947_six_p_markers_gsea <- run_gsea(rownames(seu), SRX14116947_six_p_markers)
 
-SRR17960481_six_p_markers_go_plot <- plot_go(SRR17960481_six_p_markers_gsea,
+SRX14116947_six_p_markers_go_plot <- plot_go(SRX14116947_six_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR17960481_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX14116947_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 
 gsea_6p <- list(
-  "SRR17960481" = SRR17960481_six_p_markers_gsea,
-  "SRR17960484" = SRR17960484_six_p_markers_gsea) %>%
+  "SRX14116947" = SRX14116947_six_p_markers_gsea,
+  "SRX14116944" = SRX14116944_six_p_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   arrange(pathway) %>%
   identity()
 
-#* SRR14800537 !!! 1q+, 16q-------------------------------
+#* SRX11133591 !!! 1q+, 16q-------------------------------
 # large fraction of cells missing 1q+/16q-
 # few cell cycle related genes in diffex of clone 2 (1qNULL/16qNULL)
 # lots of RB marker genes
 
 study = "yang"
-sample_id = "SRR14800537"
+sample_id = "SRX11133591"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -701,13 +701,13 @@ clone_4_cells <-
 
 plot_subset_numbat(nb, myannot, c(clone_2_16q_null_cells, clone_4_cells))
 
-SRR14800537_16q_diffex <-
+SRX11133591_16q_diffex <-
   compare_cell_vectors(seu,
                        cells.1 = clone_2_16q_null_cells,
                        cells.2 = clone_4_cells)
 
 
-SRR14800537_1q_diffex <-
+SRX11133591_1q_diffex <-
   compare_cell_vectors(seu,
                        cells.1 = clone_3_1q_null_cells,
                        cells.2 = clone_4_cells)
@@ -725,7 +725,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR14800537_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX11133591_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("3") ~ "scna_null",
@@ -734,7 +734,7 @@ SRR14800537_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0
   janitor::tabyl(`gene_snn_res.0.2`, diffex_group) %>%
   identity()
 
-SRR14800537_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX11133591_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("2") ~ "scna_null",
@@ -763,32 +763,32 @@ DimPlot(seu, group.by = "Phase") + labs(title = sample_id)
 # clone 3 vs. clone 4
 # negative means lower in clone 3; positive higher in clone 3 (1qNULL)
 # clone 3 defferentiated relative to clone 4; lower expresison of cone pr genes
-SRR14800537_one_q_markers <- FindMarkers(seu, ident.1 = "3", ident.2 = "4", group.by = "clone_opt") %>%
+SRX11133591_one_q_markers <- FindMarkers(seu, ident.1 = "3", ident.2 = "4", group.by = "clone_opt") %>%
   process_diffex()
 
-SRR14800537_one_q_markers_gsea <- run_gsea(rownames(seu), SRR14800537_one_q_markers)
+SRX11133591_one_q_markers_gsea <- run_gsea(rownames(seu), SRX11133591_one_q_markers)
 
-SRR14800537_one_q_markers_go_plot <- plot_go(SRR14800537_one_q_markers_gsea,
+SRX11133591_one_q_markers_go_plot <- plot_go(SRX11133591_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
 # clone 2 vs. clone 4
 # negative means lower in clone 2; positive higher in clone 2 (16qNULL)
 # clone 2 has increased expression of TFF1
-SRR14800537_sixteen_q_markers <- FindMarkers(seu, ident.1 = "2", ident.2 = "4", group.by = "clone_opt") %>%
+SRX11133591_sixteen_q_markers <- FindMarkers(seu, ident.1 = "2", ident.2 = "4", group.by = "clone_opt") %>%
   process_diffex()
 
-SRR14800537_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRR14800537_sixteen_q_markers)
+SRX11133591_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRX11133591_sixteen_q_markers)
 
-SRR14800537_sixteen_q_markers_go_plot <- plot_go(SRR14800537_sixteen_q_markers_gsea,
+SRX11133591_sixteen_q_markers_go_plot <- plot_go(SRX11133591_sixteen_q_markers_gsea,
                                                  n = 20) +
   labs(title = sample_id)
 
-SRR14800537_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX11133591_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
-#* SRR13884242 wu 1q+, 16q-------------------------------
+#* SRX10264519 wu 1q+, 16q-------------------------------
 study = "wu"
-sample_id = "SRR13884242"
+sample_id = "SRX10264519"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -827,7 +827,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884242_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264519_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -848,33 +848,33 @@ GT_by_cluster_plot / (cluster_plot + GT_plot)
 # clone 1 vs. all
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR13884242_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
+SRX10264519_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR13884242_one_q_markers_gsea <- run_gsea(rownames(seu), SRR13884242_one_q_markers)
+SRX10264519_one_q_markers_gsea <- run_gsea(rownames(seu), SRX10264519_one_q_markers)
 
-SRR13884242_one_q_markers_go_plot <- plot_go(SRR13884242_one_q_markers_gsea,
+SRX10264519_one_q_markers_go_plot <- plot_go(SRX10264519_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
 # clone 1 vs. all
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR13884242_sixteen_q_markers <- SRR13884242_one_q_markers
+SRX10264519_sixteen_q_markers <- SRX10264519_one_q_markers
 
-SRR13884242_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRR13884242_sixteen_q_markers)
+SRX10264519_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRX10264519_sixteen_q_markers)
 
-SRR13884242_sixteen_q_markers_go_plot <- plot_go(SRR13884242_sixteen_q_markers_gsea,
+SRX10264519_sixteen_q_markers_go_plot <- plot_go(SRX10264519_sixteen_q_markers_gsea,
                                                  n = 20) +
   labs(title = sample_id)
 
-SRR13884242_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264519_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
-#* SRR17960484 !!! 6p+, 1q+ ------------------------------
+#* SRX14116944 !!! 6p+, 1q+ ------------------------------
 # very few 1qNULL clone 1 diffex 1 v. 2
 # possibly some 6pNULL clone 1/2 diffex 1/2 v. 3/4
 
-sample_id = "SRR17960484"
+sample_id = "SRX14116944"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -893,7 +893,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR17960484_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116944_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -902,7 +902,7 @@ SRR17960484_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0
   janitor::tabyl(`gene_snn_res.0.2`, diffex_group) %>%
   identity()
 
-SRR17960484_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116944_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("2") ~ "scna_null",
@@ -931,37 +931,37 @@ DimPlot(seu, group.by = "Phase") + labs(title = sample_id)
 # clone 1 vs. clone 2
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR17960484_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
+SRX14116944_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR17960484_one_q_markers_gsea <- run_gsea(rownames(seu), SRR17960484_one_q_markers)
+SRX14116944_one_q_markers_gsea <- run_gsea(rownames(seu), SRX14116944_one_q_markers)
 
-SRR17960484_one_q_markers_go_plot <- plot_go(SRR17960484_one_q_markers_gsea,
+SRX14116944_one_q_markers_go_plot <- plot_go(SRX14116944_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
 # clone 2 vs. clone 3/4
 # clone 2 lacks 16q-
 # negative means lower in clone 1/2; positive higher in clone 3/4
-SRR17960484_six_p_markers <- FindMarkers(seu, ident.1 = c("2"), ident.2 = c("3", "4"), group.by = "clone_opt") %>%
+SRX14116944_six_p_markers <- FindMarkers(seu, ident.1 = c("2"), ident.2 = c("3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR17960484_six_p_markers_gsea <- run_gsea(rownames(seu), SRR17960484_six_p_markers)
+SRX14116944_six_p_markers_gsea <- run_gsea(rownames(seu), SRX14116944_six_p_markers)
 
-SRR17960484_six_p_markers_go_plot <- plot_go(SRR17960484_six_p_markers_gsea,
+SRX14116944_six_p_markers_go_plot <- plot_go(SRX14116944_six_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR17960484_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX14116944_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 #* cohort ------------------------------
 
-one_q_gseas <- list(SRR13884242 = SRR13884242_one_q_markers_gsea,
-                    SRR13884243 = SRR13884243_one_q_markers_gsea,
-                    SRR14800534 = SRR14800534_one_q_markers_gsea,
-                    SRR14800537 = SRR14800537_one_q_markers_gsea,
-                    SRR17960481 = SRR17960481_one_q_markers_gsea,
-                    SRR17960484 = SRR17960484_one_q_markers_gsea) %>%
+one_q_gseas <- list(SRX10264519 = SRX10264519_one_q_markers_gsea,
+                    SRX10264520 = SRX10264520_one_q_markers_gsea,
+                    SRX11133594 = SRX11133594_one_q_markers_gsea,
+                    SRX11133591 = SRX11133591_one_q_markers_gsea,
+                    SRX14116947 = SRX14116947_one_q_markers_gsea,
+                    SRX14116944 = SRX14116944_one_q_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   identity()
@@ -976,9 +976,9 @@ one_q_go_plot <- plot_go(one_q_gseas,
 
 # 2p+ start ------------------------------
 
-# SRR13884240 wu 2p+------------------------------
+# SRX10264517 wu 2p+------------------------------
 study = "wu"
-sample_id = "SRR13884240"
+sample_id = "SRX10264517"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -997,7 +997,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884240_2p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264517_2p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1017,20 +1017,20 @@ GT_by_cluster_plot / (cluster_plot + GT_plot)
 
 # clone 1 vs. clone 2,3,4
 # negative means lower in clone 1; positive higher in clone 2 (16qNULL)
-SRR13884240_two_p_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
+SRX10264517_two_p_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR13884240_two_p_markers_gsea <- run_gsea(rownames(seu), SRR13884240_two_p_markers)
+SRX10264517_two_p_markers_gsea <- run_gsea(rownames(seu), SRX10264517_two_p_markers)
 
-SRR13884240_two_p_markers_go_plot <- plot_go(SRR13884240_two_p_markers_gsea,
+SRX10264517_two_p_markers_go_plot <- plot_go(SRX10264517_two_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR13884240_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264517_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
-# SRR13884241 wu 2p+ ------------------------------
+# SRX10264518 wu 2p+ ------------------------------
 study = "wu"
-sample_id = "SRR13884241"
+sample_id = "SRX10264518"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1049,7 +1049,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884241_2p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264518_2p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1069,33 +1069,33 @@ GT_by_cluster_plot / (cluster_plot + GT_plot)
 
 # clone 1 vs. clone 2
 # negative means lower in clone 1; positive higher in clone 2 (16qNULL)
-SRR13884241_two_p_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
+SRX10264518_two_p_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR13884241_two_p_markers_gsea <- run_gsea(rownames(seu), SRR13884241_two_p_markers)
+SRX10264518_two_p_markers_gsea <- run_gsea(rownames(seu), SRX10264518_two_p_markers)
 
-SRR13884241_two_p_markers_go_plot <- plot_go(SRR13884241_two_p_markers_gsea,
+SRX10264518_two_p_markers_go_plot <- plot_go(SRX10264518_two_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR13884241_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264518_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 
 gsea_2p <-
   list(
-    "SRR13884240" = SRR13884240_two_p_markers_gsea,
-    "SRR13884241" = SRR13884241_two_p_markers_gsea,
-    "SRR13884249" = SRR13884249_two_p_markers_gsea) %>%
+    "SRX10264517" = SRX10264517_two_p_markers_gsea,
+    "SRX10264518" = SRX10264518_two_p_markers_gsea,
+    "SRX10264526" = SRX10264526_two_p_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   arrange(pathway) %>%
   identity()
 
-# SRR13884249 wu 2p+ ------------------------------
+# SRX10264526 wu 2p+ ------------------------------
 # large fraction of cells lacking 2p+
 
 study = "wu"
-sample_id = "SRR13884249"
+sample_id = "SRX10264526"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1114,7 +1114,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884249_2p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264526_2p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1134,23 +1134,23 @@ GT_by_cluster_plot / (cluster_plot + GT_plot)
 
 # clone 1 vs. clone 2
 # negative means lower in clone 1; positive higher in clone 2 (16qNULL)
-SRR13884249_two_p_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2"), group.by = "clone_opt") %>%
+SRX10264526_two_p_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR13884249_two_p_markers_gsea <- run_gsea(rownames(seu), SRR13884249_two_p_markers)
+SRX10264526_two_p_markers_gsea <- run_gsea(rownames(seu), SRX10264526_two_p_markers)
 
-SRR13884249_two_p_markers_go_plot <- plot_go(SRR13884249_two_p_markers_gsea,
+SRX10264526_two_p_markers_go_plot <- plot_go(SRX10264526_two_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR13884249_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264526_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 #* cohort ------------------------------
 
 two_p_gseas <- list(
-  SRR13884240 = SRR13884240_two_p_markers_gsea,
-  SRR13884241 = SRR13884241_two_p_markers_gsea,
-  SRR13884249 = SRR13884249_two_p_markers_gsea) %>%
+  SRX10264517 = SRX10264517_two_p_markers_gsea,
+  SRX10264518 = SRX10264518_two_p_markers_gsea,
+  SRX10264526 = SRX10264526_two_p_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   identity()
@@ -1164,12 +1164,12 @@ two_p_go_plot <- plot_go(two_p_gseas,
 
 # 6p+ start ------------------------------
 
-# SRR17960481 !!! 1q+, 6p+ ------------------------------
+# SRX14116947 !!! 1q+, 6p+ ------------------------------
 # notable fraction of 1q NULL cell
 # PLK1 negative in clone 2 lacking 1q+
 
 study = "field"
-sample_id = "SRR17960481"
+sample_id = "SRX14116947"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1188,7 +1188,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR17960481_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116947_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1", "2") ~ "scna_null",
@@ -1197,7 +1197,7 @@ SRR17960481_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0
   janitor::tabyl(`gene_snn_res.0.2`, diffex_group) %>%
   identity()
 
-SRR17960481_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116947_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1225,31 +1225,31 @@ DimPlot(seu, group.by = "Phase") + labs(title = sample_id)
 # clone 1 vs. 2,3
 # clone 1 lacks 6p+
 # negative means lower in (6pNULL); positive lower in (6p+)
-SRR17960481_six_p_markers <- FindMarkers(seu, ident.1 = c("1"), ident.2 = c("2", "3"), group.by = "clone_opt") %>%
+SRX14116947_six_p_markers <- FindMarkers(seu, ident.1 = c("1"), ident.2 = c("2", "3"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR17960481_six_p_markers_gsea <- run_gsea(rownames(seu), SRR17960481_six_p_markers)
+SRX14116947_six_p_markers_gsea <- run_gsea(rownames(seu), SRX14116947_six_p_markers)
 
-SRR17960481_six_p_markers_go_plot <- plot_go(SRR17960481_six_p_markers_gsea,
+SRX14116947_six_p_markers_go_plot <- plot_go(SRX14116947_six_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR17960481_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX14116947_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 
 gsea_6p <- list(
-  "SRR17960481" = SRR17960481_six_p_markers_gsea,
-  "SRR17960484" = SRR17960484_six_p_markers_gsea) %>%
+  "SRX14116947" = SRX14116947_six_p_markers_gsea,
+  "SRX14116944" = SRX14116944_six_p_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   arrange(pathway) %>%
   identity()
 
-# SRR17960484 !!! 6p+, 1q+ ------------------------------
+# SRX14116944 !!! 6p+, 1q+ ------------------------------
 # very few 1qNULL clone 1 diffex 1 v. 2
 # possibly some 6pNULL clone 1/2 diffex 1/2 v. 3/4
 
-sample_id = "SRR17960484"
+sample_id = "SRX14116944"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1268,7 +1268,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR17960484_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116944_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1277,7 +1277,7 @@ SRR17960484_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0
   janitor::tabyl(`gene_snn_res.0.2`, diffex_group) %>%
   identity()
 
-SRR17960484_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX14116944_6p_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("2") ~ "scna_null",
@@ -1307,22 +1307,22 @@ DimPlot(seu, group.by = "Phase") + labs(title = sample_id)
 # clone 2 vs. clone 3/4
 # clone 2 lacks 16q-
 # negative means lower in clone 1/2; positive higher in clone 3/4
-SRR17960484_six_p_markers <- FindMarkers(seu, ident.1 = c("2"), ident.2 = c("3", "4"), group.by = "clone_opt") %>%
+SRX14116944_six_p_markers <- FindMarkers(seu, ident.1 = c("2"), ident.2 = c("3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR17960484_six_p_markers_gsea <- run_gsea(rownames(seu), SRR17960484_six_p_markers)
+SRX14116944_six_p_markers_gsea <- run_gsea(rownames(seu), SRX14116944_six_p_markers)
 
-SRR17960484_six_p_markers_go_plot <- plot_go(SRR17960484_six_p_markers_gsea,
+SRX14116944_six_p_markers_go_plot <- plot_go(SRX14116944_six_p_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
-SRR17960484_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX14116944_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 #* cohort ------------------------------
 
 six_p_gseas <- list(
-  SRR17960481 = SRR17960481_six_p_markers_gsea,
-  SRR17960484 = SRR17960484_six_p_markers_gsea) %>%
+  SRX14116947 = SRX14116947_six_p_markers_gsea,
+  SRX14116944 = SRX14116944_six_p_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   identity()
@@ -1333,12 +1333,12 @@ six_p_go_plot <- plot_go(six_p_gseas,
 
 # 16q- start ------------------------------
 
-# SRR14800535 !!! 16q-------------------------------
+# SRX11133593 !!! 16q-------------------------------
 # very small fraction of cells with 16q-
 # PLK1 diff expressed between clones; lower in clone 1
 
 study = "yang"
-sample_id = "SRR14800535"
+sample_id = "SRX11133593"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1353,7 +1353,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR14800535_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX11133593_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1386,26 +1386,26 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 # clone 1 vs. clone 2
 # clone 1 lacks 16q-
 # negative means lower in clone 1; positive higher in clone 1
-SRR14800535_sixteen_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2"), group.by = "clone_opt") %>%
+SRX11133593_sixteen_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR14800535_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRR14800535_sixteen_q_markers)
+SRX11133593_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRX11133593_sixteen_q_markers)
 
-SRR14800535_sixteen_q_markers_go_plot <- plot_go(SRR14800535_sixteen_q_markers_gsea,
+SRX11133593_sixteen_q_markers_go_plot <- plot_go(SRX11133593_sixteen_q_markers_gsea,
                                                  n = 20) +
   labs(title = sample_id)
 
-SRR14800535_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX11133593_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 
 
-# SRR14800537 !!! 1q+, 16q-------------------------------
+# SRX11133591 !!! 1q+, 16q-------------------------------
 # large fraction of cells missing 1q+/16q-
 # few cell cycle related genes in diffex of clone 2 (1qNULL/16qNULL)
 # lots of RB marker genes
 
 study = "yang"
-sample_id = "SRR14800537"
+sample_id = "SRX11133591"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1461,13 +1461,13 @@ clone_4_cells <-
 
 plot_subset_numbat(nb, myannot, c(clone_2_16q_null_cells, clone_4_cells))
 
-SRR14800537_16q_diffex <-
+SRX11133591_16q_diffex <-
   compare_cell_vectors(seu,
                        cells.1 = clone_2_16q_null_cells,
                        cells.2 = clone_4_cells)
 
 
-SRR14800537_1q_diffex <-
+SRX11133591_1q_diffex <-
   compare_cell_vectors(seu,
                        cells.1 = clone_3_1q_null_cells,
                        cells.2 = clone_4_cells)
@@ -1485,7 +1485,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR14800537_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX11133591_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("3") ~ "scna_null",
@@ -1494,7 +1494,7 @@ SRR14800537_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0
   janitor::tabyl(`gene_snn_res.0.2`, diffex_group) %>%
   identity()
 
-SRR14800537_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX11133591_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("2") ~ "scna_null",
@@ -1523,32 +1523,32 @@ DimPlot(seu, group.by = "Phase") + labs(title = sample_id)
 # clone 3 vs. clone 4
 # negative means lower in clone 3; positive higher in clone 3 (1qNULL)
 # clone 3 defferentiated relative to clone 4; lower expresison of cone pr genes
-SRR14800537_one_q_markers <- FindMarkers(seu, ident.1 = "3", ident.2 = "4", group.by = "clone_opt") %>%
+SRX11133591_one_q_markers <- FindMarkers(seu, ident.1 = "3", ident.2 = "4", group.by = "clone_opt") %>%
   process_diffex()
 
-SRR14800537_one_q_markers_gsea <- run_gsea(rownames(seu), SRR14800537_one_q_markers)
+SRX11133591_one_q_markers_gsea <- run_gsea(rownames(seu), SRX11133591_one_q_markers)
 
-SRR14800537_one_q_markers_go_plot <- plot_go(SRR14800537_one_q_markers_gsea,
+SRX11133591_one_q_markers_go_plot <- plot_go(SRX11133591_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
 # clone 2 vs. clone 4
 # negative means lower in clone 2; positive higher in clone 2 (16qNULL)
 # clone 2 has increased expression of TFF1
-SRR14800537_sixteen_q_markers <- FindMarkers(seu, ident.1 = "2", ident.2 = "4", group.by = "clone_opt") %>%
+SRX11133591_sixteen_q_markers <- FindMarkers(seu, ident.1 = "2", ident.2 = "4", group.by = "clone_opt") %>%
   process_diffex()
 
-SRR14800537_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRR14800537_sixteen_q_markers)
+SRX11133591_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRX11133591_sixteen_q_markers)
 
-SRR14800537_sixteen_q_markers_go_plot <- plot_go(SRR14800537_sixteen_q_markers_gsea,
+SRX11133591_sixteen_q_markers_go_plot <- plot_go(SRX11133591_sixteen_q_markers_gsea,
                                                  n = 20) +
   labs(title = sample_id)
 
-SRR14800537_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX11133591_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
-# SRR13884242 wu 1q+, 16q-------------------------------
+# SRX10264519 wu 1q+, 16q-------------------------------
 study = "wu"
-sample_id = "SRR13884242"
+sample_id = "SRX10264519"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1587,7 +1587,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884242_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264519_1q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1608,33 +1608,33 @@ GT_by_cluster_plot / (cluster_plot + GT_plot)
 # clone 1 vs. all
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR13884242_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
+SRX10264519_one_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2", "3", "4"), group.by = "clone_opt") %>%
   process_diffex()
 
-SRR13884242_one_q_markers_gsea <- run_gsea(rownames(seu), SRR13884242_one_q_markers)
+SRX10264519_one_q_markers_gsea <- run_gsea(rownames(seu), SRX10264519_one_q_markers)
 
-SRR13884242_one_q_markers_go_plot <- plot_go(SRR13884242_one_q_markers_gsea,
+SRX10264519_one_q_markers_go_plot <- plot_go(SRX10264519_one_q_markers_gsea,
                                              n = 20) +
   labs(title = sample_id)
 
 # clone 1 vs. all
 # clone 1 lacks 1q+
 # negative means lower in clone 1; positive higher in clone 1
-SRR13884242_sixteen_q_markers <- SRR13884242_one_q_markers
+SRX10264519_sixteen_q_markers <- SRX10264519_one_q_markers
 
-SRR13884242_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRR13884242_sixteen_q_markers)
+SRX10264519_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRX10264519_sixteen_q_markers)
 
-SRR13884242_sixteen_q_markers_go_plot <- plot_go(SRR13884242_sixteen_q_markers_gsea,
+SRX10264519_sixteen_q_markers_go_plot <- plot_go(SRX10264519_sixteen_q_markers_gsea,
                                                  n = 20) +
   labs(title = sample_id)
 
-SRR13884242_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264519_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
-# SRR13884245 wu 16q- ------------------------------
+# SRX10264522 wu 16q- ------------------------------
 # a very small number of cells with 16q-
 
 study = "wu"
-sample_id = "SRR13884245"
+sample_id = "SRX10264522"
 seu <- readRDS(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 
 # nb = Numbat$new(out_dir = glue("~/single_cell_projects/resources/{study}_et_al_proj/output/numbat/{sample_id}"))
@@ -1649,7 +1649,7 @@ nb_meta <- nb$clone_post[,c("cell", "clone_opt", "GT_opt")] %>%
 
 seu <- Seurat::AddMetaData(seu, nb_meta)
 
-SRR13884245_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
+SRX10264522_16q_clone_by_cluster <- FetchData(seu, c("clone_opt", "gene_snn_res.0.2")) %>%
   dplyr::filter(!clone_opt == "") %>%
   dplyr::mutate(diffex_group = dplyr::case_when(
     clone_opt %in% c("1") ~ "scna_null",
@@ -1682,32 +1682,32 @@ safe_plot_phylo(nb, seu, myannot, sample_id, clone_bar = FALSE, p_min = 0.2)
 # clone 1 vs. clone 2
 # clone 1 lacks 16q-
 # negative means lower in clone 1; positive higher in clone 1
-SRR13884245_sixteen_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2"), group.by = "clone_opt") %>%
+SRX10264522_sixteen_q_markers <- FindMarkers(seu, ident.1 = "1", ident.2 = c("2"), group.by = "clone_opt") %>%
   process_diffex()
 
 
-SRR13884245_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRR13884245_sixteen_q_markers)
+SRX10264522_sixteen_q_markers_gsea <- run_gsea(rownames(seu), SRX10264522_sixteen_q_markers)
 
-SRR13884245_sixteen_q_markers_go_plot <- plot_go(SRR13884245_sixteen_q_markers_gsea,
+SRX10264522_sixteen_q_markers_go_plot <- plot_go(SRX10264522_sixteen_q_markers_gsea,
                                                  n = 20) +
   labs(title = sample_id)
 
-SRR13884245_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
+SRX10264522_dimplot <- DimPlot(seu, group.by = "gene_snn_res.0.2", split.by = "clone_opt")
 
 #* cohort ------------------------------
 
 sixteen_q_gseas <- list(
-  "SRR14800535" = SRR14800535_sixteen_q_markers_gsea,
-  "SRR14800537" = SRR14800537_sixteen_q_markers_gsea,
-  "SRR13884242" = SRR13884242_sixteen_q_markers_gsea,
-  "SRR13884245" = SRR13884245_sixteen_q_markers_gsea) %>%
+  "SRX11133593" = SRX11133593_sixteen_q_markers_gsea,
+  "SRX11133591" = SRX11133591_sixteen_q_markers_gsea,
+  "SRX10264519" = SRX10264519_sixteen_q_markers_gsea,
+  "SRX10264522" = SRX10264522_sixteen_q_markers_gsea) %>%
   dplyr::bind_rows(.id = "source") %>%
   dplyr::filter(padj < 0.05) %>%
   arrange(pathway) %>%
   identity()
 #
-# matching_genes <- intersect(SRR14800535_sixteen_q_markers$symbol,
-#                             SRR13884245_sixteen_q_markers$symbol)
+# matching_genes <- intersect(SRX11133593_sixteen_q_markers$symbol,
+#                             SRX10264522_sixteen_q_markers$symbol)
 #
 
 sixteen_q_go_plot <- plot_go(sixteen_q_gseas,

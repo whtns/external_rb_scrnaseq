@@ -89,7 +89,7 @@ drop_mt_cluster <- function(seu, group.by = "integrated_snn_res.0.4"){
 plot_fig_07_08 <- function(figure_input, x_var = "sample_cluster", plot_title = "fig_07", p_adj_threshold = 0.1, plot_path = "results/fig_07.pdf", ...){
 	raw_tables <-
 		unlist(figure_input) |>
-		set_names(str_extract(unlist(figure_input), "SRR[0-9]*")) |>
+		set_names(str_extract(unlist(figure_input), "SR[RX][0-9]+")) |>
 		map(read_csv)
 
 	non_empty <- purrr::keep(raw_tables, ~nrow(.x) > 0)
@@ -189,7 +189,7 @@ dotplot_recurrent_genes <- function(diffex_list, x_var = "sample_id", recurrence
 		dplyr::filter(symbol %in% top_genes) |> 
 		dplyr::mutate(mean_FC = abs_mean_FC*sign) |> 
 		dplyr::arrange(mean_FC) |> 
-			dplyr::mutate(tumor_id = str_extract(sample_id, "SRR[0-9]*")) |> 
+			dplyr::mutate(tumor_id = str_extract(sample_id, "SR[RX][0-9]+")) |> 
 		ggplot(aes(y = symbol, x = tumor_id, size = neg_log_p_val_adj, color = avg_log2FC)) + 
 		geom_point() +
 		theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
@@ -248,7 +248,7 @@ dotplot_diffex <- function(diffex_list, x_var = "sample_id", recurrence_threshol
 		dplyr::filter(symbol %in% top_genes) |> 
 		dplyr::mutate(mean_FC = abs_mean_FC*sign) |> 
 		dplyr::arrange(mean_FC) |> 
-		dplyr::mutate(tumor_id = str_extract(sample_id, "SRR[0-9]*")) |> 
+		dplyr::mutate(tumor_id = str_extract(sample_id, "SR[RX][0-9]+")) |> 
 		ggplot(aes(y = symbol, x = tumor_id, size = neg_log_p_val_adj, color = avg_log2FC)) + 
 		geom_point() +
 		theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 

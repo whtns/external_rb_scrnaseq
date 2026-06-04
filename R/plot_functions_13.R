@@ -8,7 +8,7 @@
 #' @export
 plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 	
-	integrated_16q_seus <- dir_ls("output/seurat/integrated_16q/", regexp = ".*SRR[0-9].*rds") |> 
+	integrated_16q_seus <- dir_ls("output/seurat/integrated_16q/", regexp = ".*SR[RX][0-9].*rds") |> 
 		as.character()
 	
 	batch_corrected_seu <- "output/seurat/integrated_16q/integrated_seu_16q_complete.rds"
@@ -22,7 +22,7 @@ plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 	fig_3d_cc <- map(c(batch_corrected_seu, integrated_16q_seus), plot_clone_cc_plots, scna_of_interest = "16q", var_y = "clusters", labeled_values = c("pm"))
 	
 	fig_3d_cc_table <- map(fig_3d_cc, ~.x$data) |> 
-		set_names(c("integrated", str_extract(integrated_16q_seus, "SRR[0-9]*"))) |> 
+		set_names(c("integrated", str_extract(integrated_16q_seus, "SR[RX][0-9]+"))) |> 
 		write_xlsx(path = "results/fig_3d_cc.xlsx")
 	
 	for(plot_i in 2:length(fig_3d_cc)){
@@ -59,7 +59,7 @@ plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 #' @export
 plot_fig_03_afterall <- function(cluster_orders, plot_path = "results/fig_03_afterall.pdf"){
     
-    integrated_16q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SRR[0-9].*_16q_filtered_seu.rds") |> 
+    integrated_16q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SR[RX][0-9].*_16q_filtered_seu.rds") |> 
         as.character()
     
     batch_corrected_seu <- "output/seurat/integrated_1q_16q/integrated_seu_16q_afterall.rds"
@@ -75,7 +75,7 @@ plot_fig_03_afterall <- function(cluster_orders, plot_path = "results/fig_03_aft
     fig_3d_cc <- map(c(batch_corrected_seu, integrated_16q_seus), plot_clone_cc_plots, scna_of_interest = "16q", var_y = "clusters", labeled_values = c("pm"), var_y_levels = var_y_levels)
     
     fig_3d_cc_table <- map(fig_3d_cc, ~.x$data) |> 
-        set_names(c("integrated", str_extract(integrated_16q_seus, "SRR[0-9]*"))) |> 
+        set_names(c("integrated", str_extract(integrated_16q_seus, "SR[RX][0-9]+"))) |> 
         write_xlsx(path = "results/fig_3d_cc_afterall.xlsx")
     
     for(plot_i in 2:length(fig_3d_cc)){

@@ -9,7 +9,7 @@
 #' @export
 plot_markers_in_sample <- function(seu_path, mymarkers, plot_type = FeaturePlot, group_by = group_by) {
   #
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   numbat_dir <- "numbat_sridhar"
 

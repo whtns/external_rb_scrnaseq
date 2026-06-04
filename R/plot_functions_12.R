@@ -132,7 +132,7 @@ make_table_s01 <- function(study_cell_stats, path = "doc/table_s01.csv"){
 #' @return ggplot2 plot object
 #' @export
 plot_integrated_1q_fig <- function(cluster_orders, plot_path = "results/fig_02.pdf"){
-	integrated_1q_seus <- dir_ls("output/seurat/integrated_1q/", regexp = ".*SRR[0-9].*rds") |> as.character()
+	integrated_1q_seus <- dir_ls("output/seurat/integrated_1q/", regexp = ".*SR[RX][0-9].*rds") |> as.character()
 	
 	batch_corrected_seu <- "output/seurat/integrated_1q/integrated_seu_1q_complete.rds"
 	
@@ -148,7 +148,7 @@ plot_integrated_1q_fig <- function(cluster_orders, plot_path = "results/fig_02.p
 	fig_2d_cc <- map(c(batch_corrected_seu, integrated_1q_seus), plot_clone_cc_plots, var_y = "clusters", scna_of_interest = "1q", labeled_values = c("g2_m"))
 	
 	fig_2d_cc_table <- map(fig_2d_cc, ~.x$data) |> 
-		set_names(c("integrated", str_extract(integrated_1q_seus, "SRR[0-9]*"))) |> 
+		set_names(c("integrated", str_extract(integrated_1q_seus, "SR[RX][0-9]+"))) |> 
 		write_xlsx(path = "results/fig_2d_cc.xlsx")
 	
 	

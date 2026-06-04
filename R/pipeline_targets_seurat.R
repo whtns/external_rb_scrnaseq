@@ -10,39 +10,39 @@ pipeline_targets_seurat <- c(
   # downstream targets (e.g. factor heatmaps, diffex, clone pearls).
   tarchetypes::tar_files(debranched_seus_1q,
     c(
-      "SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu_1q.rds",
-      "SRR13884249" = "output/seurat/SRR13884249_filtered_seu_1q.rds",
-      "SRR14800534" = "output/seurat/SRR14800534_filtered_seu_1q.rds",
-      "SRR14800535" = "output/seurat/SRR14800535_filtered_seu_1q.rds",
-      "SRR14800536" = "output/seurat/SRR14800536_filtered_seu_1q.rds"
+      "SRX10264523" = "output/seurat/SRX10264523_branch_5_filtered_seu_1q.rds",
+      "SRX10264526" = "output/seurat/SRX10264526_filtered_seu_1q.rds",
+      "SRX11133594" = "output/seurat/SRX11133594_filtered_seu_1q.rds",
+      "SRX11133593" = "output/seurat/SRX11133593_filtered_seu_1q.rds",
+      "SRX11133592" = "output/seurat/SRX11133592_filtered_seu_1q.rds"
     )
   ),
 
   tarchetypes::tar_files(debranched_seus_2p,
     c(
-      "SRR13884246" = "output/seurat/SRR13884246_branch_5_filtered_seu_2p.rds",
-      "SRR13884247" = "output/seurat/SRR13884247_branch_6_filtered_seu.rds",
-      "SRR13884248" = "output/seurat/SRR13884248_filtered_seu_2p.rds",
-      # "SRR13884249" = "output/seurat/SRR13884249_filtered_seu_2p.rds",
-      # "SRR17960481" = "output/seurat/SRR17960481_filtered_seu.rds",
-      "SRR17960484" = "output/seurat/SRR17960484_filtered_seu_2p.rds" # too many changes at once to conclude anything
+      "SRX10264523" = "output/seurat/SRX10264523_branch_5_filtered_seu_2p.rds",
+      "SRX10264524" = "output/seurat/SRX10264524_branch_6_filtered_seu.rds",
+      "SRX10264525" = "output/seurat/SRX10264525_filtered_seu_2p.rds",
+      # "SRX10264526" = "output/seurat/SRX10264526_filtered_seu_2p.rds",
+      # "SRX14116947" = "output/seurat/SRX14116947_filtered_seu.rds",
+      "SRX14116944" = "output/seurat/SRX14116944_filtered_seu_2p.rds" # too many changes at once to conclude anything
     )
   ),
 
   tarchetypes::tar_files(debranched_seus_6p,
     c(
-      "SRR13884247" = "output/seurat/SRR13884247_filtered_seu.rds",
-      "SRR13884248" = "output/seurat/SRR13884248_filtered_seu_6p.rds",
-      "SRR17960484" = "output/seurat/SRR17960484_filtered_seu_6p.rds",
-      "SRR27187899" = "output/seurat/SRR27187899_filtered_seu.rds"
+      "SRX10264524" = "output/seurat/SRX10264524_filtered_seu.rds",
+      "SRX10264525" = "output/seurat/SRX10264525_filtered_seu_6p.rds",
+      "SRX14116944" = "output/seurat/SRX14116944_filtered_seu_6p.rds",
+      "SRX22868105" = "output/seurat/SRX22868105_filtered_seu.rds"
     )
   ),
 
   tarchetypes::tar_files(debranched_seus_16q,
     c(
-      "SRR14800534" = "output/seurat/SRR14800534_filtered_seu_16q.rds",
-      "SRR14800535" = "output/seurat/SRR14800535_filtered_seu_16q.rds",
-      "SRR14800536" = "output/seurat/SRR14800536_filtered_seu_16q.rds"
+      "SRX11133594" = "output/seurat/SRX11133594_filtered_seu_16q.rds",
+      "SRX11133593" = "output/seurat/SRX11133593_filtered_seu_16q.rds",
+      "SRX11133592" = "output/seurat/SRX11133592_filtered_seu_16q.rds"
     )
   ),
 
@@ -50,32 +50,32 @@ pipeline_targets_seurat <- c(
 
   tarchetypes::tar_files(integrated_seus_1q,
     c(
-      "SRR13884249_filtered_seu.rds" = "output/seurat/integrated_1q/SRR13884249_integrated_1q_filtered_seu.rds",
-      "SRR14800534_filtered_seu.rds" = "output/seurat/integrated_1q/SRR14800534_integrated_1q_filtered_seu.rds",
-      "SRR14800535_filtered_seu.rds" = "output/seurat/integrated_1q/SRR14800535_integrated_1q_filtered_seu.rds",
-      "SRR14800536_filtered_seu.rds" = "output/seurat/integrated_1q/SRR14800536_integrated_1q_filtered_seu.rds"
+      "SRX10264526_filtered_seu.rds" = "output/seurat/integrated_1q/SRX10264526_integrated_1q_filtered_seu.rds",
+      "SRX11133594_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133594_integrated_1q_filtered_seu.rds",
+      "SRX11133593_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133593_integrated_1q_filtered_seu.rds",
+      "SRX11133592_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133592_integrated_1q_filtered_seu.rds"
     )
   ),
 
   tarchetypes::tar_files(integrated_seus_16q,
     c(
-      "SRR14800534_filtered_seu.rds" = "output/seurat/integrated_16q/SRR14800534_integrated_16q_filtered_seu.rds",
-      "SRR14800535_filtered_seu.rds" = "output/seurat/integrated_16q/SRR14800535_integrated_16q_filtered_seu.rds",
-      "SRR14800536_filtered_seu.rds" = "output/seurat/integrated_16q/SRR14800536_integrated_16q_filtered_seu.rds"
+      "SRX11133594_filtered_seu.rds" = "output/seurat/integrated_16q/SRX11133594_integrated_16q_filtered_seu.rds",
+      "SRX11133593_filtered_seu.rds" = "output/seurat/integrated_16q/SRX11133593_integrated_16q_filtered_seu.rds",
+      "SRX11133592_filtered_seu.rds" = "output/seurat/integrated_16q/SRX11133592_integrated_16q_filtered_seu.rds"
     )
   ),
 
   tarchetypes::tar_files(integrated_seus_2p,
     c(
-      "SRR13884248_integrated_2p_filtered_seu.rds" = "output/seurat/integrated_2p/SRR13884248_integrated_2p_filtered_seu.rds",
-      "SRR17960484_integrated_2p_filtered_seu.rds" = "output/seurat/integrated_2p/SRR17960484_integrated_2p_filtered_seu.rds"
+      "SRX10264525_integrated_2p_filtered_seu.rds" = "output/seurat/integrated_2p/SRX10264525_integrated_2p_filtered_seu.rds",
+      "SRX14116944_integrated_2p_filtered_seu.rds" = "output/seurat/integrated_2p/SRX14116944_integrated_2p_filtered_seu.rds"
     )
   ),
 
   tarchetypes::tar_files(integrated_seus_6p,
     c(
-      "SRR13884248_integrated_6p_filtered_seu.rds" = "output/seurat/integrated_6p/SRR13884248_integrated_6p_filtered_seu.rds",
-      "SRR17960484_integrated_6p_filtered_seu.rds" = "output/seurat/integrated_6p/SRR17960484_integrated_6p_filtered_seu.rds"
+      "SRX10264525_integrated_6p_filtered_seu.rds" = "output/seurat/integrated_6p/SRX10264525_integrated_6p_filtered_seu.rds",
+      "SRX14116944_integrated_6p_filtered_seu.rds" = "output/seurat/integrated_6p/SRX14116944_integrated_6p_filtered_seu.rds"
     )
   ),
 
@@ -95,7 +95,6 @@ pipeline_targets_seurat <- c(
       prep_unfiltered_seu(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample, large_filter_expressions_per_sample, extension = "_unfiltered"),
       pattern = map(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample, large_filter_expressions_per_sample),
       iteration = "list",
-      deployment = "main",
       error = "null",
       cue = tar_cue(command = FALSE, depend = FALSE)
     ),
@@ -150,7 +149,7 @@ pipeline_targets_seurat <- c(
           paste(rod_low_sample_ids, collapse = "|"),
           unlist(seus_low_hypoxia)
         ) & !grepl(
-          "SRR13633762|SRR13884240|SRR13884241|SRR13884246|SRR17960482",
+          "SRX10031194|SRX10264517|SRX10264518|SRX10264523|SRX14116946",
           unlist(seus_low_hypoxia)
         )],
         integrate = TRUE
@@ -200,29 +199,29 @@ pipeline_targets_seurat <- c(
 
     tar_file(debranched_seu_files,
       c(
-        "SRR13884242"          = "output/seurat/SRR13884242_filtered_seu.rds",
-        "SRR13884243"          = "output/seurat/SRR13884243_filtered_seu.rds",
-        "SRR13884246_branch_5" = "output/seurat/SRR13884246_branch_5_filtered_seu.rds",
-        "SRR13884246_branch_6" = "output/seurat/SRR13884246_branch_6_filtered_seu.rds",
-        "SRR13884247_branch_6" = "output/seurat/SRR13884247_branch_6_filtered_seu.rds",
-        "SRR13884247_branch_4" = "output/seurat/SRR13884247_branch_4_filtered_seu.rds",
-        "SRR13884247_branch_5" = "output/seurat/SRR13884247_branch_5_filtered_seu.rds",
-        "SRR13884248"          = "output/seurat/SRR13884248_filtered_seu.rds",
-        "SRR13884249"          = "output/seurat/SRR13884249_filtered_seu.rds",
-        "SRR14800534"          = "output/seurat/SRR14800534_filtered_seu.rds",
-        "SRR14800535"          = "output/seurat/SRR14800535_filtered_seu.rds",
-        "SRR14800536"          = "output/seurat/SRR14800536_filtered_seu.rds",
-        "SRR14800540_branch_2" = "output/seurat/SRR14800540_branch_2_filtered_seu.rds",
-        "SRR14800540_branch_3" = "output/seurat/SRR14800540_branch_3_filtered_seu.rds",
-        "SRR14800541_branch_4" = "output/seurat/SRR14800541_branch_4_filtered_seu.rds",
-        "SRR14800541_branch_7" = "output/seurat/SRR14800541_branch_7_filtered_seu.rds",
-        "SRR14800543_branch_3" = "output/seurat/SRR14800543_branch_3_filtered_seu.rds",
-        "SRR14800543_branch_4" = "output/seurat/SRR14800543_branch_4_filtered_seu.rds",
-        "SRR17960481"          = "output/seurat/SRR17960481_filtered_seu.rds",
-        "SRR17960484"          = "output/seurat/SRR17960484_filtered_seu.rds",
-        "SRR27187899"          = "output/seurat/SRR27187899_filtered_seu.rds",
-        "SRR27187902_branch_3" = "output/seurat/SRR27187902_branch_3_filtered_seu.rds",
-        "SRR27187902_branch_4" = "output/seurat/SRR27187902_branch_4_filtered_seu.rds"
+        "SRX10264519"          = "output/seurat/SRX10264519_filtered_seu.rds",
+        "SRX10264520"          = "output/seurat/SRX10264520_filtered_seu.rds",
+        "SRX10264523_branch_5" = "output/seurat/SRX10264523_branch_5_filtered_seu.rds",
+        "SRX10264523_branch_6" = "output/seurat/SRX10264523_branch_6_filtered_seu.rds",
+        "SRX10264524_branch_6" = "output/seurat/SRX10264524_branch_6_filtered_seu.rds",
+        "SRX10264524_branch_4" = "output/seurat/SRX10264524_branch_4_filtered_seu.rds",
+        "SRX10264524_branch_5" = "output/seurat/SRX10264524_branch_5_filtered_seu.rds",
+        "SRX10264525"          = "output/seurat/SRX10264525_filtered_seu.rds",
+        "SRX10264526"          = "output/seurat/SRX10264526_filtered_seu.rds",
+        "SRX11133594"          = "output/seurat/SRX11133594_filtered_seu.rds",
+        "SRX11133593"          = "output/seurat/SRX11133593_filtered_seu.rds",
+        "SRX11133592"          = "output/seurat/SRX11133592_filtered_seu.rds",
+        "SRX11133588_branch_2" = "output/seurat/SRX11133588_branch_2_filtered_seu.rds",
+        "SRX11133588_branch_3" = "output/seurat/SRX11133588_branch_3_filtered_seu.rds",
+        "SRX11133587_branch_4" = "output/seurat/SRX11133587_branch_4_filtered_seu.rds",
+        "SRX11133587_branch_7" = "output/seurat/SRX11133587_branch_7_filtered_seu.rds",
+        "SRX11133585_branch_3" = "output/seurat/SRX11133585_branch_3_filtered_seu.rds",
+        "SRX11133585_branch_4" = "output/seurat/SRX11133585_branch_4_filtered_seu.rds",
+        "SRX14116947"          = "output/seurat/SRX14116947_filtered_seu.rds",
+        "SRX14116944"          = "output/seurat/SRX14116944_filtered_seu.rds",
+        "SRX22868105"          = "output/seurat/SRX22868105_filtered_seu.rds",
+        "SRX22868102_branch_3" = "output/seurat/SRX22868102_branch_3_filtered_seu.rds",
+        "SRX22868102_branch_4" = "output/seurat/SRX22868102_branch_4_filtered_seu.rds"
       )
     ),
 
@@ -298,11 +297,11 @@ pipeline_targets_seurat <- c(
     tar_target(
       combined_recurrent_filtered_heatmap,
       heatmap_marker_genes(
-        "output/seurat/SRR14800534_SRR14800535_SRR14800536_seu.rds",
+        "output/seurat/SRX11133594_SRX11133593_SRX11133592_seu.rds",
         filtered_recurrent_genes,
         subtype_markers,
         "filtered_",
-        label = "SRR14800534_SRR14800535_SRR14800536",
+        label = "SRX11133594_SRX11133593_SRX11133592",
         marker_col = "SCT_snn_res.0.2",
         group.by = c("integrated_snn_res.0.2", "Phase", "scna"),
         col_arrangement = c("integrated_snn_res.0.2", "Phase", "scna")
@@ -346,7 +345,7 @@ pipeline_targets_seurat <- c(
       {
         path <- unlist(unfiltered_seus)
         if (is.na(path)) return(NULL)
-        sample_id <- stringr::str_extract(path, "SRR[0-9]+")
+        sample_id <- stringr::str_extract(path, "SR[RX][0-9]+")
         filtered_path <- unlist(filtered_seus)[grepl(sample_id, unlist(filtered_seus))]
         if (length(filtered_path) == 0) filtered_path <- NULL
         lh_paths <- unlist(seus_low_hypoxia)
@@ -615,7 +614,7 @@ pipeline_targets_seurat <- c(
 
     tar_target(
       integrated_seu_16q,
-      readRDS("output/seurat/SRR14800534_SRR14800535_SRR14800536_seu.rds")
+      readRDS("output/seurat/SRX11133594_SRX11133593_SRX11133592_seu.rds")
     ),
 
     tar_target(integrated_seus,
@@ -635,7 +634,7 @@ pipeline_targets_seurat <- c(
   ),
 
   # clustree_{id} — one per debranched sample/branch (static branching so
-  # targets are named e.g. clustree_SRR13884242, clustree_SRR13884246_branch_5)
+  # targets are named e.g. clustree_SRX10264519, clustree_SRX10264523_branch_5)
   # seu_file_{id} provides per-sample file tracking so only the affected
   # clustree reruns when a single Seurat file changes on disk.
   {

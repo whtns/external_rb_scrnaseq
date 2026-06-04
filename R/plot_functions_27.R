@@ -5,7 +5,7 @@
 #' @return ggplot2 plot object
 #' @export
 gse_plot_from_clone_diffex <- function(diffex_path) {
-  sample_id <- str_extract(diffex_path, "SRR[0-9]*")
+  sample_id <- str_extract(diffex_path, "SR[RX][0-9]+")
 
   numbat_dir <- path_split(diffex_path)[[1]][[2]]
 

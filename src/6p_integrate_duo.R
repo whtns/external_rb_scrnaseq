@@ -4,18 +4,18 @@ library(seuratTools)
 library(patchwork)
 library(glue)
 
-seu_899 <- readRDS("output/seurat/SRR27187899_filtered_seu.rds")
-seu_899$batch <- c("SRR27187899")
-seu_4248 <- readRDS("output/seurat/integrated_6p/SRR13884248_integrated_6p_filtered_seu.rds")
-seu_4248$batch <- c("SRR13884248")
+seu_899 <- readRDS("output/seurat/SRX22868105_filtered_seu.rds")
+seu_899$batch <- c("SRX22868105")
+seu_4248 <- readRDS("output/seurat/integrated_6p/SRX10264525_integrated_6p_filtered_seu.rds")
+seu_4248$batch <- c("SRX10264525")
 
 # seu <- readRDS("output/seurat/integrated_6p/integrated_seu_6p_complete.rds")
 
 seu1 <- 
 	seurat_integrate(
 		list(
-			"SRR27187899" = seu_899, 
-			"SRR13884248" = seu_4248)
+			"SRX22868105" = seu_899, 
+			"SRX10264525" = seu_4248)
 	)
 
 DefaultAssay(seu1) <- "gene"

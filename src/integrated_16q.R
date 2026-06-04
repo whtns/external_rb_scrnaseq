@@ -9,13 +9,13 @@ library('readxl')
 library(seuratTools)
 
 seus <- c(
-	"output/seurat/SRR14800534_filtered_seu.rds",
-	"output/seurat/SRR14800535_filtered_seu.rds",
-	"output/seurat/SRR14800536_filtered_seu.rds"
+	"output/seurat/SRX11133594_filtered_seu.rds",
+	"output/seurat/SRX11133593_filtered_seu.rds",
+	"output/seurat/SRX11133592_filtered_seu.rds"
 ) |> 
 	set_names()
 
-seus <- set_names(seus, str_extract(names(seus), "SRR[0-9]*"))
+seus <- set_names(seus, str_extract(names(seus), "SRX[0-9]*"))
 
 seus <- seus |> 
 	map(readRDS)

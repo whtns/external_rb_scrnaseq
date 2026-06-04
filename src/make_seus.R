@@ -63,11 +63,11 @@ seu_paths <-
 
 normal_seu_paths <-
   c(
-    "output/seurat/collin_et_al/SRR13633759.rds",
-    "output/seurat/yang_et_al/SRR14800540_seu.rds",
-    "output/seurat/yang_et_al/SRR14800541_seu.rds",
-    "output/seurat/yang_et_al/SRR14800542_seu.rds",
-    "output/seurat/yang_et_al/SRR14800543_seu.rds"
+    "output/seurat/collin_et_al/SRX10031191.rds",
+    "output/seurat/yang_et_al/SRX11133588_seu.rds",
+    "output/seurat/yang_et_al/SRX11133587_seu.rds",
+    "output/seurat/yang_et_al/SRX11133586_seu.rds",
+    "output/seurat/yang_et_al/SRX11133585_seu.rds"
   ) %>%
   purrr::set_names(stringr::str_extract(path_file(.), "SRR[0-9]*"))
 
@@ -113,9 +113,9 @@ patchworks
 dev.off()
 
 
-infercnv_obj <- readRDS("output/infercnv/SRR13884240/run.final.infercnv_obj")
+infercnv_obj <- readRDS("output/infercnv/SRX10264517/run.final.infercnv_obj")
 
-seu_40 <- readRDS("output/seurat/SRR13884240_seu.rds") %>%
+seu_40 <- readRDS("output/seurat/SRX10264517_seu.rds") %>%
 	RenameCells(new.names = str_replace(colnames(.), "-", "."))
 
 normal_reference_mat <- readRDS("output/infercnv/reference_counts.rds")
@@ -130,7 +130,7 @@ infercnv_cells <- colnames(infercnv_obj@expr.data)
 
 
 # debug(infercnv::add_to_seurat)
-seu1 <- infercnv::add_to_seurat(seu0, "output/infercnv/SRR13884240/")
+seu1 <- infercnv::add_to_seurat(seu0, "output/infercnv/SRX10264517/")
 
 seu2 <- seu1[,!grepl("normal", colnames(seu1))]
 

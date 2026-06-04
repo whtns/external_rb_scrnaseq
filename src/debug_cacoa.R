@@ -5,7 +5,7 @@ library('fs')
 library('readxl')
 library(cacoa)
 
-seu <- readRDS("output/seurat/CopyOfSRR14800534_SRR14800535_SRR14800536_seu.rds")
+seu <- readRDS("output/seurat/CopyOfSRX11133594_SRX11133593_SRX11133592_seu.rds")
 
 seu <- seu[,!is.na(seu$clone_opt)]
 

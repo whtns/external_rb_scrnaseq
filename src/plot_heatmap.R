@@ -15,8 +15,8 @@ library(tidyverse)
 library(seuratTools)
 library(fastcluster)
 
-# seu_path = "output/seurat/SRR14800534_filtered_seu.rds"
-# pdf_path = "output/mosaicmpi/SRR14800534_heatmaps.pdf"
+# seu_path = "output/seurat/SRX11133594_filtered_seu.rds"
+# pdf_path = "output/mosaicmpi/SRX11133594_heatmaps.pdf"
 
 args <- (commandArgs(trailingOnly = TRUE))
 for (i in seq_len(length(args))) {

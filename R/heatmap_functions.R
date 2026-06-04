@@ -42,7 +42,7 @@ load_and_save_hypoxia_score <- function(seu_path) {
 #' the target hypoxia RDS already exists the function returns early and does
 #' not re-compute.
 #'
-#' @param seu_path Path to an existing Seurat RDS file (e.g. "SRRxxxxx_seu.rds").
+#' @param seu_path Path to an existing Seurat RDS file (e.g. "SRXxxxxx_seu.rds").
 #' @return Path to the hypoxia RDS file that was written (or existing file path
 #'   if skipped).
 #' @export
@@ -165,7 +165,7 @@ add_hypoxia_score <- function(seu) {
 plot_hypoxia_gene_heatmap <- function(seu_path, group.by = "gene_snn_res.0.2", n_genes = 50) {
   if (is.na(seu_path)) return(NA_character_)
 
-  sample_id <- stringr::str_extract(seu_path, "SRR[0-9]+")
+  sample_id <- stringr::str_extract(seu_path, "SR[RX][0-9]+")
   out_dir <- "results/hypoxia_gene_heatmaps"
   fs::dir_create(out_dir)
   out_path <- glue::glue("{out_dir}/{sample_id}_hypoxia_gene_heatmap.pdf")
@@ -200,7 +200,7 @@ plot_hypoxia_gene_heatmap <- function(seu_path, group.by = "gene_snn_res.0.2", n
   seu <- Seurat::ScaleData(seu, assay = "gene", features = available_genes, verbose = FALSE)
 
   p <- Seurat::DoHeatmap(seu, features = available_genes, group.by = group.by,
-                         assay = "gene", slot = "scale.data") +
+                         assay = "gene", layer = "scale.data") +
     ggplot2::ggtitle(glue::glue("{sample_id}: HALLMARK_HYPOXIA (low-hypoxia cells)")) +
     ggplot2::theme(plot.title = ggplot2::element_text(size = 10),
                    axis.text.y  = ggplot2::element_text(size = 6))
@@ -215,12 +215,12 @@ plot_hypoxia_gene_heatmap <- function(seu_path, group.by = "gene_snn_res.0.2", n
 subset_to_1q <- function(seu, file_id = NULL, slug="", ...) {
   clone_selection <- tribble(
       ~batch, ~clone_opt,
-      "SRR13884249", c(1,2),
-      "SRR14800534", c(2,3),
-      "SRR14800535", c(2,3),
-      "SRR14800536", c(2,3),
-      "SRR13884246", c(1,2),
-      "SRR17960484", c(1,2)
+      "SRX10264526", c(1,2),
+      "SRX11133594", c(2,3),
+      "SRX11133593", c(2,3),
+      "SRX11133592", c(2,3),
+      "SRX10264523", c(1,2),
+      "SRX14116944", c(1,2)
   ) |>
       tidyr::unnest(clone_opt)
   
@@ -280,9 +280,9 @@ select_1q_clones <- function(seu, slug="", ...) {
 subset_to_16q <- function(seu, file_id = NULL, slug="", ...) {
     clone_selection <- tribble(
         ~batch, ~clone_opt,
-        "SRR14800534", c(1,2),
-        "SRR14800535", c(1,2),
-        "SRR14800536", c(1,2)
+        "SRX11133594", c(1,2),
+        "SRX11133593", c(1,2),
+        "SRX11133592", c(1,2)
     ) |>
         tidyr::unnest(clone_opt)
     

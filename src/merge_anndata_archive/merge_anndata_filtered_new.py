@@ -233,7 +233,7 @@ def check_resolution(adata_filtered, resolution = 0.2):
   
   return(adata_filtered)
 
-# dropped_samples = ["SRR14800543"]
+# dropped_samples = ["SRX11133585"]
 # dropped_clones = [1.0]
 # # 
 # new_adata_filtered = new_adata_filtered[~(new_adata_filtered.obs.sample_id.isin(dropped_samples) & new_adata_filtered.obs.clone_opt.isin(dropped_clones)),:]

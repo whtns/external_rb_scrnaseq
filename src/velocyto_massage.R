@@ -9,7 +9,7 @@ matplotlib$use("Agg", force = TRUE)
 pyplot <<- reticulate::import("matplotlib.pyplot", delay_load = TRUE)
 scvelo <<- reticulate::import("scvelo", delay_load = TRUE)
 
-seu_path <- "~/single_cell_projects/resources/external_rb_scrnaseq_proj/output/seurat/SRR14800534_filtered_seu.rds"
+seu_path <- "~/single_cell_projects/resources/external_rb_scrnaseq_proj/output/seurat/SRX11133594_filtered_seu.rds"
 
 seu <- readRDS(seu_path)
 

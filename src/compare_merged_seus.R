@@ -8,9 +8,9 @@ library(chevreul)
 library(sctransform)
 
 seu_paths <- c(
-  "output/seurat/SRR14800534_regressed_seu.rds",
-  "output/seurat/SRR14800535_regressed_seu.rds",
-  "output/seurat/SRR14800536_regressed_seu.rds"
+  "output/seurat/SRX11133594_regressed_seu.rds",
+  "output/seurat/SRX11133593_regressed_seu.rds",
+  "output/seurat/SRX11133592_regressed_seu.rds"
   )
 
 sct_prep <- function(seu_path){
@@ -41,4 +41,4 @@ seu.combined.sct <- FindClusters(seu.combined.sct, resolution = 0.3)
 
 
 
-merged_seu <- readRDS("output/seurat/SRR14800534_SRR14800535_SRR14800536_seu.rds")
+merged_seu <- readRDS("output/seurat/SRX11133594_SRX11133593_SRX11133592_seu.rds")

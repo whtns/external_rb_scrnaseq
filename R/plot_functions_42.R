@@ -43,7 +43,7 @@ convert_seu_to_scanpy <- function(seu_path) {
 score_chrom_instability <- function(seu_path) {
   
   
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   seu <- seu_path
 
@@ -81,7 +81,7 @@ score_chrom_instability <- function(seu_path) {
 score_stachelek <- function(seu_path, stachelek_scores_table) {
   
   
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   seu <- seu_path
 
@@ -134,7 +134,7 @@ reference_plae_celltypes <- function(seu_path, mycluster = "SCT_snn_res.0.4", my
   #   dplyr::filter(Organism == "Homo sapiens") %>%
   #   collect()
 
-  seu_path <- "output/seurat/SRR13884242_regressed_seu.rds"
+  seu_path <- "output/seurat/SRX10264519_regressed_seu.rds"
 
   seu <- seu_path
 

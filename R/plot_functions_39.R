@@ -15,13 +15,13 @@ plot_study_metadata <- function(study_cell_stats, ...) {
   # study_cell_stats <- read_csv("results/study_cell_stats.csv")
 
   normal_ctrl_samples <- unlist(list(
-    "collin" = c("SRR13633761", "SRR13633762")
+    "collin" = c("SRX10031193", "SRX10031194")
   ))
 
   bad_qc_sample_ids <- list(
-    "collin" = c("SRR13633759", "SRR13633760"),
-    "yang" = c("SRR14800537", "SRR14800538", "SRR14800539", "SRR14800542"),
-    "field" = c("SRR17960480", "SRR17960482", "SRR17960484")
+    "collin" = c("SRX10031191", "SRX10031192"),
+    "yang" = c("SRX11133591", "SRX11133590", "SRX11133589", "SRX11133586"),
+    "field" = c("SRX14116948", "SRX14116946", "SRX14116944")
   ) %>%
     enframe("study", "sample_id") %>%
     unnest(sample_id) %>%
@@ -29,10 +29,10 @@ plot_study_metadata <- function(study_cell_stats, ...) {
 
   bad_scna_sample_ids <- list(
     "collin" = c(),
-    "yang" = c("SRR14800540", "SRR14800541", "SRR14800543"),
-    "field" = c("SRR17960483"),
-    "wu" = c("SRR13884240", "SRR13884241", "SRR13884244", "SRR13884245"),
-    "liu" = c("SRR27187900", "SRR27187901")
+    "yang" = c("SRX11133588", "SRX11133587", "SRX11133585"),
+    "field" = c("SRX14116945"),
+    "wu" = c("SRX10264517", "SRX10264518", "SRX10264521", "SRX10264522"),
+    "liu" = c("SRX22868104", "SRX22868103")
   ) %>%
     enframe("study", "sample_id") %>%
     unnest(sample_id) %>%
@@ -92,7 +92,7 @@ plot_study_metadata <- function(study_cell_stats, ...) {
 score_samples_for_rod_enrichment <- function(numbat_rds_file) {
   
   
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 
@@ -146,14 +146,14 @@ score_samples_for_rod_enrichment <- function(numbat_rds_file) {
 score_whole_pseudobulks <- function(numbat_rds_file, subtype_markers) {
   
   
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 
   seu <- readRDS(glue("output/seurat/{sample_id}_seu.rds")) %>%
     filter_sample_qc()
 
-  bulk_expression <- GetAssayData(seu, slot = "data") %>%
+  bulk_expression <- GetAssayData(seu, layer = "data") %>%
     rowSums()
 
   subtype1_expression <- bulk_expression[names(bulk_expression) %in% subtype_markers$subtype1]
@@ -184,10 +184,10 @@ pull_assay_data <- function(seu_path) {
     seu <- readRDS(seu_path) %>%
       filter_sample_qc()
 
-    bulk_data <- GetAssayData(seu, slot = "data") %>%
+    bulk_data <- GetAssayData(seu, layer = "data") %>%
       rowSums()
 
-    bulk_counts <- GetAssayData(seu, slot = "counts") %>%
+    bulk_counts <- GetAssayData(seu, layer = "counts") %>%
       rowSums()
 
     return(list("counts" = bulk_counts, "data" = bulk_data))
@@ -195,7 +195,7 @@ pull_assay_data <- function(seu_path) {
 
   bulk_assays <-
     seu_paths %>%
-    set_names(str_extract(., "SRR[0-9]*")) %>%
+    set_names(str_extract(., "SR[RX][0-9]+")) %>%
     map(pull_assay_data)
 
   bulk_assay_counts <-

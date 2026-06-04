@@ -22,8 +22,6 @@ suppressPackageStartupMessages({
     library(numbat)
 })
 
-source("scripts/patch_numbat_dplyr.R")
-
 label   <- args$label
 samples <- str_split(args$samples, ',')[[1]]
 outdir  <- args$outdir
@@ -39,12 +37,7 @@ dir.create(glue('{outdir}/phasing'), showWarnings = FALSE, recursive = TRUE)
 ## VCF creation
 cat('Creating VCFs\n')
 vcfs <- lapply(samples, function(sample) {
-    vcfR::read.vcfR(glue('{outdir}/pileup/{sample}/cellSNP.base.vcf'), verbose = FALSE)
-})
-
-# genotype() expects bare chromosome names ("1","2",...); cellsnp-lite outputs
-# "chr1","chr2",... — strip the prefix so make_vcf_chr() comparisons work.
-vcfs <- lapply(vcfs, function(vcf) {
+    vcf <- vcfR::read.vcfR(glue('{outdir}/pileup/{sample}/cellSNP.base.vcf'), verbose = FALSE)
     vcf@fix[, 1] <- sub("^chr", "", vcf@fix[, 1])
     vcf
 })
@@ -54,7 +47,7 @@ numbat:::genotype(label, samples, vcfs, glue('{outdir}/phasing'))
 ## Eagle phasing
 eagle_cmd <- function(chr) {
     paste(eagle,
-          glue('--numThreads {ncores}'),
+          '--numThreads 1',
           glue('--vcfTarget {outdir}/phasing/{label}_chr{chr}.vcf.gz'),
           glue('--vcfRef {paneldir}/chr{chr}.genotypes.bcf'),
           glue('--geneticMapFile={gmap}'),
@@ -62,16 +55,16 @@ eagle_cmd <- function(chr) {
           sep = ' ')
 }
 
-cmds   <- lapply(1:22, function(chr) { eagle_cmd(chr) })
-script <- glue('{outdir}/run_phasing.sh')
-list(cmds) %>% fwrite(script, sep = '\n')
-system(glue('chmod 777 {script}'))
+cmds <- lapply(1:22, function(chr) { eagle_cmd(chr) })
 
-tryCatch({
-    system(glue('sh {script}'), intern = TRUE)
-}, warning = function(w) {
-    stop('Phasing failed')
-})
+results <- parallel::mclapply(cmds, function(cmd) {
+    system(cmd, intern = TRUE, ignore.stderr = FALSE)
+}, mc.cores = min(ncores, 22L))
+
+failed <- which(sapply(results, function(r) !is.null(attr(r, "status")) && attr(r, "status") != 0))
+if (length(failed) > 0) {
+    stop(paste('Phasing failed for chromosomes:', paste(failed, collapse = ', ')))
+}
 
 ## Generate allele count dataframe
 cat('Generating allele count dataframes\n')
@@ -101,7 +94,7 @@ for (sample in samples) {
         mutate(CHROM = factor(CHROM, unique(CHROM)))
 
     pu_dir <- glue('{outdir}/pileup/{sample}')
-    vcf_pu <- fread(glue('{pu_dir}/cellSNP.base.vcf')) %>% rename(CHROM = `#CHROM`)
+    vcf_pu <- fread(glue('{pu_dir}/cellSNP.base.vcf')) %>% rename(CHROM = `#CHROM`) %>% mutate(CHROM = str_remove(CHROM, '^chr'))
     AD     <- readMM(glue('{pu_dir}/cellSNP.tag.AD.mtx'))
     DP     <- readMM(glue('{pu_dir}/cellSNP.tag.DP.mtx'))
     cell_barcodes <- fread(glue('{pu_dir}/cellSNP.samples.tsv'), header = FALSE) %>% pull(V1)

@@ -1,12 +1,19 @@
-R is located at /opt/R/4.3.1/bin/R
-Rscript is located at /opt/R/4.3.1/bin/Rscript
-the targets store is _targets_r431
-use the targets-pipeline skill
-run the targets pipeline with /home/skevin/single_cell_projects/resources/external_rb_scrnaseq_proj/run_targets_bg.R
+## Targets Pipeline Quick Reference
+
+- Load R: `module load r/4.4.1`
+- Set libs: `export LD_LIBRARY_PATH="$HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"`
+- Targets store: `_targets_r431`
+- Script: `/project2/cobrinik_1090/external_rb_scrnaseq_proj/run_targets_bg.R`
+- Apptainer is **not required** for targets pipeline runs; invoke `Rscript` directly.
+
+Run:
+```bash
+Rscript /project2/cobrinik_1090/external_rb_scrnaseq_proj/run_targets_bg.R <target_name> _targets_r431
+```
 
 ## Monitoring Targets Pipeline
 
-When the user asks about targets pipeline progress, status, or to monitor the pipeline, use the monitoring script:
+When the user asks about targets pipeline progress, status, or to monitor the pipeline, use the monitoring script (override `R_PATH` if needed):
 ```bash
 # Basic usage (uses default _targets_r431 store)
 ./scripts/monitor_targets.sh
@@ -16,6 +23,9 @@ When the user asks about targets pipeline progress, status, or to monitor the pi
 
 # Specify store and refresh interval (seconds)
 ./scripts/monitor_targets.sh _targets_r431 5
+
+# If the script complains about /opt/R/4.3.1/bin/Rscript, set R_PATH
+R_PATH="$(which Rscript)" ./scripts/monitor_targets.sh _targets_r431 5
 ```
 
 The script provides:

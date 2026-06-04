@@ -4,7 +4,7 @@ library(tidyverse)
 source("packages.R")
 source("functions.R")
 
-seu <- readRDS("output/seurat/SRR14800534_filtered_seu.rds")
+seu <- readRDS("output/seurat/SRX11133594_filtered_seu.rds")
 
 # seu <- seu[,!seu$clusters == "other_10"]
 

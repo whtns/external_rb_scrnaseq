@@ -12,9 +12,9 @@ library(ggplot2)
 source("packages.R")
 source("functions.R")
 
-seu_paths <- c("output/seurat/SRR14800534_filtered_seu.rds",
-               "output/seurat/SRR14800535_filtered_seu.rds",
-               "output/seurat/SRR14800536_filtered_seu.rds"
+seu_paths <- c("output/seurat/SRX11133594_filtered_seu.rds",
+               "output/seurat/SRX11133593_filtered_seu.rds",
+               "output/seurat/SRX11133592_filtered_seu.rds"
 ) %>%
   set_names(str_extract(., "SRR[0-9]*"))
 
@@ -60,5 +60,5 @@ plot_markers(seu.combined.sct, "scna", num_markers = 10)
 
 seu.combined.sct <- assign_zphase(seu.combined.sct)
 
-saveRDS(seu.combined.sct, "output/seurat/SRR14800534_SRR14800535_SRR14800536_seu.rds")
+saveRDS(seu.combined.sct, "output/seurat/SRX11133594_SRX11133593_SRX11133592_seu.rds")
 

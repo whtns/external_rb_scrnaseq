@@ -1,8 +1,8 @@
 source("packages.R"); source("functions.R")
 
 seu_paths <- c(
-	"output/seurat/SRR27187900_seu.rds",
-	"output/seurat/SRR27187901_seu.rds"
+	"output/seurat/SRX22868104_seu.rds",
+	"output/seurat/SRX22868103_seu.rds"
 )
 
 # undebug(find_all_markers)

@@ -10,7 +10,7 @@
 # - long_pipe_chain: Consider breaking into intermediate variables for readability and debugging
 # - map_bind_rows: Use map_dfr() instead of map() %>% bind_rows() for better performance
 
-pull_scna_segments <- function(nb_path = "output/numbat_sridhar/SRR14800534_numbat.rds", chrom = "1"){
+pull_scna_segments <- function(nb_path = "output/numbat_sridhar/SRX11133594_numbat.rds", chrom = "1"){
 	mynb <- readRDS(nb_path)
 	
 	segments <- mynb$clone_post %>%
@@ -84,8 +84,8 @@ diffex_per_cluster <- function(seu, ident_1 = "w_scna", ident_2 = "wo_scna", myc
 plot_fig_s20 <- function() {
 	# 2p  ------------------------------
 	
-	segs_2p <- sapply(c("output/numbat_sridhar/SRR13884248_numbat.rds",
-											 "output/numbat_sridhar/SRR17960484_numbat.rds"), pull_scna_segments, chrom = "2") |> 
+	segs_2p <- sapply(c("output/numbat_sridhar/SRX10264525_numbat.rds",
+											 "output/numbat_sridhar/SRX14116944_numbat.rds"), pull_scna_segments, chrom = "2") |> 
 		as("GRangesList") |> 
 		unlist() |> 
 		reduce_ranges()
@@ -178,9 +178,9 @@ plot_fig_s20 <- function() {
 plot_fig_s10 <- function(plot_path = "results/fig_s10.pdf", table_path = "results/table_s23.csv") {
 	# 16q  ------------------------------
 	
-	segs_16q <- sapply(c("output/numbat_sridhar/SRR14800534_numbat.rds",
-											"output/numbat_sridhar/SRR14800535_numbat.rds",
-											"output/numbat_sridhar/SRR14800536_numbat.rds"), pull_scna_segments, chrom = "16") |> 
+	segs_16q <- sapply(c("output/numbat_sridhar/SRX11133594_numbat.rds",
+											"output/numbat_sridhar/SRX11133593_numbat.rds",
+											"output/numbat_sridhar/SRX11133592_numbat.rds"), pull_scna_segments, chrom = "16") |> 
 		as("GRangesList") |> 
 		unlist() |> 
 		reduce_ranges()
@@ -264,10 +264,10 @@ plot_fig_s10 <- function(plot_path = "results/fig_s10.pdf", table_path = "result
 plot_fig_s08 <- function(plot_path = "results/fig_s08.pdf", table_path = "results/table_s22.csv") {
 	# 1q  ------------------------------
 	
-	segs_1q <- sapply(c("output/numbat_sridhar/SRR13884249_numbat.rds",
-											"output/numbat_sridhar/SRR14800534_numbat.rds",
-											"output/numbat_sridhar/SRR14800535_numbat.rds",
-											"output/numbat_sridhar/SRR14800536_numbat.rds"), pull_scna_segments, chrom = "1") |> 
+	segs_1q <- sapply(c("output/numbat_sridhar/SRX10264526_numbat.rds",
+											"output/numbat_sridhar/SRX11133594_numbat.rds",
+											"output/numbat_sridhar/SRX11133593_numbat.rds",
+											"output/numbat_sridhar/SRX11133592_numbat.rds"), pull_scna_segments, chrom = "1") |> 
 		as("GRangesList") |> 
 		unlist() |> 
 		reduce_ranges()

@@ -295,7 +295,7 @@ drop_cluster_orders_table <- function(sqlite_path = "batch_hashes.sqlite") {
 #' @return List object
 #' @export
 retrieve_snakemake_params <- function(numbat_rds_file) {
-  sample_id <- stringr::str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- stringr::str_extract(numbat_rds_file, "SR[RX][0-9]+")
   log_file <- fs::path(fs::path_dir(numbat_rds_file), "log.txt")
   log <- readr::read_lines(log_file)[3:26] |>
     stringr::str_split(" = ") |>

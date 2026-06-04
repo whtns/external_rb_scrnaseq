@@ -15,9 +15,9 @@ library(readr)
 library(magrittr)
 conflicted::conflict_prefer("rowSums", "Matrix")
 
-out_dir = "output/numbat_sridhar/SRR13884242/"
+out_dir = "output/numbat_sridhar/SRX10264519/"
 
-matrix_file = "output/cellranger/SRR13884242/outs/filtered_feature_bc_matrix/matrix.mtx.gz"
+matrix_file = "output/cellranger/SRX10264519/outs/filtered_feature_bc_matrix/matrix.mtx.gz"
 print(matrix_file)
 
 matrix_dir = fs::path_dir(matrix_file)
@@ -38,12 +38,12 @@ if(cell_ceiling > 0){
 if(!as.numeric(read_prop) == 1){
 	count_mat <- scuttle::downsampleMatrix(count_mat, as.numeric(read_prop))
 }
-allele_df = "output/numbat/SRR13884242/SRR13884242_allele_counts.tsv.gz"
+allele_df = "output/numbat/SRX10264519/SRX10264519_allele_counts.tsv.gz"
 allele_df = data.table::fread(allele_df) %>%
     tidyr::drop_na(CHROM) %>% # drop X chromosome values
   identity()
 
-seu_path = "output/seurat/SRR13884242_seu.rds"
+seu_path = "output/seurat/SRX10264519_seu.rds"
 myseu <- readRDS(seu_path)
 
 count_mat <- count_mat[,colnames(count_mat) %in% colnames(myseu)]
@@ -98,7 +98,7 @@ out = numbat::run_numbat(
 	)
 
 # settings ------------------------------
-out_dir = "output/numbat_sridhar/SRR13884242/"
+out_dir = "output/numbat_sridhar/SRX10264519/"
 i=2
 exp_post <- fread(glue("{out_dir}/exp_post_{i}.tsv"),
        sep = "\t")
@@ -110,10 +110,10 @@ tree_list <- readRDS(glue("{out_dir}/tree_list_{i}.rds"))
 treeML <- readRDS(glue("{out_dir}/treeML_{i}.rds"))
 gtree <- readRDS(glue("{out_dir}/tree_final_{i}.rds"))
 G_m <- readRDS(glue("{out_dir}/mut_graph_{i}.rds"))
-clone_post = fread("output/numbat_sridhar/SRR13884242/clone_post_2.tsv", sep = "\t")
-subtrees = fread("output/numbat_sridhar/SRR13884242/bulk_subtrees_2.tsv.gz", sep = "\t")
-clones <- readRDS("output/numbat_sridhar/SRR13884242/clones_2.rds")
-segs_consensus = fread("output/numbat_sridhar/SRR13884242/segs_consensus_2.tsv", sep = "\t")
+clone_post = fread("output/numbat_sridhar/SRX10264519/clone_post_2.tsv", sep = "\t")
+subtrees = fread("output/numbat_sridhar/SRX10264519/bulk_subtrees_2.tsv.gz", sep = "\t")
+clones <- readRDS("output/numbat_sridhar/SRX10264519/clones_2.rds")
+segs_consensus = fread("output/numbat_sridhar/SRX10264519/segs_consensus_2.tsv", sep = "\t")
 
 done_file <- fs::path(out_dir, "done.txt")
 

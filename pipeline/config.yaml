@@ -19,6 +19,17 @@
 metatsv: ../data/metadata.tsv
 
 ##--------------------------------------------------------------------------------------------
+## FASTQ input directory.
+## Expected structure: <FASTQ>/<sample>/<sample>_S1_L001_R[12]_001.fastq.gz
+##--------------------------------------------------------------------------------------------
+FASTQ: ../data/FASTQ
+
+##--------------------------------------------------------------------------------------------
+## Cell Ranger reference transcriptome (built with cellranger mkref).
+##--------------------------------------------------------------------------------------------
+cellranger_transcriptome: /project2/cobrinik_1090/Homo_sapiens/cellranger/refdata-gex-GRCh38-2024-A
+
+##--------------------------------------------------------------------------------------------
 ## Path to the directory containing cellranger outputs.
 ## Expected structure: <cellranger_output>/<sample>/outs/possorted_genome_bam.bam
 ##                     <cellranger_output>/<sample>/outs/filtered_feature_bc_matrix/
@@ -38,32 +49,38 @@ numbat_sridhar_dirname: numbat_sridhar
 ##--------------------------------------------------------------------------------------------
 ## R setup
 ##--------------------------------------------------------------------------------------------
-Rbin: "/usr/bin/R"
+Rbin: "R"
 
 ## Project-local R library searched before system libraries. Set to null to disable.
 R_LIBS_USER: ../.rlib
 
-## Maximum cores available for each rule.
-## The actual number of cores available to Snakemake is set via --cores on the command line.
-ncores: 6
+## Per-rule core counts for HPC. Override any value here to tune for your node size.
+## Pass --cores <total> to Snakemake; it will not exceed that total across all running jobs.
+ncores: 6        # legacy fallback (unused by rules; kept for backwards compat)
+cellranger_cores: 32  # Cell Ranger alignment + counting
+cellranger_mem_mb: 128000  # Cell Ranger peak memory (120 GB; passed as --localmem)
+pileup_cores: 16     # cellsnp-lite pileup — parallelizes over BAM chunks
+phase_cores: 16      # Eagle2 phasing — multi-threaded
+seurat_cores: 4      # Seurat object construction — mostly serial R
+numbat_cores: 8      # Numbat CNV inference — HMM/EM iterations parallelize well
 
 ##--------------------------------------------------------------------------------------------
 ## Numbat allele pileup and phasing inputs
 ##--------------------------------------------------------------------------------------------
 ## Genetic map for Eagle2 phasing
-gmap: /usr/local/bin/TOOLS/Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz
+gmap: /Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz
 
 ## Population SNP VCF (heterozygous SNP positions)
-snpvcf: /dataVolume/storage/Homo_sapiens/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.chrPrefix.vcf.gz
+snpvcf: /project2/cobrinik_1090/Homo_sapiens/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.chrPrefix.vcf.gz
 
 ## 1000 Genomes reference panel directory for phasing
-paneldir: /dataVolume/storage/Homo_sapiens/numbat/1000G_hg38
+paneldir: /project2/cobrinik_1090/Homo_sapiens/numbat/1000G_hg38
 
 ##--------------------------------------------------------------------------------------------
 ## Numbat CNV inference parameters
 ##--------------------------------------------------------------------------------------------
 ## Reference expression profile for normal cells
-sridhar_ref_path: /dataVolume/storage/Homo_sapiens/numbat/sridhar_ref.rds
+sridhar_ref_path: /project2/cobrinik_1090/Homo_sapiens/numbat/sridhar_ref.rds
 
 ## Transition probability for the HMM (lower = stricter CNV calls)
 numbat_t: 1e-2
@@ -78,7 +95,7 @@ max_entropy: 0.7
 min_LLR: 5
 
 ## Maximum number of EM iterations
-max_iter: 2
+max_iter: 4
 
 ## Maximum number of nearest-neighbour iterations
 max_nni: 100
@@ -103,10 +120,10 @@ subset_bad_cell_types_default: true
 ## Seurat cell type annotation reference
 ## Used by process_seurat.R to assign cell type labels before numbat runs.
 ##--------------------------------------------------------------------------------------------
-celltype_ref: /dataVolume/storage/Homo_sapiens/numbat/plae_ref.rds
+celltype_ref: /project2/cobrinik_1090/Homo_sapiens/numbat/plae_ref.rds
 
 ##--------------------------------------------------------------------------------------------
 ## Memory limit for the numbat rule (in MB). Enforced via ulimit -v.
 ## Must be <= the --memory flag passed to `docker run`.
 ##--------------------------------------------------------------------------------------------
-numbat_mem_mb: 65536
+numbat_mem_mb: 131072

@@ -15,7 +15,8 @@ configvars = [
     'read_prop', 'tau', 'cell_ceiling', 'gmap', 'snpvcf',
     'paneldir', 'sridhar_ref_path', 'cellranger_output',
     'subset_bad_cell_types_default', 'subset_bad_cell_types_by_sample',
-    'celltype_ref', 'numbat_sridhar_dirname'
+    'celltype_ref', 'numbat_sridhar_dirname',
+    'FASTQ', 'cellranger_transcriptome'
 ]
 for k in configvars:
     if k not in config:
@@ -39,51 +40,36 @@ from pathlib import Path
 
 table_samples = pd.read_csv(config["metatsv"], sep="\t")
 
-## Derive sample names from the cellranger output directory.
-## Supports two layouts:
-##   Standard cellranger: outs/possorted_genome_bam.bam, outs/filtered_feature_bc_matrix/
-##   Merged/aggr:         outs/{sample}.bam, outs/count/filtered_feature_bc_matrix/
-cellranger_base   = config["cellranger_output"]
-metadata_samples  = set(table_samples["Run"].tolist())
+## Sample discovery: union of samples found in the FASTQ directory and existing
+## cellranger output directories, filtered to those present in the metadata.
+cellranger_base  = config["cellranger_output"]
+fastq_base       = config.get("FASTQ", "../data/FASTQ")
+metadata_samples = set(table_samples["Experiment"].tolist())
 
-def _find_bam(d):
-    for p in [d / "outs" / "possorted_genome_bam.bam", d / "outs" / (d.name + ".bam")]:
-        if p.exists():
-            return str(p)
-    return None
+_samples = set()
 
-def _find_barcodes(d):
-    for p in [d / "outs" / "filtered_feature_bc_matrix" / "barcodes.tsv.gz",
-              d / "outs" / "count" / "filtered_feature_bc_matrix" / "barcodes.tsv.gz"]:
-        if p.exists():
-            return str(p)
-    return None
+## Discover from FASTQ subdirectories (samples not yet run through cellranger)
+_fastq_path = Path(os.path.abspath(fastq_base))
+if _fastq_path.exists():
+    for _d in sorted(_fastq_path.iterdir()):
+        if _d.is_dir() and _d.name in metadata_samples:
+            _samples.add(_d.name)
 
-def _find_matrix_dir(d):
-    for p in [d / "outs" / "filtered_feature_bc_matrix",
-              d / "outs" / "count" / "filtered_feature_bc_matrix"]:
-        if p.is_dir():
-            return str(p) + "/"
-    return None
+## Also include samples with existing cellranger output (for resuming partial runs)
+_cr_path = Path(cellranger_base)
+if _cr_path.exists():
+    for _d in sorted(_cr_path.iterdir()):
+        if _d.is_dir() and _d.name in metadata_samples:
+            _bam = _d / "outs" / "possorted_genome_bam.bam"
+            if _bam.exists():
+                _samples.add(_d.name)
 
-sample_bam        = {}
-sample_barcodes   = {}
-sample_matrix_dir = {}
-
-for _d in sorted(Path(cellranger_base).iterdir()):
-    if not _d.is_dir() or _d.name not in metadata_samples:
-        continue
-    _bam  = _find_bam(_d)
-    _bars = _find_barcodes(_d)
-    _mdir = _find_matrix_dir(_d)
-    if _bam and _bars and _mdir:
-        sample_bam[_d.name]        = _bam
-        sample_barcodes[_d.name]   = _bars
-        sample_matrix_dir[_d.name] = _mdir
-
-samples = list(sample_bam.keys())
+samples = sorted(_samples)
 if len(samples) == 0:
-    sys.exit("No cellranger output directories with BAM files found under: " + cellranger_base)
+    sys.exit(
+        "No samples found in FASTQ directory (" + fastq_base + ") "
+        "or cellranger output (" + cellranger_base + ") that match the metadata."
+    )
 
 ## Optional: limit which samples to process (comma-separated string or list in config)
 _run_samples_cfg = config.get("run_samples", None)
@@ -113,6 +99,11 @@ numbat_sridhar_dir = outputdir + getpath(numbat_sridhar_dirname)
 ## Define the R binary
 Rbin = config["Rbin"]
 
+## Singularity container — used for all R rules
+_sif = "/project2/cobrinik_1090/external_rb_scrnaseq_proj/pipeline/containers/numbat-pipeline.sif"
+container_R      = "apptainer exec --bind /project2 " + _sif + " /usr/bin/R"
+container_Rscript = "apptainer exec --bind /project2 " + _sif + " /usr/bin/Rscript"
+
 ## Optional project-local R library path
 RlibsUser = config.get("R_LIBS_USER", None)
 if RlibsUser not in [None, "", "None", "none"]:
@@ -140,7 +131,7 @@ def subset_bad_cell_types_for_sample(wildcards):
     if isinstance(per_sample, dict) and wildcards.sample in per_sample:
         return parse_bool(per_sample[wildcards.sample], default_value)
     if "subset_bad_cell_types" in table_samples.columns:
-        sample_rows = table_samples[table_samples.Run == wildcards.sample]
+        sample_rows = table_samples[table_samples.Experiment == wildcards.sample]
         if len(sample_rows) > 0:
             return parse_bool(sample_rows.subset_bad_cell_types.values[0], default_value)
     return default_value
@@ -153,16 +144,16 @@ def max_entropy_for_sample(wildcards):
     return default_value
 
 def bam_for_sample(wildcards):
-    return sample_bam[wildcards.sample]
+    return outputdir + "cellranger/" + wildcards.sample + "/outs/possorted_genome_bam.bam"
 
 def barcodes_for_sample(wildcards):
-    return sample_barcodes[wildcards.sample]
+    return outputdir + "cellranger/" + wildcards.sample + "/outs/filtered_feature_bc_matrix/barcodes.tsv.gz"
 
 def matrix_dir_for_sample(wildcards):
-    return sample_matrix_dir[wildcards.sample]
+    return outputdir + "cellranger/" + wildcards.sample + "/outs/filtered_feature_bc_matrix/"
 
 def matrix_file_for_sample(wildcards):
-    return sample_matrix_dir[wildcards.sample] + "matrix.mtx.gz"
+    return outputdir + "cellranger/" + wildcards.sample + "/outs/filtered_feature_bc_matrix/matrix.mtx.gz"
 
 ## ------------------------------------------------------------------------------------ ##
 ## Target definitions
@@ -174,6 +165,51 @@ rule all:
         expand(numbat_sridhar_dir + "{sample}_numbat.rds", sample=samples)
 
 ## ------------------------------------------------------------------------------------ ##
+## Step 0: Cell Ranger count
+##
+## Aligns FASTQ reads to the reference transcriptome and produces the feature-barcode
+## matrix and position-sorted BAM consumed by all downstream steps.
+## FASTQs must be organised as data/FASTQ/{sample}/{sample}_S1_L001_R[12]_001.fastq.gz
+## ------------------------------------------------------------------------------------ ##
+
+rule cellranger:
+    input:
+        fastqdir = fastq_base + "/{sample}"
+    output:
+        bam      = outputdir + "cellranger/{sample}/outs/possorted_genome_bam.bam",
+        barcodes = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/barcodes.tsv.gz",
+        matrix   = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/matrix.mtx.gz"
+    log:
+        outputdir + "logs/cellranger_{sample}.log"
+    benchmark:
+        outputdir + "benchmarks/cellranger_{sample}.txt"
+    threads:
+        config.get("cellranger_cores", 16)
+    resources:
+        mem_mb = config.get("cellranger_mem_mb", 120000),
+        time   = "24:00:00"
+    params:
+        transcriptome  = config["cellranger_transcriptome"],
+        cellranger_dir = outputdir + "cellranger",
+        abs_fastqdir   = lambda wildcards: os.path.abspath(fastq_base + "/" + wildcards.sample),
+        localmem       = lambda wildcards, resources: resources.mem_mb // 1000
+    shell:
+        '''
+        export PATH=/apps/generic/cellranger/8.0.1/bin:$PATH
+        echo "cellranger version:" > {log}; cellranger --version >> {log}
+        rm -rf {params.cellranger_dir}/{wildcards.sample}
+        cd {params.cellranger_dir}
+        cellranger count \
+            --id={wildcards.sample} \
+            --fastqs={params.abs_fastqdir} \
+            --sample={wildcards.sample} \
+            --transcriptome={params.transcriptome} \
+            --localcores={threads} \
+            --localmem={params.localmem} \
+            --create-bam=true >> {log} 2>&1
+        '''
+
+## ------------------------------------------------------------------------------------ ##
 ## Step 1a: Pileup
 ##
 ## Counts alleles at heterozygous SNP positions using cellsnp-lite.
@@ -183,8 +219,8 @@ rule all:
 
 rule pileup:
     input:
-        bam      = bam_for_sample,
-        barcodes = barcodes_for_sample
+        bam      = outputdir + "cellranger/{sample}/outs/possorted_genome_bam.bam",
+        barcodes = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/barcodes.tsv.gz"
     output:
         sentinel = outputdir + "numbat/{sample}/pileup/{sample}/cellSNP.base.vcf"
     log:
@@ -192,7 +228,10 @@ rule pileup:
     benchmark:
         outputdir + "benchmarks/pileup_{sample}.txt"
     threads:
-        config["ncores"]
+        config.get("pileup_cores", 16)
+    resources:
+        mem_mb = 32000,
+        time   = "08:00:00"
     params:
         gmap   = config["gmap"],
         snpvcf = config["snpvcf"],
@@ -200,7 +239,7 @@ rule pileup:
         script = "scripts/pileup_and_phase.R"
     shell:
         '''
-        Rscript {params.script} \
+        {container_Rscript} {params.script} \
             --label {wildcards.sample} \
             --samples {wildcards.sample} \
             --bams {input.bam} \
@@ -232,7 +271,10 @@ rule phase_and_count:
     benchmark:
         outputdir + "benchmarks/phase_and_count_{sample}.txt"
     threads:
-        config["ncores"]
+        config.get("phase_cores", 16)
+    resources:
+        mem_mb = 32000,
+        time   = "08:00:00"
     params:
         gmap     = config["gmap"],
         paneldir = config["paneldir"],
@@ -241,7 +283,7 @@ rule phase_and_count:
         intermediate_allele_df = outputdir + "numbat/{sample}/{sample}_allele_counts.tsv.gz"
     shell:
         '''
-        Rscript {params.script} \
+        {container_Rscript} {params.script} \
             --label {wildcards.sample} \
             --samples {wildcards.sample} \
             --outdir {params.outdir} \
@@ -262,8 +304,8 @@ rule phase_and_count:
 
 rule seurat:
     input:
-        matrix_dir = matrix_dir_for_sample,
-        script     = "scripts/process_seurat.R"
+        matrix_file = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/matrix.mtx.gz",
+        script      = "scripts/process_seurat.R"
     output:
         seu_path = outputdir + "seurat/{sample}_seu.rds"
     log:
@@ -271,11 +313,15 @@ rule seurat:
     benchmark:
         outputdir + "benchmarks/seurat_{sample}.txt"
     threads:
-        config["ncores"]
+        config.get("seurat_cores", 4)
+    resources:
+        mem_mb = 32000,
+        time   = "04:00:00"
     params:
+        matrix_dir   = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/",
         celltype_ref = config["celltype_ref"]
     shell:
-        '''{Rbin} CMD BATCH --no-restore --no-save "--args matrix_dir='{input.matrix_dir}' seu_path='{output.seu_path}' celltype_ref='{params.celltype_ref}'" {input.script} {log}'''
+        '''{container_R} CMD BATCH --no-restore --no-save "--args matrix_dir='{params.matrix_dir}' seu_path='{output.seu_path}' celltype_ref='{params.celltype_ref}'" {input.script} {log}'''
 
 ## ------------------------------------------------------------------------------------ ##
 ## Step 3: Numbat CNV inference
@@ -289,7 +335,7 @@ rule seurat:
 rule numbat_sridhar:
     input:
         allele_df   = outputdir + "numbat/{sample}_allele_counts.tsv.gz",
-        matrix_file = matrix_file_for_sample,
+        matrix_file = outputdir + "cellranger/{sample}/outs/filtered_feature_bc_matrix/matrix.mtx.gz",
         seu_path    = outputdir + "seurat/{sample}_seu.rds",
         script      = "scripts/run_numbat.R"
     output:
@@ -299,11 +345,12 @@ rule numbat_sridhar:
     benchmark:
         numbat_sridhar_dir + "{sample}/benchmark_numbat.txt"
     threads:
-        config["ncores"]
+        config.get("numbat_cores", 16)
     resources:
-        mem_mb = config.get("numbat_mem_mb", 30720)
+        mem_mb = config.get("numbat_mem_mb", 65536),
+        time   = "24:00:00"
     params:
-        num_clones            = lambda wildcards: table_samples[table_samples.Run == wildcards.sample].num_clone.values[0],
+        num_clones            = lambda wildcards: table_samples[table_samples.Experiment == wildcards.sample].num_clone.values[0],
         subset_bad_cell_types = subset_bad_cell_types_for_sample,
         numbat_t              = config["numbat_t"],
         gamma                 = config["gamma"],
@@ -316,11 +363,11 @@ rule numbat_sridhar:
         cell_ceiling          = config["cell_ceiling"],
         prof                  = numbat_sridhar_dir + "{sample}/log.prof",
         ref_path              = config["sridhar_ref_path"],
-        mem_kb                = lambda wildcards, resources: resources.mem_mb * 1024
+        mem_kb                = lambda wildcards, resources: resources.mem_mb * 1024 * 2
     shell:
         '''
         ulimit -v {params.mem_kb};
-        {Rbin} CMD BATCH --no-restore --no-save \
+        {container_R} CMD BATCH --no-restore --no-save \
         "--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
         t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
         init_k='{params.num_clones}' read_prop='{params.read_prop}' \
@@ -350,11 +397,14 @@ rule numbat_sridhar_rds:
     benchmark:
         numbat_sridhar_dir + "{sample}/benchmark_numbat_rds.txt"
     threads:
-        config["ncores"]
+        1
+    resources:
+        mem_mb = 8000,
+        time   = "01:00:00"
     params:
         script = "scripts/process_numbat_rds.R"
     shell:
-        '''{Rbin} CMD BATCH --no-restore --no-save "--args done_file='{input.done_file}'" {params.script} {log}'''
+        '''{container_R} CMD BATCH --no-restore --no-save "--args done_file='{input.done_file}'" {params.script} {log}'''
 
 ## ------------------------------------------------------------------------------------ ##
 ## Success and failure messages

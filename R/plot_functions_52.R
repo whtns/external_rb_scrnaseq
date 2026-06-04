@@ -156,7 +156,7 @@ poster_plot_markers <- function(seu, metavar = "batch", num_markers = 5, selecte
 #' @export
 calc_silhouette <- function(seu_path, assay = "SCT", reduction = "pca", dims = 1:30, ...) {
   #
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -272,7 +272,7 @@ find_cc_genes_by_arm <- function() {
 }
 
 plot_feature_in_seu <- function(numbat_rds_file, ...) {
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 
@@ -299,7 +299,7 @@ plot_feature_in_seu <- function(numbat_rds_file, ...) {
 plot_clone_pearls <- function(seu_path, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), var_y = "clusters") {
 	file_id <- fs::path_file(seu_path)
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
@@ -369,7 +369,7 @@ plot_clone_cc_plots <- function(seu_path, large_clone_comparisons = NULL, scna_o
 	
 	summary_function = match.arg(summary_function)
 	
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -526,7 +526,7 @@ plot_cc <- function(object = NULL, group.by = "gene_snn_res.0.6", assay = "gene"
     group_by(Cluster) %>%
     slice_head(n = 6) %>%
     dplyr::filter(Gene.Name %in%
-      rownames(GetAssayData(object, layer = "gene", slot = "scale.data"))) %>%
+      rownames(GetAssayData(object, layer = "gene", layer = "scale.data"))) %>%
     dplyr::filter(Gene.Name %in% VariableFeatures(object)) %>%
     identity()
   heatmap_features <- heatmap_features %>%
@@ -624,7 +624,7 @@ make_table_s10 <- make_table_s07
 
 #' Collate per-sample summary PDFs from multiple figure targets
 #'
-#' @param sample_id SRR sample identifier
+#' @param sample_id SRX sample identifier
 #' @param clone_tree_files Character vector of debranched clone tree PDF paths
 #' @param fig_s03a_files Character vector of unfiltered numbat heatmap PDF paths
 #' @param numbat_expression_files Character vector of numbat expression PDF paths
@@ -653,7 +653,7 @@ collate_sample_summary <- function(ideogram_res_s06a_unfiltered,
                                    low_hypoxia_numbat_bulk_clones,
                                    density = 300) {
 
-  sample_id <- str_extract(unlist(unfiltered_clone_tree_files)[1], "SRR[0-9]*")
+  sample_id <- str_extract(unlist(unfiltered_clone_tree_files)[1], "SR[RX][0-9]+")
   if (is.na(sample_id)) return(NULL)
 
   clone_trees_unfiltered    <- unlist(unfiltered_clone_tree_files)
@@ -997,7 +997,7 @@ collate_hypoxia_summary <- function(seu_path,
                                     high_heatmap_file,
                                     density = 300) {
 
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   annotate_panel <- function(path, label) {
     img <- magick::image_read_pdf(path, density = density)[1]

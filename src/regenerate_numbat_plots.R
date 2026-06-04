@@ -14,5 +14,5 @@ safe_make_numbat_plots <- purrr::safely(make_all_numbat_plots)
 
 # map(numbat_dirs, safe_make_numbat_plots)
 
-safe_make_numbat_plots("output/numbat/SRR13884249", min_LLR = 1, overwrite = TRUE)
+safe_make_numbat_plots("output/numbat/SRX10264526", min_LLR = 1, overwrite = TRUE)
 

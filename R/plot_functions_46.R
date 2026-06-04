@@ -157,11 +157,11 @@ make_faded_umap_plots <- function(full_seu, retained_clones, group_by = "cluster
 plot_seu_marker_heatmap_all_resolutions <- function(seu_path = NULL, nb_paths = NULL, clone_simplifications = NULL, cluster_orders = NULL) {
 	file_id <- fs::path_file(seu_path)
 	
-  sample_id <- str_extract(seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   nb_paths <-
     nb_paths %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   nb_path <- nb_paths[[sample_id]]
 

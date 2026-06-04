@@ -3,7 +3,7 @@
 import velocyto as vcy
 import numpy as np 
 
-vlm = vcy.VelocytoLoom("output/velocyto/SRR14800534.loom")
+vlm = vcy.VelocytoLoom("output/velocyto/SRX11133594.loom")
 
 vlm.normalize("S", size=True, log=True)
 vlm.S_norm  # contains log normalized

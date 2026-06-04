@@ -1,7 +1,7 @@
 library(seuratTools)
 library(tidyverse)
 
-seu <- seu[,seu$batch %in% c("SRR13884247", "SRR13884248", "SRR17960484")]
+seu <- seu[,seu$batch %in% c("SRX10264524", "SRX10264525", "SRX14116944")]
 
 seu$batch <- factor(seu$batch)
 

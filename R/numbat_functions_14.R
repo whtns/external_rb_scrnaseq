@@ -60,7 +60,7 @@ calculate_6p_percent_affected <- function(){
 		identity()
 	
 	# test3 <- 
-	test1[c("SRR13884247", "SRR13884248", "SRR17960484", "SRR27187899")] |> 
+	test1[c("SRX10264524", "SRX10264525", "SRX14116944", "SRX22868105")] |> 
 		dplyr::bind_rows(.id = "tumor") |> 
 		dplyr::filter(chr == "chr6", arm == "p") |> 
 		dplyr::mutate(start = percent(start, accuracy = 1)) |> 
@@ -104,9 +104,9 @@ binom_test_clone_percent <- function(mydf) {
 #' @param seu_path File path
 #' @return Function result
 #' @export
-tabulate_clone_percent <- function(seu_path = "output/seurat/SRR14800534_filtered_seu.rds") {
+tabulate_clone_percent <- function(seu_path = "output/seurat/SRX11133594_filtered_seu.rds") {
 
-	sample_id <- str_extract(seu_path, "SRR[0-9]*")
+	sample_id <- str_extract(seu_path, "SR[RX][0-9]+")
 		
 	seu <- readRDS(seu_path)
 	

@@ -94,14 +94,14 @@ diffex_bw_cluster_set <- function(file_name, w_scna, wo_scna){
 corresponding_states_dictionary = 
 					 tibble::tribble(
                                           ~file_name, ~w_scna, ~wo_scna,
-        "SRR13884246_branch_5_filtered_seu_2p.rds", "g1_1-g1_4-g1_0",      "g1_2",
-        "SRR13884246_branch_5_filtered_seu_2p.rds",     "s_g2_7",      "s_6",
-           "SRR13884247_branch_6_filtered_seu.rds", "g1_0-g1_2-g1_5",    "g1_3-g1_6",
-                 "SRR13884248_filtered_seu_2p.rds",   "g1_0-g1_1",    "g1_6-g1_7",
-                 "SRR17960484_filtered_seu_2p.rds",     "g1_1",    "g1_3-g1_4",
-                 "SRR17960484_filtered_seu_2p.rds",     "s_g2_5",      "s_g2_0",
-                    "SRR13884247_filtered_seu.rds",   "g1_0-g1_1",    "g1_4-g1_5",
-                 "SRR17960484_filtered_seu_6p.rds",     "g1_2",      "g1_3"
+        "SRX10264523_branch_5_filtered_seu_2p.rds", "g1_1-g1_4-g1_0",      "g1_2",
+        "SRX10264523_branch_5_filtered_seu_2p.rds",     "s_g2_7",      "s_6",
+           "SRX10264524_branch_6_filtered_seu.rds", "g1_0-g1_2-g1_5",    "g1_3-g1_6",
+                 "SRX10264525_filtered_seu_2p.rds",   "g1_0-g1_1",    "g1_6-g1_7",
+                 "SRX14116944_filtered_seu_2p.rds",     "g1_1",    "g1_3-g1_4",
+                 "SRX14116944_filtered_seu_2p.rds",     "s_g2_5",      "s_g2_0",
+                    "SRX10264524_filtered_seu.rds",   "g1_0-g1_1",    "g1_4-g1_5",
+                 "SRX14116944_filtered_seu_6p.rds",     "g1_2",      "g1_3"
         )
 
 

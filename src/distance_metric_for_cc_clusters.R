@@ -4,7 +4,7 @@ library('tidyverse')
 library('fs')
 library('readxl')
 
-seu <- readRDS("output/seurat/SRR17960484_filtered_seu_2p.rds")
+seu <- readRDS("output/seurat/SRX14116944_filtered_seu_2p.rds")
 
 source("packages.R")
 source("functions.R")

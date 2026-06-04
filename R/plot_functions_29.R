@@ -42,7 +42,7 @@ collect_markers <- function(numbat_rds_file, metavar = "gene_snn_res.0.2", num_m
   # # by default only resolution markers are calculated in pre-processing
   # seu <- find_all_markers(numbat_rds_file, metavar, seurat_assay = seurat_assay, p_val_cutoff = p_val_cutoff)
 
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 
@@ -92,7 +92,7 @@ collect_markers <- function(numbat_rds_file, metavar = "gene_snn_res.0.2", num_m
 collect_all_markers <- function(numbat_rds_files, excel_output = "results/markers.xlsx") {
   
   
-  names(numbat_rds_files) <- str_extract(numbat_rds_files, "SRR[0-9]*")
+  names(numbat_rds_files) <- str_extract(numbat_rds_files, "SR[RX][0-9]+")
 
   marker_tables <- purrr::map(numbat_rds_files, collect_markers)
 
@@ -130,7 +130,7 @@ score_filtration <- function(numbat_rds_file, cluster_dictionary, filter_express
   
   #
 
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
 
@@ -186,7 +186,7 @@ collect_clusters_from_seus <- function(filtered_seus) {
 
   gather_clusters <- function(filtered_seu, resolutions) {
     #
-    # sample_id <- str_extract(filtered_seu, "SRR[0-9]*")
+    # sample_id <- str_extract(filtered_seu, "SR[RX][0-9]+")
 
     # numbat_dir = fs::path_split(filtered_seu)[[1]][[2]]
 
@@ -204,7 +204,7 @@ collect_clusters_from_seus <- function(filtered_seus) {
     return(clusters)
   }
 
-  sample_ids <- str_extract(filtered_seus, "SRR[0-9]*")
+  sample_ids <- str_extract(filtered_seus, "SR[RX][0-9]+")
 
   names(filtered_seus) <- sample_ids
 
@@ -220,7 +220,7 @@ compare_cluster_continuous_var <- function(seu_path, cluster_order = NULL, conti
   #
 	file_id <- fs::path_file(seu_path)
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
@@ -278,7 +278,7 @@ compare_markers <- function(seu_path, cluster_order = NULL, group.by = "SCT_snn_
   #
 	file_id <- fs::path_file(seu_path)
 
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -333,8 +333,8 @@ compare_markers <- function(seu_path, cluster_order = NULL, group.by = "SCT_snn_
 }
 
 compile_subtype_violins <- function(interesting_samples, subtype_violins, selected_samples = c(
-                                      "SRR13884242", "SRR13884243", "SRR13884248", "SRR13884249", "SRR14800534",
-                                      "SRR14800535", "SRR14800536", "SRR14800543", "SRR17960484"
+                                      "SRX10264519", "SRX10264520", "SRX10264525", "SRX10264526", "SRX11133594",
+                                      "SRX11133593", "SRX11133592", "SRX11133585", "SRX14116944"
                                     )) {
   names(subtype_violins) <- interesting_samples
 

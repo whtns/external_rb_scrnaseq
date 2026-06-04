@@ -96,11 +96,11 @@ plot_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications,
 
 
   seu <- readRDS(seu_path)
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   nb_paths <- nb_paths %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   nb_path <- nb_paths[[tumor_id]]
 
@@ -126,11 +126,11 @@ save_clone_tree_from_path <- function(seu_path, nb_paths, clone_simplifications,
   }
 
   seu <- readRDS(seu_path)
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   nb_paths <- nb_paths %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   nb_path <- nb_paths[[tumor_id]]
 

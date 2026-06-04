@@ -153,8 +153,8 @@ merged_metadata = read_csv(path(glue("~/single_cell_projects/resources/{study}_e
   dplyr::mutate(cell = str_replace(cell, "-", ".")) %>%
   identity()
 
-# SRR13884240 numbat ------------------------------
-sample_id = "SRR13884240"
+# SRX10264517 numbat ------------------------------
+sample_id = "SRX10264517"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -203,8 +203,8 @@ output_plots[[sample_id]][["numbat_phylo"]] <-  safe_plot_phylo(mynbs[[sample_id
 output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(output_plots[[sample_id]][["numbat_phylo"]][["result"]]) / output_plots[[sample_id]][["numbat_phylo"]][["result"]] %>%
   plot_variability_at_SCNA()
 
-# SRR13884241 numbat ------------------------------
-sample_id = "SRR13884241"
+# SRX10264518 numbat ------------------------------
+sample_id = "SRX10264518"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -230,7 +230,7 @@ myseus[[sample_id]] <- annotate_seu_with_rb_subtype_gene_expression(myseus[[samp
 
 # saveRDS(myseus[[sample_id]], seu_path)
 
-mynbs[[sample_id]] <- readRDS("~/single_cell_projects/resources/wu_et_al_proj/output/numbat/SRR13884240_numbat.rds")
+mynbs[[sample_id]] <- readRDS("~/single_cell_projects/resources/wu_et_al_proj/output/numbat/SRX10264517_numbat.rds")
 
 plot_phylo_heatmap(mynbs[[sample_id]])
 
@@ -251,8 +251,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
   plot_variability_at_SCNA()
 
 
-# SRR13884242 numbat ------------------------------
-sample_id = "SRR13884242"
+# SRX10264519 numbat ------------------------------
+sample_id = "SRX10264519"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -296,8 +296,8 @@ output_plots[[sample_id]][["numbat_phylo"]] <-  safe_plot_phylo(mynbs[[sample_id
 output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(output_plots[[sample_id]][["numbat_phylo"]][["result"]]) / output_plots[[sample_id]][["numbat_phylo"]][["result"]] %>%
   plot_variability_at_SCNA()
 
-# SRR13884243 numbat in progress ------------------------------
-sample_id = "SRR13884243"
+# SRX10264520 numbat in progress ------------------------------
+sample_id = "SRX10264520"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 # read_regress_save(seu_path)
@@ -356,8 +356,8 @@ phylo_plot_output <- output_plots[[sample_id]][["numbat_phylo"]]$result
 
 plot_variability_at_SCNA(phylo_plot_output)
 
-# SRR13884244 ------------------------------
-sample_id = "SRR13884244"
+# SRX10264521 ------------------------------
+sample_id = "SRX10264521"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 # read_regress_save(seu_path)
@@ -385,8 +385,8 @@ myseus[[sample_id]] <- annotate_seu_with_rb_subtype_gene_expression(myseus[[samp
 
 # saveRDS(myseus[[sample_id]], seu_path)
 
-# SRR13884245 ------------------------------
-sample_id = "SRR13884245"
+# SRX10264522 ------------------------------
+sample_id = "SRX10264522"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 # read_regress_save(seu_path)
@@ -414,8 +414,8 @@ myseus[[sample_id]] <- annotate_seu_with_rb_subtype_gene_expression(myseus[[samp
 
 # saveRDS(myseus[[sample_id]], seu_path)
 
-# SRR13884246 numbat ------------------------------
-sample_id = "SRR13884246"
+# SRX10264523 numbat ------------------------------
+sample_id = "SRX10264523"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -457,8 +457,8 @@ output_plots[[sample_id]][["numbat_phylo"]] <-  safe_plot_phylo(mynbs[[sample_id
 output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(output_plots[[sample_id]][["numbat_phylo"]][["result"]]) / output_plots[[sample_id]][["numbat_phylo"]][["result"]] %>%
   plot_variability_at_SCNA()
 
-# SRR13884247 ------------------------------
-sample_id = "SRR13884247"
+# SRX10264524 ------------------------------
+sample_id = "SRX10264524"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_seu.rds"))
 # read_regress_save(seu_path)
@@ -486,8 +486,8 @@ myseus[[sample_id]] <- annotate_seu_with_rb_subtype_gene_expression(myseus[[samp
 
 # saveRDS(myseus[[sample_id]], seu_path)
 
-# SRR13884248 numbat ------------------------------
-sample_id = "SRR13884248"
+# SRX10264525 numbat ------------------------------
+sample_id = "SRX10264525"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -529,8 +529,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 # saveRDS(myseus[[sample_id]], seu_path)
 
-# SRR13884249 numbat ------------------------------
-sample_id = "SRR13884249"
+# SRX10264526 numbat ------------------------------
+sample_id = "SRX10264526"
 study = "wu"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -584,8 +584,8 @@ merged_metadata = read_csv(path(glue("~/single_cell_projects/resources/{study}_e
   dplyr::mutate(cell = str_replace(cell, "-", ".")) %>%
   identity()
 
-# SRR14800534 numbat ------------------------------
-sample_id = "SRR14800534"
+# SRX11133594 numbat ------------------------------
+sample_id = "SRX11133594"
 study = "yang"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -631,8 +631,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR14800536 numbat ------------------------------
-sample_id = "SRR14800536"
+# SRX11133592 numbat ------------------------------
+sample_id = "SRX11133592"
 study = "yang"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -678,8 +678,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR14800537 numbat ------------------------------
-sample_id = "SRR14800537"
+# SRX11133591 numbat ------------------------------
+sample_id = "SRX11133591"
 study = "yang"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -725,8 +725,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR14800539 numbat ------------------------------
-sample_id = "SRR14800539"
+# SRX11133589 numbat ------------------------------
+sample_id = "SRX11133589"
 study = "yang"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -772,8 +772,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR14800540 numbat ------------------------------
-sample_id = "SRR14800540"
+# SRX11133588 numbat ------------------------------
+sample_id = "SRX11133588"
 study = "yang"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -819,8 +819,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR14800541 numbat ------------------------------
-sample_id = "SRR14800541"
+# SRX11133587 numbat ------------------------------
+sample_id = "SRX11133587"
 study = "yang"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -873,8 +873,8 @@ merged_metadata = read_csv(path(glue("~/single_cell_projects/resources/{study}_e
   dplyr::mutate(cell = str_replace(cell, "-", ".")) %>%
   identity()
 
-# SRR17960481 numbat ------------------------------
-sample_id = "SRR17960481"
+# SRX14116947 numbat ------------------------------
+sample_id = "SRX14116947"
 study = "field"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -920,8 +920,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR17960482 numbat ------------------------------
-sample_id = "SRR17960482"
+# SRX14116946 numbat ------------------------------
+sample_id = "SRX14116946"
 study = "field"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -967,8 +967,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR17960483 numbat ------------------------------
-sample_id = "SRR17960483"
+# SRX14116945 numbat ------------------------------
+sample_id = "SRX14116945"
 study = "field"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -1014,8 +1014,8 @@ output_plots[[sample_id]][["phylo_probability_plot"]] <- ggplotify::as.ggplot(ou
 
 
 
-# SRR17960484 numbat ------------------------------
-sample_id = "SRR17960484"
+# SRX14116944 numbat ------------------------------
+sample_id = "SRX14116944"
 study = "field"
 seu_path = path(glue("~/single_cell_projects/resources/{study}_et_al_proj/output/seurat/{sample_id}_infercnv_numbat_seu.rds"))
 # read_regress_save(seu_path)
@@ -1097,7 +1097,7 @@ plot_rb_subtype_expression <- function(seu, seu_name, subtype_hallmarks){
 
 
 pdf("results/test0.pdf")
-test0$SRR13884242
+test0$SRX10264519
 dev.off()
 
 browseURL("results/test0.pdf")

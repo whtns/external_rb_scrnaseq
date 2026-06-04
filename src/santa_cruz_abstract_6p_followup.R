@@ -2,7 +2,7 @@ source("packages.R")
 source("functions.R")
 library(targets)
 
-seu <- readRDS("output/seurat/SRR17960484_filtered_seu.rds")
+seu <- readRDS("output/seurat/SRX14116944_filtered_seu.rds")
 
 seu$clusters
 

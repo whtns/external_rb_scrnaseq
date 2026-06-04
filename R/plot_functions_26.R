@@ -22,12 +22,12 @@ window <- function(x, size) {
 #' @export
 find_diffex_bw_clones_for_each_cluster <- function(seu_path, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "cis", scna_of_interest = NULL) {
   #
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   numbat_rds_files <- numbat_rds_files %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   mynb <- readRDS(numbat_rds_files[[tumor_id]])
 
@@ -92,7 +92,7 @@ find_diffex_bw_clones_for_each_cluster <- function(seu_path, numbat_rds_files, l
 #' @return ggplot2 plot object
 #' @export
 gse_plot_from_cluster_diffex <- function(diffex_path) {
-  sample_id <- str_extract(diffex_path, "SRR[0-9]*")
+  sample_id <- str_extract(diffex_path, "SR[RX][0-9]+")
 
   numbat_dir <- path_split(diffex_path)[[1]][[2]]
 
@@ -162,7 +162,7 @@ drop_empty_plots <- function(plot_list) {
 make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL, nb_paths = NULL, clone_simplifications = NULL, group.bys = "SCT_snn_res.0.6", group.by = "SCT_snn_res.0.6", assay = "SCT", height = 10, width = 18, equalize_scna_clones = FALSE, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star"), kept_phases = NULL, large_clone_comparisons = NULL, scna_of_interest = "1q", min_cells_per_cluster = 50, return_plots = FALSE, split_columns = "clusters", wo_nb = FALSE, plot_path = NULL, heatmap_groups = c("G2M.Score", "S.Score", "scna", "clusters"), heatmap_arrangement = c("clusters", "scna"), file_id = NULL) {
 	kept_phases <- kept_phases %||% phase_levels
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
@@ -194,7 +194,7 @@ make_clone_distribution_figure <- function(seu_path = NULL, cluster_order = NULL
 	
 	if(!is.null(nb_paths)){
 		nb_paths <- nb_paths %>%
-			set_names(str_extract(., "SRR[0-9]*"))
+			set_names(str_extract(., "SR[RX][0-9]+"))
 		
 		nb_path <- nb_paths[[tumor_id]]
 		

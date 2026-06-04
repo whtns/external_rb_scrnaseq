@@ -5,13 +5,58 @@ suppressPackageStartupMessages(source("./packages.R"))
 ## Load your R files
 lapply(list.files("./R", full.names = TRUE), source)
 
+# Seurat uses future internally for parallel ops; large Seurat objects exceed the
+# 500 MB default limit. Remove the cap so workers can process them.
+options(future.globals.maxSize = Inf)
+
+# Absolute user library path — used both in script_lines (for R_LIBS_USER) and
+# in tar_option_set(lib.loc=) so workers find packages regardless of HOME resolution.
+.user_lib <- "/home1/stachele/R/x86_64-pc-linux-gnu-library/4.4"
+
+# Lines added to every SLURM worker script: load modules and set library paths.
+# Workers start as fresh R sessions on compute nodes, so they need this environment.
+.slurm_script_lines <- c(
+  "source /etc/profile.d/modules.sh",
+  "module load r/4.4.1 curl bzip2 libxml2 cairo fontconfig freetype",
+  paste0("export LD_LIBRARY_PATH=/home1/stachele/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"),
+  paste0("export R_LIBS_USER=", .user_lib)
+)
+
+# Light controller: file-tracking, plotting, metadata (~8 GB total, 2 CPUs).
+.worker_light <- crew_controller_slurm(
+  name                        = "light",
+  workers                     = 8,
+  seconds_idle                = 120,
+  slurm_partition             = "main",
+  slurm_cpus_per_task         = 2,
+  slurm_memory_gigabytes_per_cpu = 4,
+  slurm_time_minutes          = 240,
+  script_lines                = .slurm_script_lines
+)
+
+# Heavy controller: Seurat processing, numbat, integration, diffex (~64 GB total, 4 CPUs).
+.worker_heavy <- crew_controller_slurm(
+  name                        = "heavy",
+  workers                     = 4,
+  seconds_idle                = 300,
+  slurm_partition             = "main",
+  slurm_cpus_per_task         = 4,
+  slurm_memory_gigabytes_per_cpu = 16,
+  slurm_time_minutes          = 720,
+  script_lines                = .slurm_script_lines
+)
+
 tar_option_set(
-  memory = "transient",
+  memory             = "transient",
   garbage_collection = TRUE,
-  error = "continue",
+  error              = "continue",
   workspace_on_error = TRUE,
-  trust_timestamps = TRUE,
-  controller = crew_controller_local(workers = 1)
+  trust_timestamps   = TRUE,
+  library            = .user_lib,
+  controller         = crew_controller_group(.worker_light, .worker_heavy),
+  # Default to heavy; workers are persistent so lightweight targets on a heavy worker
+  # cost nothing extra. Tag individual targets with controller = "light" to opt down.
+  resources          = tar_resources(crew = tar_resources_crew(controller = "heavy"))
 )
 
 ## _targets.R must return a list of tar_target objects.

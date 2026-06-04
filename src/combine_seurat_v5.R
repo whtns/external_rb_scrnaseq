@@ -6,9 +6,9 @@ library('readxl')
 library(seuratTools)
 
 one_q_sixteen_q_seus <- c(
-	"SRR14800534" = "output/seurat/SRR14800534_filtered_seu.rds",
-	"SRR14800535" = "output/seurat/SRR14800535_filtered_seu.rds",
-	"SRR14800536" = "output/seurat/SRR14800536_filtered_seu.rds"
+	"SRX11133594" = "output/seurat/SRX11133594_filtered_seu.rds",
+	"SRX11133593" = "output/seurat/SRX11133593_filtered_seu.rds",
+	"SRX11133592" = "output/seurat/SRX11133592_filtered_seu.rds"
 ) %>% 
 	map(readRDS)
 
@@ -33,7 +33,7 @@ DefaultAssay(seu) <- "gene"
 
 seu$sample_id <- dplyr::coalesce(seu$sample_id, seu$sample_id.x)
 
-seu <- seu[,seu$sample_id %in% c("SRR14800534", "SRR14800535", "SRR14800536")]
+seu <- seu[,seu$sample_id %in% c("SRX11133594", "SRX11133593", "SRX11133592")]
 
 options(future.globals.maxSize = 3e+09)
 

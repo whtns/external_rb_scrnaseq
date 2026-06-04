@@ -61,6 +61,33 @@ SAMPLES=$("${SSH[@]}" "$SOURCE_HOST" "ls '${SOURCE_BASE}/data/FASTQ' | grep '^SR
 #     done
 # done
 
+# ── per-sample base seurat objects (_seu.rds) ─────────────────────────────────
+# Source machine names files by SRR ID; HPC uses SRX IDs for renamed samples.
+# Reads SRX->SRR mapping from metadata at runtime and renames on copy.
+mkdir -p "${DEST}/output/seurat"
+
+# Build associative array: SRX -> SRR (where Run=SRR and Experiment=SRX)
+declare -A SRX_TO_SRR
+while IFS=$'\t' read -r run _ _ _ _ _ exp rest; do
+    if [[ "$run" == SRR* && "$exp" == SRX* ]]; then
+        SRX_TO_SRR["$exp"]="$run"
+    fi
+done < <(tail -n +2 "${DEST}/data/metadata.tsv")
+
+for s in $(ls "${DEST}/output/cellranger/"); do
+    [[ -f "${DEST}/output/seurat/${s}_seu.rds" ]] && continue
+    # SRX samples that were renamed from an SRR on the source machine
+    src_name="$s"
+    if [[ "$s" == SRX* && -n "${SRX_TO_SRR[$s]+x}" ]]; then
+        src_name="${SRX_TO_SRR[$s]}"
+    fi
+    if "${SSH[@]}" "$SOURCE_HOST" "[[ -f '${SOURCE_BASE}/output/seurat/${src_name}_seu.rds' ]]"; then
+        "${RSYNC[@]}" \
+            "${SOURCE_HOST}:${SOURCE_BASE}/output/seurat/${src_name}_seu.rds" \
+            "${DEST}/output/seurat/${s}_seu.rds"
+    fi
+done
+
 # ── numbat filtered results ───────────────────────────────────────────────────
 for s in $SAMPLES; do
     src="${SOURCE_HOST}:${SOURCE_BASE}/output/numbat_sridhar_filtered/${s}"

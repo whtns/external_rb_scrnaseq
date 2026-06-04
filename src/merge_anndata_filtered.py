@@ -23,18 +23,18 @@ import scrb
 import seaborn as sns
 
 adata_paths = {
-  "SRR13884242" : "output/scanpy/SRR13884242_filtered_scanpy.h5ad",
-  "SRR13884243" : "output/scanpy/SRR13884243_filtered_scanpy.h5ad",
-  "SRR13884247" : "output/scanpy/SRR13884247_filtered_scanpy.h5ad",
-  "SRR13884249" : "output/scanpy/SRR13884249_filtered_scanpy.h5ad",
-  "SRR14800534" : "output/scanpy/SRR14800534_filtered_scanpy.h5ad",
-  "SRR14800535" : "output/scanpy/SRR14800535_filtered_scanpy.h5ad",
-  "SRR14800536" : "output/scanpy/SRR14800536_filtered_scanpy.h5ad",
-  "SRR14800540" : "output/scanpy/SRR14800540_filtered_scanpy.h5ad",
-  "SRR14800541" : "output/scanpy/SRR14800541_filtered_scanpy.h5ad",
-  "SRR14800543" : "output/scanpy/SRR14800543_filtered_scanpy.h5ad",
-  "SRR17960481" : "output/scanpy/SRR17960481_filtered_scanpy.h5ad",
-  "SRR17960484" : "output/scanpy/SRR17960484_filtered_scanpy.h5ad"
+  "SRX10264519" : "output/scanpy/SRX10264519_filtered_scanpy.h5ad",
+  "SRX10264520" : "output/scanpy/SRX10264520_filtered_scanpy.h5ad",
+  "SRX10264524" : "output/scanpy/SRX10264524_filtered_scanpy.h5ad",
+  "SRX10264526" : "output/scanpy/SRX10264526_filtered_scanpy.h5ad",
+  "SRX11133594" : "output/scanpy/SRX11133594_filtered_scanpy.h5ad",
+  "SRX11133593" : "output/scanpy/SRX11133593_filtered_scanpy.h5ad",
+  "SRX11133592" : "output/scanpy/SRX11133592_filtered_scanpy.h5ad",
+  "SRX11133588" : "output/scanpy/SRX11133588_filtered_scanpy.h5ad",
+  "SRX11133587" : "output/scanpy/SRX11133587_filtered_scanpy.h5ad",
+  "SRX11133585" : "output/scanpy/SRX11133585_filtered_scanpy.h5ad",
+  "SRX14116947" : "output/scanpy/SRX14116947_filtered_scanpy.h5ad",
+  "SRX14116944" : "output/scanpy/SRX14116944_filtered_scanpy.h5ad"
 }
 
 

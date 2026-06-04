@@ -96,7 +96,7 @@ select_scna_diffex <- function(diffex_clones, selected_scna = "1q+", rb_scna_sam
     sign <- str_extract(selected_scna, "[+,-]")
 
     comparisons <-
-      diffex_clones[str_extract(names(diffex_clones), "SRR[0-9]*") %in% rb_scna_samples[[segment]]] %>%
+      diffex_clones[str_extract(names(diffex_clones), "SR[RX][0-9]+") %in% rb_scna_samples[[segment]]] %>%
       map(~ .x[str_detect(names(.x), glue("{segment}\\{sign}$"))]) %>%
       compact() %>%
       map(dplyr::bind_rows, .id = "clone_comparison") %>%

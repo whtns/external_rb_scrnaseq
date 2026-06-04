@@ -11,7 +11,7 @@
 #' @return ggplot2 plot object
 #' @export
 plot_fig_04_afterall <- function(cluster_orders, plot_path = "results/fig_02afterall.pdf"){
-    integrated_1q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SRR[0-9].*_1q_filtered_seu.rds") |> as.character()
+    integrated_1q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SR[RX][0-9].*_1q_filtered_seu.rds") |> as.character()
 
     batch_corrected_seu <- "output/seurat/integrated_1q_16q/integrated_seu_1q_afterall.rds"
 
@@ -24,7 +24,7 @@ plot_fig_04_afterall <- function(cluster_orders, plot_path = "results/fig_02afte
     fig_2d_cc <- map(c(batch_corrected_seu, integrated_1q_seus), plot_clone_cc_plots, var_y = "clusters", scna_of_interest = "1q", labeled_values = c("g2_m"))
 
     fig_2d_cc_table <- map(fig_2d_cc, ~.x$data) |>
-        set_names(c("integrated", str_extract(integrated_1q_seus, "SRR[0-9]*"))) |>
+        set_names(c("integrated", str_extract(integrated_1q_seus, "SR[RX][0-9]+"))) |>
         write_xlsx(path = "results/fig_2d_cc.xlsx")
 
     for(plot_i in 2:length(fig_2d_cc)){
@@ -76,7 +76,7 @@ plot_fig_04_afterall <- function(cluster_orders, plot_path = "results/fig_02afte
 #' @export
 plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 
-	integrated_16q_seus <- dir_ls("output/seurat/integrated_16q/", regexp = ".*SRR[0-9].*rds") |>
+	integrated_16q_seus <- dir_ls("output/seurat/integrated_16q/", regexp = ".*SR[RX][0-9].*rds") |>
 		as.character()
 
 	batch_corrected_seu <- "output/seurat/integrated_16q/integrated_seu_16q_complete.rds"
@@ -90,7 +90,7 @@ plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 	fig_3d_cc <- map(c(batch_corrected_seu, integrated_16q_seus), plot_clone_cc_plots, scna_of_interest = "16q", var_y = "clusters", labeled_values = c("pm"))
 
 	fig_3d_cc_table <- map(fig_3d_cc, ~.x$data) |>
-		set_names(c("integrated", str_extract(integrated_16q_seus, "SRR[0-9]*"))) |>
+		set_names(c("integrated", str_extract(integrated_16q_seus, "SR[RX][0-9]+"))) |>
 		write_xlsx(path = "results/fig_3d_cc.xlsx")
 
 	for(plot_i in 2:length(fig_3d_cc)){
@@ -126,7 +126,7 @@ plot_fig_03 <- function(cluster_orders, plot_path = "results/fig_03.pdf"){
 #' @export
 plot_fig_03_afterall <- function(cluster_orders, plot_path = "results/fig_03_afterall.pdf"){
 
-    integrated_16q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SRR[0-9].*_16q_filtered_seu.rds") |>
+    integrated_16q_seus <- dir_ls("output/seurat/integrated_1q_16q/", regexp = ".*SR[RX][0-9].*_16q_filtered_seu.rds") |>
         as.character()
 
     batch_corrected_seu <- "output/seurat/integrated_1q_16q/integrated_seu_16q_afterall.rds"
@@ -142,7 +142,7 @@ plot_fig_03_afterall <- function(cluster_orders, plot_path = "results/fig_03_aft
     fig_3d_cc <- map(c(batch_corrected_seu, integrated_16q_seus), plot_clone_cc_plots, scna_of_interest = "16q", var_y = "clusters", labeled_values = c("pm"), var_y_levels = var_y_levels)
 
     fig_3d_cc_table <- map(fig_3d_cc, ~.x$data) |>
-        set_names(c("integrated", str_extract(integrated_16q_seus, "SRR[0-9]*"))) |>
+        set_names(c("integrated", str_extract(integrated_16q_seus, "SR[RX][0-9]+"))) |>
         write_xlsx(path = "results/fig_3d_cc_afterall.xlsx")
 
     for(plot_i in 2:length(fig_3d_cc)){
@@ -246,7 +246,7 @@ plot_fig_04_05 <- function(seu_paths, integrated_enrichment, plot_path = "result
 plot_fig_07_08 <- function(figure_input, x_var = "sample_cluster", plot_title = "fig_07", p_adj_threshold = 0.1, plot_path = "results/fig_07.pdf", ...){
 	unfiltered_input <-
 		unlist(figure_input) |>
-		set_names(str_extract(unlist(figure_input), "SRR[0-9]*")) |>
+		set_names(str_extract(unlist(figure_input), "SR[RX][0-9]+")) |>
 		map(read_csv) |>
 		purrr::keep(~ nrow(.x) > 0 && "location" %in% names(.x)) |>
 		map(~split(.x, .x$cluster)) |>
@@ -392,7 +392,7 @@ not_sure_what_this_does <- function(seu_list, cluster_orders, plot_path = "resul
 #' @export
 plot_fig_s06a <- function(plot_path = "results/fig_s06a.pdf", table_path = "results/table_s12.xlsx"){
 
-	nb_paths <- dir_ls("output/numbat_sridhar/", regexp = ".*SRR[0-9]*_numbat.rds", recurse = TRUE) |>
+	nb_paths <- dir_ls("output/numbat_sridhar/", regexp = ".*SR[RX][0-9]+_numbat.rds", recurse = TRUE) |>
 		sort()
 
 	ideogram_res <- map(nb_paths, make_rb_scna_ideograms)
@@ -402,7 +402,7 @@ plot_fig_s06a <- function(plot_path = "results/fig_s06a.pdf", table_path = "resu
 		map("table")
 
 	ideogram_tables |>
-		set_names(str_extract(names(ideogram_tables), "SRR[0-9]*")) |>
+		set_names(str_extract(names(ideogram_tables), "SR[RX][0-9]+")) |>
 		writexl::write_xlsx(path = table_path)
 
 	ideogram_plots <-
@@ -420,10 +420,10 @@ plot_fig_s06a <- function(plot_path = "results/fig_s06a.pdf", table_path = "resu
 #' @return List of plot and table paths
 #' @export
 plot_fig_s08 <- function(plot_path = "results/fig_s08.pdf", table_path = "results/table_s22.csv") {
-	segs_1q <- sapply(c("output/numbat_sridhar/SRR13884249_numbat.rds",
-											"output/numbat_sridhar/SRR14800534_numbat.rds",
-											"output/numbat_sridhar/SRR14800535_numbat.rds",
-											"output/numbat_sridhar/SRR14800536_numbat.rds"), pull_scna_segments, chrom = "1") |>
+	segs_1q <- sapply(c("output/numbat_sridhar/SRX10264526_numbat.rds",
+											"output/numbat_sridhar/SRX11133594_numbat.rds",
+											"output/numbat_sridhar/SRX11133593_numbat.rds",
+											"output/numbat_sridhar/SRX11133592_numbat.rds"), pull_scna_segments, chrom = "1") |>
 		as("GRangesList") |>
 		unlist() |>
 		reduce_ranges()
@@ -559,9 +559,9 @@ plot_fig_s09 <- function(){
 #' @return List of plot and table paths
 #' @export
 plot_fig_s10 <- function(plot_path = "results/fig_s10.pdf", table_path = "results/table_s23.csv") {
-	segs_16q <- sapply(c("output/numbat_sridhar/SRR14800534_numbat.rds",
-											"output/numbat_sridhar/SRR14800535_numbat.rds",
-											"output/numbat_sridhar/SRR14800536_numbat.rds"), pull_scna_segments, chrom = "16") |>
+	segs_16q <- sapply(c("output/numbat_sridhar/SRX11133594_numbat.rds",
+											"output/numbat_sridhar/SRX11133593_numbat.rds",
+											"output/numbat_sridhar/SRX11133592_numbat.rds"), pull_scna_segments, chrom = "16") |>
 		as("GRangesList") |>
 		unlist() |>
 		reduce_ranges()
@@ -637,8 +637,8 @@ plot_fig_s10 <- function(plot_path = "results/fig_s10.pdf", table_path = "result
 #' @return List of plot and table paths
 #' @export
 plot_fig_s20 <- function() {
-	segs_2p <- sapply(c("output/numbat_sridhar/SRR13884248_numbat.rds",
-											 "output/numbat_sridhar/SRR17960484_numbat.rds"), pull_scna_segments, chrom = "2") |>
+	segs_2p <- sapply(c("output/numbat_sridhar/SRX10264525_numbat.rds",
+											 "output/numbat_sridhar/SRX14116944_numbat.rds"), pull_scna_segments, chrom = "2") |>
 		as("GRangesList") |>
 		unlist() |>
 		reduce_ranges()
@@ -746,7 +746,7 @@ plot_figure_collage <- function(seu_path = NULL, cluster_order = NULL, nb_paths 
 
 	file_id <- fs::path_file(seu_path)
 
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -763,7 +763,7 @@ plot_figure_collage <- function(seu_path = NULL, cluster_order = NULL, nb_paths 
 		str_split("_v_", simplify = TRUE)
 
 	nb_paths <- nb_paths %>%
-		set_names(str_extract(., "SRR[0-9]*"))
+		set_names(str_extract(., "SR[RX][0-9]+"))
 
 	nb_path <- nb_paths[[tumor_id]]
 
@@ -1109,7 +1109,7 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 
 	file_id <- fs::path_file(seu_path)
 
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -1120,7 +1120,7 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 
 	if(!is.null(nb_paths)){
 		nb_paths <- nb_paths %>%
-			set_names(str_extract(., "SRR[0-9]*"))
+			set_names(str_extract(., "SR[RX][0-9]+"))
 
 		nb_path <- nb_paths[[tumor_id]]
 	}
@@ -1444,7 +1444,7 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 plot_seu_clusters_and_markers <- function(seu_path, cluster_order, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star")) {
 	file_id <- fs::path_file(seu_path)
 
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
@@ -1639,7 +1639,7 @@ plot_fig_01 <- function(seu_path, plot_path = "results/fig_01.pdf") {
 plot_fig_02 <- function(seu_path, numbat_rds_files, large_clone_simplifications, plot_path = NULL) {
 	if (is.na(seu_path)) return(NA_character_)
 
-	sample_id <- stringr::str_extract(seu_path, "SRR[0-9]+")
+	sample_id <- stringr::str_extract(seu_path, "SR[RX][0-9]+")
 	plot_path <- plot_path %||% glue::glue("results/fig_02_{sample_id}.pdf")
 	fs::dir_create(fs::path_dir(plot_path))
 

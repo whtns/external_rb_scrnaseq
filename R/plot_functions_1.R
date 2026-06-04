@@ -225,7 +225,7 @@ assign_phase_cluster_at_resolution <- function(seu_path = NULL, cluster_order = 
 
 	file_id <- fs::path_file(seu_path)
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
@@ -314,7 +314,7 @@ calculate_clone_distribution <- function(seu_path = NULL, cluster_order = NULL, 
 
   file_id <- fs::path_file(seu_path)
   
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   

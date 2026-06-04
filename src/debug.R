@@ -63,16 +63,16 @@ plot_recurrence <- function(test0, mytitle){
 
 # plot drivers ------------------------------
 
-samples_1q <- c("SRR14800534", "SRR14800536", "SRR14800535", "SRR13884249",
-                "SRR17960484")
+samples_1q <- c("SRX11133594", "SRX11133592", "SRX11133593", "SRX10264526",
+                "SRX14116944")
 
-samples_2p <- c("SRR13884249", "SRR17960484", "SRR17960481", "SRR13884247")
+samples_2p <- c("SRX10264526", "SRX14116944", "SRX14116947", "SRX10264524")
 
-samples_6p <- c("SRR17960484", "SRR13884247", "SRR17960481")
+samples_6p <- c("SRX14116944", "SRX10264524", "SRX14116947")
 
-samples_16q <- c("SRR14800540", "SRR13884242", "SRR14800535", "SRR14800534", "SRR14800543", "SRR14800536", "SRR13884243")
+samples_16q <- c("SRX11133588", "SRX10264519", "SRX11133593", "SRX11133594", "SRX11133585", "SRX11133592", "SRX10264520")
 
-# samples_16q <- c("SRR14800540", "SRR14800543", "SRR14800536")
+# samples_16q <- c("SRX11133588", "SRX11133585", "SRX11133592")
 
 plot_markers_featureplot <- function(sample_ids, features){
   # browser()

@@ -138,7 +138,7 @@ pull_common_markers <- function(filtered_seus, gene_lists) {
     dplyr::arrange(mp) %>%
     identity()
 
-  names(filtered_seus) <- str_extract(filtered_seus, "SRR[0-9]*")
+  names(filtered_seus) <- str_extract(filtered_seus, "SR[RX][0-9]+")
 
   # load filtered_seus ------------------------------
   # find cluster markers of every seu, compare with zinovyev markers

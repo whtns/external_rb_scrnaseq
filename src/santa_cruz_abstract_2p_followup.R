@@ -5,7 +5,7 @@ library(org.Hs.eg.db)
 
 
 
-seu <- readRDS("output/seurat/SRR13884246_branch_5_filtered_seu.rds")
+seu <- readRDS("output/seurat/SRX10264523_branch_5_filtered_seu.rds")
 
 seu$clusters
 

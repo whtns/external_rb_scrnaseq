@@ -20,14 +20,14 @@ liu_meta <-
 	identity()
 
 
-mymat <- Seurat::Read10X("data/GSE249995/SRR27187899/")
+mymat <- Seurat::Read10X("data/GSE249995/SRX22868105/")
 
 liu_lu_seu_paths <- 
 	c(
-		"output/seurat/SRR27187899_seu.rds",
-		"output/seurat/SRR27187900_seu.rds",
-		# "output/seurat/SRR27187901_seu.rds",
-		"output/seurat/SRR27187902_seu.rds"
+		"output/seurat/SRX22868105_seu.rds",
+		"output/seurat/SRX22868104_seu.rds",
+		# "output/seurat/SRX22868103_seu.rds",
+		"output/seurat/SRX22868102_seu.rds"
 	)
 
 for(seu_path in liu_lu_seu_paths){

@@ -45,3 +45,12 @@ pipeline.log
 .claude/
 fastq/
 ncbi/
+*.log
+logs/
+pipeline/containers/
+pipeline/logs/
+src/logs/
+.R_libs_backup*/
+lockfile
+src/scenic/example/genome-ranking.feather
+src/scenic/example/output/

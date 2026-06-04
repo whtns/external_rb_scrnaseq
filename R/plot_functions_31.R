@@ -21,12 +21,12 @@ find_diffex_clones_between_corresponding_states <- function(seu_path, correspond
   
   
   #
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   numbat_rds_files <- numbat_rds_files %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   mynb <- numbat_rds_files[[tumor_id]]
 
@@ -70,12 +70,12 @@ find_diffex_clusters_between_corresponding_states <- function(seu_path, correspo
   
   file_name <- fs::path_ext_remove(fs::path_file(seu_path))
 
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   numbat_rds_files <- numbat_rds_files %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   seu <- readRDS(seu_path)
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))

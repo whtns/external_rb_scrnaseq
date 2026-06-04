@@ -168,7 +168,7 @@ extract_seu_metadata <- function(
     )
   }
 
-  sample_id <- stringr::str_extract(filepath, "SRR[0-9]+")
+  sample_id <- stringr::str_extract(filepath, "SR[RX][0-9]+")
 
   # ── seurat_objects ──────────────────────────────────────────────────────────
   DBI::dbExecute(con, "

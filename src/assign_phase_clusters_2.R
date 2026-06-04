@@ -18,7 +18,7 @@ cluster_orders <- pull_cluster_orders2("data/scna_cluster_order2.csv")
 # 
 # # debug(assign_phase_clusters)
 # 
-# assign_phase_clusters(seu, "SRR27187899_filtered_seu.rds", cluster_orders, resolution = "0", group.by = "SCT_snn_res.0.6")
+# assign_phase_clusters(seu, "SRX22868105_filtered_seu.rds", cluster_orders, resolution = "0", group.by = "SCT_snn_res.0.6")
 
 seus <- 
 	myseu_paths |> 

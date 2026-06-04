@@ -16,7 +16,7 @@
 plot_putative_marker_across_samples <- function(mymarkers, seu_paths, plot_type = FeaturePlot, group_by = "gene_snn_res.0.2", extension = "_filtered") {
   print(mymarkers)
 
-  sample_ids <- str_extract(seu_paths, "SRR[0-9]*")
+  sample_ids <- str_extract(seu_paths, "SR[RX][0-9]+")
 
   myplots <- map(seu_paths, plot_markers_in_sample, mymarkers = mymarkers, plot_type = plot_type, group_by = group_by) %>%
     set_names(sample_ids)
@@ -60,7 +60,7 @@ plot_putative_marker_across_samples <- function(mymarkers, seu_paths, plot_type 
 #' @export
 find_diffex_bw_clusters_for_each_clone <- function(numbat_rds_file, cluster_dictionary, ident.1 = "G2M", ident.2 = "cone") {
   #
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
 
 
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]

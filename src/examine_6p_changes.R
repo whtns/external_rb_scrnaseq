@@ -6,8 +6,8 @@ library(plyranges)
 
 tar_load(c("corresponding_clusters_diffex_6p", "corresponding_state_6p_seus", "corresponding_clusters_enrichments_6p"))
 
-segs_6p <- sapply(c("output/numbat_sridhar/SRR13884247_numbat.rds",
-										"output/numbat_sridhar/SRR17960484_numbat.rds"), pull_scna_segments, chrom = "6") |> 
+segs_6p <- sapply(c("output/numbat_sridhar/SRX10264524_numbat.rds",
+										"output/numbat_sridhar/SRX14116944_numbat.rds"), pull_scna_segments, chrom = "6") |> 
 	as("GRangesList") |> 
 	unlist() |> 
 	# reduce_ranges() |> 
@@ -41,9 +41,9 @@ test4 <-
 
 names(corresponding_clusters_diffex_6p) <- str_extract(corresponding_state_6p_seus, "SRR[0-9]*")
 
-cis_47 <- corresponding_clusters_diffex_6p$SRR13884247$`g1_0-g1_1 v. g1_4-g1_5`$cis
+cis_47 <- corresponding_clusters_diffex_6p$SRX10264524$`g1_0-g1_1 v. g1_4-g1_5`$cis
 
-cis_84 <- corresponding_clusters_diffex_6p$SRR17960484$`g1_0 v. g1_1`$cis
+cis_84 <- corresponding_clusters_diffex_6p$SRX14116944$`g1_0 v. g1_1`$cis
 
 specific_47 <- anti_join(cis_47, cis_84, by = "symbol") |> 
 	as_granges() |> 

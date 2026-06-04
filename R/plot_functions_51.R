@@ -110,10 +110,10 @@ pull_cluster_comparisons <- function(cluster_comparisons_file) {
 make_cluster_comparisons_by_phase_for_disctinct_clones <- function(cluster_comparison, debranched_seus) {
   sample_id <- unique(cluster_comparison[[1]][["sample_id"]])
 
-  tumor_id <- str_extract(sample_id, "SRR[0-9]*")
+  tumor_id <- str_extract(sample_id, "SR[RX][0-9]+")
 
   debranched_seus <- debranched_seus %>%
-    set_names(str_extract(., "SRR[0-9]*.*(?=_filtered_seu.rds)"))
+    set_names(str_extract(., "SR[RX][0-9]+.*(?=_filtered_seu.rds)"))
 
   seu_path <- debranched_seus[[sample_id]]
 

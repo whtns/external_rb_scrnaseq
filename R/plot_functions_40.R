@@ -17,7 +17,7 @@ plot_effect_of_filtering_old <- function(unfiltered_seu_path, filtered_seu_path,
 	
 	plot_list <- list()
 	
-	sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
+	sample_id <- str_extract(unfiltered_seu_path, "SR[RX][0-9]+")
 	
 	unfiltered_seu <- unfiltered_seu_path
 	
@@ -181,7 +181,7 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
 
   vec_split_label_line <- Vectorize(split_label_line)
 
-  sample_id <- str_extract(unfiltered_seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(unfiltered_seu_path, "SR[RX][0-9]+")
 
   if (is.null(plot_path)) {
     fs::dir_create("results/effect_of_filtering")
@@ -402,7 +402,7 @@ plot_effect_of_filtering <- function(unfiltered_seu_path, filtered_seu_path = NU
       # Manual calculation of percent-expressed and average expression per group
       assay_name <- if ("SCT" %in% names(seu@assays)) "SCT" else Seurat::DefaultAssay(seu)
       cat("DEBUG: assay_name =", assay_name, "\n")
-      mat <- tryCatch(as.matrix(Seurat::GetAssayData(seu, assay = assay_name, slot = "data")[valid_features, , drop = FALSE]), error = function(e) {
+      mat <- tryCatch(as.matrix(Seurat::GetAssayData(seu, assay = assay_name, layer = "data")[valid_features, , drop = FALSE]), error = function(e) {
         cat("ERROR fetching assay data:", conditionMessage(e), "\n"); NULL
       })
       if (is.null(mat)) {
@@ -853,7 +853,7 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
   
   #
 
-  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(filtered_seu_path, "SR[RX][0-9]+")
 
   regressed_seu <- readRDS(regressed_seu_path)
 
@@ -927,7 +927,7 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
     dplyr::select(regressed_cluster = Cluster, Gene.Name) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(Gene.Name, .keep_all = TRUE) %>%
-    dplyr::filter(Gene.Name %in% rownames(GetAssayData(filtered_seu, "SCT", "scale.data"))) %>%
+    dplyr::filter(Gene.Name %in% rownames(Seurat::GetAssayData(filtered_seu, assay = "SCT", layer = "scale.data"))) %>%
     identity()
 
   filtered_features <-
@@ -938,7 +938,7 @@ plot_effect_of_regression <- function(filtered_seu_path, regressed_seu_path, res
     dplyr::mutate(filtered_cluster = Cluster) %>%
     dplyr::ungroup() %>%
     dplyr::distinct(Gene.Name, .keep_all = TRUE) %>%
-    dplyr::filter(Gene.Name %in% rownames(GetAssayData(filtered_seu, "SCT", "scale.data"))) %>%
+    dplyr::filter(Gene.Name %in% rownames(Seurat::GetAssayData(filtered_seu, assay = "SCT", layer = "scale.data"))) %>%
     identity()
 
   # filtered ------------------------------
@@ -1109,7 +1109,7 @@ plot_effect_of_regression_old <- function(filtered_seu_path, regressed_seu_path,
 
   plot_list <- list()
 
-  sample_id <- str_extract(filtered_seu_path, "SRR[0-9]*")
+  sample_id <- str_extract(filtered_seu_path, "SR[RX][0-9]+")
 
   filtered_seu <- filtered_seu_path
 
@@ -1362,4 +1362,3 @@ plot_effect_of_regression_old <- function(filtered_seu_path, regressed_seu_path,
 
   return(plot_list)
 }
-

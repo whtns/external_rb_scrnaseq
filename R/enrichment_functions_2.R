@@ -59,7 +59,7 @@ enrich_diffex_by_cluster <- function(sample_id, myseus, celldf, ...) {
 #' @export
 enrich_by_cluster <- function(seu_path) {
   
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
   seu <- readRDS(seu_path)
   seu <- Seurat::RenameCells(seu, new.names = str_replace(colnames(seu), "\\.", "-"))
@@ -131,7 +131,7 @@ convert_numbat_pngs <- function(numbat_rds_file) {
   
   
   numbat_output_dir <- str_remove(numbat_rds_file, "_numbat.*")
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
   numbat_dir <- basename(dirname(numbat_output_dir))
   numbat_pngs <- dir_ls(numbat_output_dir, glob = "*.png") %>%
     set_names(path_file(.))

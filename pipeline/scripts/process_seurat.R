@@ -85,6 +85,11 @@ seu <- Seurat::CreateSeuratObject(counts, assay = "gene")
 
 DefaultAssay(seu) <- "gene"
 
+seu <- add_percent_mito(seu, seurat_assay = "gene")
+seu <- seu[, seu$nCount_gene > 1000]
+seu <- seu[, seu$nFeature_gene > 1000]
+seu <- seu[, seu$percent.mt < 10]
+
 seu <-
 	seu %>%
 	seurat_preprocess() %>%
@@ -95,6 +100,7 @@ seu <- FindNeighbors(seu, dims = 1:30, verbose = FALSE)
 seu <- seurat_cluster(seu = seu, resolution = c(0.2, 0.4, 0.6),
 											reduction = "pca")
 
+options(future.globals.maxSize = Inf)
 seu <- SCTransform(seu, assay = "gene", verbose = FALSE)
 
 seu <- RunPCA(seu, verbose = FALSE)
@@ -108,15 +114,5 @@ seu <- seurat_cluster(seu = seu, resolution = c(0.2, 0.4, 0.6),
                       reduction = "pca")
 
 seu <- find_all_markers(seu, seurat_assay = "gene")
-
-seu <- add_percent_mito(seu, seurat_assay = "gene")
-
-# drop poor qc cells
-# read count
-seu <- seu[,seu$nCount_gene > 1000]
-# genes detected
-seu <- seu[,seu$nFeature_gene > 1000]
-# %mito
-seu <- seu[,seu$percent.mt < 5]
 
 saveRDS(seu, seu_path)

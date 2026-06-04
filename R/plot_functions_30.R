@@ -14,12 +14,12 @@ find_diffex_clones <- function(seu_path, numbat_rds_files, large_clone_compariso
   
   
   #
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   numbat_rds_files <- numbat_rds_files %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   mynb <- readRDS(numbat_rds_files[[tumor_id]])
 
@@ -57,12 +57,12 @@ find_diffex_clones_in_phase <- function(seu_path, phase = "g1", scna_of_interest
   
   
   #
-  tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+  tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 
   sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 
   numbat_rds_files <- numbat_rds_files %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   mynb <- numbat_rds_files[[tumor_id]]
 
@@ -94,7 +94,7 @@ find_diffex_clones_in_phase <- function(seu_path, phase = "g1", scna_of_interest
 plot_seu_clusters_and_markers <- function(seu_path, cluster_order, phase_levels = c("pm", "g1", "g1_s", "s", "s_g2", "g2", "g2_m", "hsp", "hypoxia", "other", "s_star")) {
 	file_id <- fs::path_file(seu_path)
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
@@ -207,9 +207,9 @@ plot_plae_celltype_expression <- function(mygenes = c("RXRG", "NRL"), plot_type 
 }
 
 plot_phase_distribution_of_all_samples_by_scna <- function(seu_paths, selected_samples = c(
-                                                             "SRR13884243", "SRR13884249", "SRR14800534",
-                                                             "SRR14800535", "SRR14800536", "SRR14800543",
-                                                             "SRR17960481"
+                                                             "SRX10264520", "SRX10264526", "SRX11133594",
+                                                             "SRX11133593", "SRX11133592", "SRX11133585",
+                                                             "SRX14116947"
                                                            )) {
   #
 
@@ -221,7 +221,7 @@ plot_phase_distribution_of_all_samples_by_scna <- function(seu_paths, selected_s
 
   seu_paths <-
     seu_paths %>%
-    set_names(str_extract(., "SRR[0-9]*"))
+    set_names(str_extract(., "SR[RX][0-9]+"))
 
   if (!is.null(selected_samples)) {
     seu_paths <- seu_paths[selected_samples]
@@ -302,7 +302,7 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 	
 	file_id <- fs::path_file(seu_path)
 	
-	tumor_id <- str_extract(seu_path, "SRR[0-9]*")
+	tumor_id <- str_extract(seu_path, "SR[RX][0-9]+")
 	
 	sample_id <- str_remove(fs::path_file(seu_path), "_filtered_seu.*")
 	
@@ -313,7 +313,7 @@ plot_fig_04_05_panels <- function(seu_path = NULL, cluster_order = NULL, nb_path
 	
 	if(!is.null(nb_paths)){
 		nb_paths <- nb_paths %>%
-			set_names(str_extract(., "SRR[0-9]*"))
+			set_names(str_extract(., "SR[RX][0-9]+"))
 		
 		nb_path <- nb_paths[[tumor_id]]	
 	}

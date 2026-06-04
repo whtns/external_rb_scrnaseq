@@ -7,7 +7,7 @@
 #' @return ggplot2 plot object
 #' @export
 diffex_groups <- function(numbat_rds_file, filter_expressions, idents = NULL) {
-  sample_id <- str_extract(numbat_rds_file, "SRR[0-9]*")
+  sample_id <- str_extract(numbat_rds_file, "SR[RX][0-9]+")
   ident.1 <- idents[[sample_id]]
   filter_expressions <- filter_expressions[[sample_id]]
   numbat_dir <- fs::path_split(numbat_rds_file)[[1]][[2]]
