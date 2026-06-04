@@ -2,6 +2,10 @@
 # SCNA collages, oncoprint targets, enrichment, pseudobulks, and figures 09/10.
 # Defines: pipeline_targets_integration (spliced into tar_plan in _targets.R)
 
+# Crew controller resource assignments for targets
+.light_resources <- tar_resources(crew = tar_resources_crew(controller = "light"))
+.heavy_resources <- tar_resources(crew = tar_resources_crew(controller = "heavy"))
+
 pipeline_targets_integration <- list(
 
   # --- collages: sample-specific SCNA heatmap collages ---

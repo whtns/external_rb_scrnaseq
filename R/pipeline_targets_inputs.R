@@ -1,6 +1,10 @@
 # File-tracking targets, config loading, sample definitions, and reference data.
 # Defines: pipeline_targets_inputs (spliced into tar_plan in _targets.R)
 
+# Crew controller resource assignments for targets
+.light_resources <- tar_resources(crew = tar_resources_crew(controller = "light"))
+.heavy_resources <- tar_resources(crew = tar_resources_crew(controller = "heavy"))
+
 pipeline_targets_inputs <- c(
 
   # --- numbat / seurat file tracking ---
@@ -150,7 +154,7 @@ pipeline_targets_inputs <- c(
     tar_target(large_clone_simplifications, yaml::read_yaml(large_clone_simplifications_file)),
     tar_target(
       large_clone_simplifications_per_sample,
-      large_clone_simplifications[stringr::str_extract(numbat_rds_files, "SR[RX][0-9]+")],
+      large_clone_simplifications[stringr::str_extract(numbat_rds_files, "SRX[0-9]+")],
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
@@ -158,7 +162,7 @@ pipeline_targets_inputs <- c(
     tar_target(large_filter_expressions, yaml::read_yaml(large_filter_expressions_file)),
     tar_target(
       large_filter_expressions_per_sample,
-      large_filter_expressions[stringr::str_extract(numbat_rds_files, "SR[RX][0-9]+")],
+      large_filter_expressions[stringr::str_extract(numbat_rds_files, "SRX[0-9]+")],
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
@@ -172,7 +176,7 @@ pipeline_targets_inputs <- c(
     tar_target(cluster_dictionary, read_cluster_dictionary(cluster_dictionary_file)),
     tar_target(
       cluster_dictionary_per_sample,
-      cluster_dictionary[stringr::str_extract(numbat_rds_files, "SR[RX][0-9]+")],
+      cluster_dictionary[stringr::str_extract(numbat_rds_files, "SRX[0-9]+")],
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),

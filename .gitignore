@@ -54,3 +54,6 @@ src/logs/
 lockfile
 src/scenic/example/genome-ranking.feather
 src/scenic/example/output/
+*.out
+*.err
+*.tsv

@@ -2,6 +2,10 @@
 # and integration cluster diffex (fig 07/08 inputs and plots).
 # Defines: pipeline_targets_diffex (spliced into tar_plan in _targets.R)
 
+# Crew controller resource assignments for targets
+.light_resources <- tar_resources(crew = tar_resources_crew(controller = "light"))
+.heavy_resources <- tar_resources(crew = tar_resources_crew(controller = "heavy"))
+
 pipeline_targets_diffex <- list(
 
   # --- all locations ---

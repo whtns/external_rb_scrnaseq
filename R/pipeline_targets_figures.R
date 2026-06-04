@@ -3,6 +3,10 @@
 # large numbat plots, sample-specific integration figures, and pipeline notification.
 # Defines: pipeline_targets_figures (spliced into tar_plan in _targets.R)
 
+# Crew controller resource assignments for targets
+.light_resources <- tar_resources(crew = tar_resources_crew(controller = "light"))
+.heavy_resources <- tar_resources(crew = tar_resources_crew(controller = "heavy"))
+
 pipeline_targets_figures <- c(
 
 list(
@@ -66,6 +70,7 @@ list(
   # --- study metadata and overview figures ---
 
   # Collect per-sample cell count and QC statistics across all studies.
+  # Returns file path (simple string, trivially serializable)
   tar_target(study_cell_stats, collect_study_metadata()),
 
   # Cell cycle space and clone distribution plots for figure 01.
@@ -144,7 +149,12 @@ list(
   ),
 
   # Plot study-level metadata summary for supplemental figure S04.
-  tar_target(fig_s04, plot_study_metadata(study_cell_stats)),
+  tar_target(fig_s04, {
+    # Depend on study_cell_stats to ensure CSV is created
+    study_cell_stats
+    # Read CSV directly
+    plot_study_metadata(readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE))
+  }),
 
   tar_target(table_s01, make_table_s01(study_cell_stats)), # umi, genes detected, mito %
   tar_target(table_s02, make_table_s02()), # detailed sample metadata
@@ -335,9 +345,9 @@ list(
   tar_target(
     preferred_numbat_bulk_clones,
     {
-      filt_ids <- str_extract(filtered_numbat_bulk_clones, "SR[RX][0-9]+")
+      filt_ids <- str_extract(filtered_numbat_bulk_clones, "SRX[0-9]+")
       purrr::map_chr(unfiltered_numbat_bulk_clones, function(path) {
-        sid <- str_extract(path, "SR[RX][0-9]+")
+        sid <- str_extract(path, "SRX[0-9]+")
         filt_match <- filtered_numbat_bulk_clones[filt_ids == sid]
         if (length(filt_match) > 0) filt_match[[1]] else path
       })
@@ -345,26 +355,29 @@ list(
   ),
 
   tar_target(nb_paths_s06a,
-    dir_ls("output/numbat_sridhar/", regexp = ".*SR[RX][0-9]+_numbat.rds", recurse = TRUE) |> sort()
+    dir_ls("output/numbat_sridhar/", regexp = ".*SRX[0-9]+_numbat.rds", recurse = TRUE) |> sort()
   ),
 
   tar_target(ideogram_res_s06a_unfiltered,
     make_rb_scna_ideograms(nb_paths_s06a),
-    pattern = map(nb_paths_s06a)
+    pattern = map(nb_paths_s06a),
+    resources = .light_resources
   ),
 
   tar_target(ideogram_res_s06a_filtered,
     make_rb_scna_ideograms(nb_paths_s06a, suffix = "_subset"),
-    pattern = map(nb_paths_s06a)
+    pattern = map(nb_paths_s06a),
+    resources = .light_resources
   ),
 
   tar_target(nb_paths_s06a_filtered,
-    dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SR[RX][0-9]+_numbat.rds", recurse = TRUE) |> sort()
+    dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SRX[0-9]+_numbat.rds", recurse = TRUE) |> sort()
   ),
 
   tar_target(ideogram_res_s06a_low_hypoxia,
     make_rb_scna_ideograms(nb_paths_s06a, suffix = "_low_hypoxia"),
-    pattern = map(nb_paths_s06a)
+    pattern = map(nb_paths_s06a),
+    resources = .light_resources
   ),
 
   tar_target(fig_s06a,
@@ -373,7 +386,7 @@ list(
       odd_idx <- seq(1, length(ideogram_res_s06a_unfiltered), by = 2)
       plot_paths <- as.character(ideogram_res_s06a_unfiltered[odd_idx])
       tables <- ideogram_res_s06a_unfiltered[odd_idx + 1] |>
-        set_names(str_extract(plot_paths, "SR[RX][0-9]+"))
+        set_names(str_extract(plot_paths, "SRX[0-9]+"))
       writexl::write_xlsx(tables, "results/table_s12.xlsx")
       qpdf::pdf_combine(plot_paths, "results/fig_s06a.pdf")
       list("results/fig_s06a.pdf", "results/table_s12.xlsx")
@@ -399,7 +412,7 @@ list(
   ),
 
   tar_target(filtering_timelines,
-    qpdf::pdf_combine(dir_ls("results", regexp = ".*SR[RX][0-9]+_filtering_timeline.pdf"), "results/filtering_timelines.pdf")
+    qpdf::pdf_combine(dir_ls("results", regexp = ".*SRX[0-9]+_filtering_timeline.pdf"), "results/filtering_timelines.pdf")
   ),
 
   # --- clone distribution and pearls ---

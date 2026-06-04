@@ -2,6 +2,7 @@
 library(targets)
 library(crew)
 library(crew.cluster)
+library(numbatHelpers)
 library(future)
 library(seuratTools)
 library(dotenv)
@@ -39,8 +40,12 @@ library(speckle)
 library(ggraph)
 library(org.Hs.eg.db)
 library(plyranges)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(AnnotationHub)
+# Lazy-load annotation databases to save memory (~200 MB):
+# library(org.Hs.eg.db)
+# library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+# library(AnnotationHub)
+# These are only used in enrichment/plot functions and are already
+# referenced with :: namespace qualification where needed.
 library(TCGAgistic)
 library(maftools)
 library(janitor)
@@ -57,6 +62,7 @@ conflicts_prefer(base::setdiff)
 conflicts_prefer(rlang::exprs)
 # library(plotgardener)
 
-msig_h <- msigdbr(species = "Homo sapiens", category = "H") %>%
-  dplyr::select(gs_name, entrez_gene) %>%
-  dplyr::rename(ont = gs_name, gene = entrez_gene)
+msig_h <- msigdbr(species = "Homo sapiens", collection = "H") %>%
+  dplyr::select(gs_name, ncbi_gene) %>%
+  dplyr::rename(ont = gs_name, gene = ncbi_gene)
+

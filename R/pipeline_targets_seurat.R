@@ -2,6 +2,10 @@
 # regression diagnostics, hypoxia, integrated seus, and metadata DB.
 # Defines: pipeline_targets_seurat (spliced into tar_plan in _targets.R)
 
+# Crew controller resource assignments for targets
+.light_resources <- tar_resources(crew = tar_resources_crew(controller = "light"))
+.heavy_resources <- tar_resources(crew = tar_resources_crew(controller = "heavy"))
+
 pipeline_targets_seurat <- c(
 
   # --- file-tracking: debranched SCNA seu paths ---
@@ -245,11 +249,19 @@ pipeline_targets_seurat <- c(
       ))
     ),
 
-    # Populate SQLite metadata tables for all SCNA-stratified Seurat objects.
-    # Upserts four tables: seurat_objects, cell_metadata, cluster_composition,
-    # qc_metrics. Re-runs automatically when any debranched_seus_* file changes.
+    # Collect all available Seurat RDS files (unfiltered + filtered from all samples)
+    tar_target(all_seu_files,
+      setNames(as.character(fs::dir_ls("output/seurat/", regexp = "/SRX[0-9]+_seu.rds")),
+               stringr::str_extract(fs::dir_ls("output/seurat/", regexp = "/SRX[0-9]+_seu.rds"), "SRX[0-9]+")),
+      deployment = "main"
+    ),
+
+    # Populate SQLite metadata tables for all Seurat objects.
+    # Upserts eight tables: seurat_objects, cell_metadata, cell_qc_values,
+    # cluster_composition, cluster_markers, qc_metrics, hashes, cluster_orders.
+    # Re-runs automatically when any .rds file in output/seurat/ changes.
     tar_target(seu_metadata_db,
-      bulk_extract_seu_metadata(scna_seus, sqlite_path = "batch_hashes.sqlite"),
+      bulk_extract_seu_metadata(all_seu_files, sqlite_path = "batch_hashes.sqlite"),
       deployment = "main"  # DB writes must run on the main process, not a worker
     ),
 
@@ -345,7 +357,7 @@ pipeline_targets_seurat <- c(
       {
         path <- unlist(unfiltered_seus)
         if (is.na(path)) return(NULL)
-        sample_id <- stringr::str_extract(path, "SR[RX][0-9]+")
+        sample_id <- stringr::str_extract(path, "SRX[0-9]+")
         filtered_path <- unlist(filtered_seus)[grepl(sample_id, unlist(filtered_seus))]
         if (length(filtered_path) == 0) filtered_path <- NULL
         lh_paths <- unlist(seus_low_hypoxia)

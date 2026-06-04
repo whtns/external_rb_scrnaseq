@@ -29,8 +29,10 @@ log_msg("Working directory: ", getwd())
 runner <- callr::r_bg(
   func = function(target_names, store_path) {
     suppressPackageStartupMessages(library(targets))
+    devtools::load_all("/project2/cobrinik_1090/rpkgs/numbat_helpers")
     tar_config_set(store = store_path)
     options(targets.ask = FALSE)
+
 
     # Branch hashes (e.g. "parent_abc123def456789a") can't be targeted via
     # tar_make(names=...) because branches are dynamic. Instead: invalidate the
@@ -45,7 +47,10 @@ runner <- callr::r_bg(
       pattern_names <- unique(c(pattern_names, parent_names))
     }
 
-    tar_make(names = all_of(pattern_names), reporter = "timestamp")
+    # callr_function = NULL: run pipeline in this process rather than spawning
+    # a third nested R subprocess (outer script -> r_bg -> tar_make's own callr).
+    # Three nested R processes exhaust the 2 GB interactive session memory.
+    tar_make(names = all_of(pattern_names), reporter = "timestamp", callr_function = NULL)
   },
   args = list(target_names, store_path),
   stdout = "|",

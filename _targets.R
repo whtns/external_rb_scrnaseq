@@ -2,8 +2,8 @@
 # All R scripts in ./R/ are sourced below, including packages.R and functions.R if present.
 ## Load your packages, e.g. library(targets).
 suppressPackageStartupMessages(source("./packages.R"))
-## Load your R files
-lapply(list.files("./R", full.names = TRUE), source)
+## Load pipeline definition and constant files (functions are loaded via library(numbatHelpers))
+lapply(list.files("./R", pattern = "^(pipeline_|constants)", full.names = TRUE), source)
 
 # Seurat uses future internally for parallel ops; large Seurat objects exceed the
 # 500 MB default limit. Remove the cap so workers can process them.
@@ -19,6 +19,7 @@ options(future.globals.maxSize = Inf)
   "source /etc/profile.d/modules.sh",
   "module load r/4.4.1 curl bzip2 libxml2 cairo fontconfig freetype",
   paste0("export LD_LIBRARY_PATH=/home1/stachele/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"),
+  paste0("export R_LIBS=/project2/cobrinik_1090/external_rb_scrnaseq_proj/.R_libs:${R_LIBS}"),
   paste0("export R_LIBS_USER=", .user_lib)
 )
 
@@ -27,10 +28,13 @@ options(future.globals.maxSize = Inf)
   name                        = "light",
   workers                     = 8,
   seconds_idle                = 120,
+  seconds_timeout             = 600,
   slurm_partition             = "main",
   slurm_cpus_per_task         = 2,
   slurm_memory_gigabytes_per_cpu = 4,
   slurm_time_minutes          = 240,
+  slurm_log_output            = "logs/crew_light_%j.out",
+  slurm_log_error             = "logs/crew_light_%j.err",
   script_lines                = .slurm_script_lines
 )
 
@@ -39,10 +43,13 @@ options(future.globals.maxSize = Inf)
   name                        = "heavy",
   workers                     = 4,
   seconds_idle                = 300,
+  seconds_timeout             = 600,
   slurm_partition             = "main",
   slurm_cpus_per_task         = 4,
   slurm_memory_gigabytes_per_cpu = 16,
   slurm_time_minutes          = 720,
+  slurm_log_output            = "logs/crew_heavy_%j.out",
+  slurm_log_error             = "logs/crew_heavy_%j.err",
   script_lines                = .slurm_script_lines
 )
 
@@ -53,7 +60,7 @@ tar_option_set(
   workspace_on_error = TRUE,
   trust_timestamps   = TRUE,
   library            = .user_lib,
-  controller         = crew_controller_group(.worker_light, .worker_heavy),
+  controller         = crew_controller_group(.worker_heavy, .worker_light),
   # Default to heavy; workers are persistent so lightweight targets on a heavy worker
   # cost nothing extra. Tag individual targets with controller = "light" to opt down.
   resources          = tar_resources(crew = tar_resources_crew(controller = "heavy"))
