@@ -10,8 +10,8 @@ use the apptainer container at /project2/cobrinik_1090/external_rb_scrnaseq_proj
 - Load R: `module load r/4.4.1`
 - Always set before running R: `export LD_LIBRARY_PATH="$HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"`
   - ~/lib has symlinks: libRlapack.so, libRblas.so → openblas; libhdf5.so.200, libhdf5_hl.so.200 → hdf5-1.12.3
-- R library: `~/R/x86_64-pc-linux-gnu-library/4.4`
-- Project .Rprofile prepends `.R_libs` to .libPaths(); always pass `lib = path.expand("~/R/...")` explicitly to pak
+- R library: `~/R/x86_64-pc-linux-gnu-library/4.4` — single location for all packages
+- `.R_libs` has been removed; `.Rprofile` no longer prepends it. Do not recreate it.
 
 ## R Package Installation
 - Lockfile: `/project2/cobrinik_1090/external_rb_scrnaseq_proj/pak_source.lock`
@@ -45,6 +45,7 @@ Rscript -e "devtools::load_all('/project2/cobrinik_1090/rpkgs/numbat_helpers')" 
 ```
 - This loads the latest code without reinstalling the package
 - Only use `devtools::install_local()` when you need the package available to all processes (e.g., distributed crew workers)
+  - Install to the single library: `devtools::install_local('/project2/cobrinik_1090/rpkgs/numbat_helpers', force = TRUE)` (no `lib =` needed; ~/R/ is the only library path)
 
 **Git commit workflow for numbatHelpers:**
 - Automated daily commits: A Stop hook runs at the end of each session to commit uncommitted changes with message `Daily update: YYYY-MM-DD`

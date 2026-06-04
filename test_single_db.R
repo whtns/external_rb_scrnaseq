@@ -4,13 +4,13 @@ library(stringr)
 # library(numbatHelpers)
 devtools::load_all("/project2/cobrinik_1090/rpkgs/numbat_helpers")
 
-debug(make_numbat_heatmaps)
+# debug(make_numbat_heatmaps)
 
-# Query database for a sample
+# Query database for specific sample
 con <- DBI::dbConnect(RSQLite::SQLite(), 'batch_hashes.sqlite')
 samples <- DBI::dbGetQuery(con,
   "SELECT DISTINCT sample_id, filepath FROM seurat_objects
-   WHERE processing_stage = 'raw' AND sample_id LIKE 'SRX%' LIMIT 1")
+   WHERE processing_stage = 'raw' AND sample_id = 'SRX11133594'")
 DBI::dbDisconnect(con)
 
 if (nrow(samples) > 0) {

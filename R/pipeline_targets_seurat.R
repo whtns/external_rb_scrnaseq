@@ -127,7 +127,7 @@ pipeline_targets_seurat <- c(
       ),
       pattern = map(numbat_rds_files, cluster_dictionary_per_sample, large_clone_simplifications_per_sample),
       iteration = "list",
-      deployment = "main",
+      resources = .heavy_resources,
       error = "null",
       cue = tar_cue(command = FALSE, depend = FALSE)  # re-run when unfiltered_seus changes, but not when filter_inspection_metadata changes
     ),
@@ -182,7 +182,7 @@ pipeline_targets_seurat <- c(
       ),
       pattern = map(numbat_rds_filtered_files),
       iteration = "list",
-      deployment = "main",
+      resources = .heavy_resources,
       error = "null",
       cue = tar_cue(command = FALSE, depend = FALSE)
     ),
