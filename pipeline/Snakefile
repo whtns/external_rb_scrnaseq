@@ -353,6 +353,7 @@ rule numbat_sridhar:
         num_clones            = lambda wildcards: table_samples[table_samples.Experiment == wildcards.sample].num_clone.values[0],
         subset_bad_cell_types = subset_bad_cell_types_for_sample,
         numbat_t              = config["numbat_t"],
+        alpha                 = config["alpha"],
         gamma                 = config["gamma"],
         numbatdir             = numbat_sridhar_dir,
         max_entropy           = max_entropy_for_sample,
@@ -369,7 +370,7 @@ rule numbat_sridhar:
         ulimit -v {params.mem_kb};
         {container_R} CMD BATCH --no-restore --no-save \
         "--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
-        t='{params.numbat_t}' gamma='{params.gamma}' tau='{params.tau}' \
+        t='{params.numbat_t}' alpha='{params.alpha}' gamma='{params.gamma}' tau='{params.tau}' \
         init_k='{params.num_clones}' read_prop='{params.read_prop}' \
         subset_bad_cell_types='{params.subset_bad_cell_types}' \
         max_iter='{params.max_iter}' min_LLR='{params.min_LLR}' \

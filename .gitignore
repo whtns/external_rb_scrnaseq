@@ -57,3 +57,4 @@ src/scenic/example/output/
 *.out
 *.err
 *.tsv
+batch_hashes.sqlite.bak.20260604

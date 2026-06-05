@@ -17,9 +17,8 @@ options(future.globals.maxSize = Inf)
 # Workers start as fresh R sessions on compute nodes, so they need this environment.
 .slurm_script_lines <- c(
   "source /etc/profile.d/modules.sh",
-  "module load r/4.4.1 curl bzip2 libxml2 cairo fontconfig freetype",
+  "module load r/4.4.1 curl bzip2 libxml2 cairo fontconfig freetype poppler/23.04.0",
   paste0("export LD_LIBRARY_PATH=/home1/stachele/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"),
-  paste0("export R_LIBS=/project2/cobrinik_1090/external_rb_scrnaseq_proj/.R_libs:${R_LIBS}"),
   paste0("export R_LIBS_USER=", .user_lib)
 )
 

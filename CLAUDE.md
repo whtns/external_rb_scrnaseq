@@ -8,6 +8,7 @@ use the apptainer container at /project2/cobrinik_1090/external_rb_scrnaseq_proj
 
 ## R Environment (Rocky Linux 8 / SLURM)
 - Load R: `module load r/4.4.1`
+- For pdftools: also `module load poppler/23.04.0` (required for libpoppler-cpp)
 - Always set before running R: `export LD_LIBRARY_PATH="$HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"`
   - ~/lib has symlinks: libRlapack.so, libRblas.so → openblas; libhdf5.so.200, libhdf5_hl.so.200 → hdf5-1.12.3
 - R library: `~/R/x86_64-pc-linux-gnu-library/4.4` — single location for all packages

@@ -358,16 +358,22 @@ list(
     dir_ls("output/numbat_sridhar/", regexp = ".*SRX[0-9]+_numbat.rds", recurse = TRUE) |> sort()
   ),
 
-  tar_target(ideogram_res_s06a_unfiltered,
-    make_rb_scna_ideograms(nb_paths_s06a),
+  # Single pass per sample: one RDS load + 22 plotIdeogram calls generates all 3 suffix variants.
+  tar_target(ideogram_res_s06a_multi,
+    make_rb_scna_ideograms_multi(nb_paths_s06a, filter_midline = FALSE),
     pattern = map(nb_paths_s06a),
+    iteration = "list",
     resources = .light_resources
   ),
 
+  tar_target(ideogram_res_s06a_unfiltered,
+    ideogram_res_s06a_multi[["unfiltered"]],
+    pattern = map(ideogram_res_s06a_multi)
+  ),
+
   tar_target(ideogram_res_s06a_filtered,
-    make_rb_scna_ideograms(nb_paths_s06a, suffix = "_subset"),
-    pattern = map(nb_paths_s06a),
-    resources = .light_resources
+    ideogram_res_s06a_multi[["filtered"]],
+    pattern = map(ideogram_res_s06a_multi)
   ),
 
   tar_target(nb_paths_s06a_filtered,
@@ -375,9 +381,8 @@ list(
   ),
 
   tar_target(ideogram_res_s06a_low_hypoxia,
-    make_rb_scna_ideograms(nb_paths_s06a, suffix = "_low_hypoxia"),
-    pattern = map(nb_paths_s06a),
-    resources = .light_resources
+    ideogram_res_s06a_multi[["low_hypoxia"]],
+    pattern = map(ideogram_res_s06a_multi)
   ),
 
   tar_target(fig_s06a,
@@ -464,13 +469,15 @@ list(
   tar_target(debranched_clone_tree_files,
     save_clone_tree_from_path(debranched_seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(debranched_seus),
-    iteration = "list"
+    iteration = "list",
+    cue = tar_cue(depend = FALSE)
   ),
 
   tar_target(debranched_clone_trees,
     plot_clone_tree_from_path(debranched_seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
     pattern = map(debranched_seus),
-    iteration = "list"
+    iteration = "list",
+    cue = tar_cue(depend = FALSE)
   ),
 
   tar_target(
@@ -479,8 +486,8 @@ list(
   ),
 
   tar_target(unfiltered_clone_tree_files,
-    save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, large_clone_simplifications, label = "_unfiltered_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(unfiltered_seus),
+    save_clone_tree_from_path(unfiltered_seus, numbat_rds_files, large_clone_simplifications_per_sample, label = "_unfiltered_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(unfiltered_seus, large_clone_simplifications_per_sample),
     iteration = "list",
     error = "null"
   ),
@@ -499,8 +506,8 @@ list(
   ),
 
   tar_target(filtered_clone_tree_files,
-    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(filtered_seus),
+    save_clone_tree_from_path(filtered_seus, numbat_rds_files, large_clone_simplifications_per_sample, label = "_filtered_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(filtered_seus, large_clone_simplifications_per_sample),
     iteration = "list",
     error = "null"
   ),
@@ -518,8 +525,8 @@ list(
   ),
 
   tar_target(low_hypoxia_clone_tree_files,
-    save_clone_tree_from_path(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications, label = "_low_hypoxia_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(seus_low_hypoxia),
+    save_clone_tree_from_path(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications_per_sample, label = "_low_hypoxia_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(seus_low_hypoxia, large_clone_simplifications_per_sample),
     iteration = "list",
     error = "null"
   ),
@@ -533,8 +540,8 @@ list(
   ),
 
   tar_target(final_clone_tree_files,
-    save_clone_tree_from_path(final_seus, numbat_rds_files, large_clone_simplifications, label = "_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(final_seus),
+    save_clone_tree_from_path(final_seus, numbat_rds_files, large_clone_simplifications_per_sample, label = "_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(final_seus, large_clone_simplifications_per_sample),
     iteration = "list"
   ),
 

@@ -9,8 +9,6 @@ output_plot_extensions <- c(
   "clone_distribution.pdf"
 )
 
-hypoxia_threshold <- 0.5
-
 # Values tibble for tarchetypes::tar_map() over the 4 SCNA types.
 # Columns:
 #   scna      - SCNA label used in target names and as list index key

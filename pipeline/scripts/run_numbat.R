@@ -25,6 +25,10 @@ if(!exists("max_nni")){
 	max_nni <- 100
 }
 
+if(!exists("alpha")){
+	alpha <- 1e-04
+}
+
 if(!exists("retry_without_nni")){
 	retry_without_nni <- TRUE
 }
@@ -225,6 +229,7 @@ run_numbat_once <- function(max_nni_local) {
 		genome = "hg38",
 		min_cells = 10,
 		t = as.numeric(t),
+		alpha = as.numeric(alpha),
 		gamma = as.numeric(gamma),
 		max_iter = as.integer(max_iter),
 		max_entropy = max_entropy,

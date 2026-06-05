@@ -372,7 +372,8 @@ pipeline_targets_seurat <- c(
       },
       pattern = map(unfiltered_seus),
       iteration = "list",
-      error = "null"
+      error = "null",
+      cue = tar_cue(depend = FALSE)
     ),
 
     tar_target(effect_of_filtering_collated,
@@ -434,7 +435,7 @@ pipeline_targets_seurat <- c(
       make_numbat_heatmaps(
         unfiltered_seus, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_unfiltered",
-        show_segment_names_on_x = TRUE
+        show_segment_names_on_x = TRUE, filter_midline = FALSE
       ),
       pattern = map(unfiltered_seus),
       iteration = "list"
@@ -444,7 +445,7 @@ pipeline_targets_seurat <- c(
       make_numbat_heatmaps(
         filtered_seus, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_subset",
-        show_segment_names_on_x = TRUE
+        show_segment_names_on_x = TRUE, filter_midline = FALSE
       ),
       pattern = map(filtered_seus),
       iteration = "list"
@@ -461,7 +462,8 @@ pipeline_targets_seurat <- c(
         seus_low_hypoxia, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_low_hypoxia",
         show_segment_names_on_x = TRUE,
-        numbat_rds_filtered_files = numbat_rds_files
+        numbat_rds_filtered_files = numbat_rds_files,
+        filter_midline = FALSE
       ),
       pattern = map(seus_low_hypoxia),
       iteration = "list"
@@ -478,7 +480,7 @@ pipeline_targets_seurat <- c(
       make_numbat_heatmaps(
         seus_low_hypoxia, numbat_rds_files,
         p_min = 0.5, line_width = 0.1, extension = "_low_hypoxia",
-        show_segment_names_on_x = TRUE
+        show_segment_names_on_x = TRUE, filter_midline = FALSE
       ),
       pattern = map(seus_low_hypoxia),
       iteration = "list",
@@ -534,10 +536,25 @@ pipeline_targets_seurat <- c(
       cue = tar_cue(command = FALSE)
     ),
 
+    # Per-sample threshold: reads from hypoxia_thresholds dict, defaults to 0.4.
+    # Branched over hypoxia_seus so only samples with changed thresholds rebuild.
+    tar_target(
+      hypoxia_threshold_per_sample,
+      {
+        sample_id <- stringr::str_extract(hypoxia_seus, "SR[RX][0-9]+")
+        if (!is.null(hypoxia_thresholds) && sample_id %in% names(hypoxia_thresholds))
+          as.numeric(hypoxia_thresholds[[sample_id]])
+        else
+          0.4
+      },
+      pattern = map(hypoxia_seus),
+      iteration = "list"
+    ),
+
     tar_target(
       hypoxia_score_plots,
-      plot_hypoxia_score(hypoxia_seus, threshold = hypoxia_threshold),
-      pattern = map(hypoxia_seus),
+      plot_hypoxia_score(hypoxia_seus, threshold = hypoxia_threshold_per_sample),
+      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
       iteration = "list"
     ),
 
@@ -545,11 +562,11 @@ pipeline_targets_seurat <- c(
       # Low-hypoxia partition is later remapped into SCNA-specific subsets.
       subset_seu_by_expression(
         hypoxia_seus, run_hypoxia_clustering = TRUE,
-        hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}"),
+        hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold_per_sample}"),
         slug = "hypoxia_low",
         assay = "gene"
       ),
-      pattern = map(hypoxia_seus),
+      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
       iteration = "list",
       error = "null",
       cue = tar_cue(command = FALSE)
@@ -558,10 +575,10 @@ pipeline_targets_seurat <- c(
     tar_target(seus_high_hypoxia,
       subset_seu_by_expression(
         hypoxia_seus, run_hypoxia_clustering = TRUE,
-        hypoxia_expr = glue::glue("hypoxia_score > {hypoxia_threshold}"),
+        hypoxia_expr = glue::glue("hypoxia_score > {hypoxia_threshold_per_sample}"),
         slug = "hypoxia_high"
       ),
-      pattern = map(hypoxia_seus),
+      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
       iteration = "list",
       error = "null",
       cue = tar_cue(command = FALSE)
@@ -703,7 +720,7 @@ pipeline_targets_seurat <- c(
       integration_by_scna_clones(
         hypoxia_sym, scna_of_interest = scna,
         large_clone_comparisons,
-        filter_expr = glue::glue("hypoxia_score <= {hypoxia_threshold}")
+        filter_expr = "hypoxia_score <= 0.4"
       ),
       error = "null",
       cue = tar_cue(command = FALSE)

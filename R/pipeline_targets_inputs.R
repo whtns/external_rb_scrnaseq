@@ -152,10 +152,32 @@ pipeline_targets_inputs <- c(
       yaml::read_yaml(here::here("config/large_clone_comparisons.yaml"))
     ),
     tarchetypes::tar_file(large_clone_simplifications_file, "config/large_clone_simplifications.yaml"),
+
     tar_target(large_clone_simplifications, yaml::read_yaml(large_clone_simplifications_file)),
+
+    # Auto-derive SCNA->segment map from numbat segs_consensus for each sample.
+    # Separate target for inspection; NOT used in large_clone_simplifications_per_sample
+    # pattern (to avoid re-keying unfiltered_seus branches).
+    tar_target(
+      computed_clone_simplifications,
+      compute_clone_simplifications(numbat_rds_files),
+      pattern = map(numbat_rds_files),
+      iteration = "list"
+    ),
+
+    # Merge auto-computed with manual YAML overrides (manual entries take precedence).
+    # Pattern kept as map(numbat_rds_files) — same as before — so branch IDs are
+    # stable and unfiltered_seus (which patterns over this) does NOT get re-keyed.
+    # When YAML changes, all 33 branches re-run quickly; only the changed sample's
+    # output differs, so only that sample's clone tree branches rebuild.
     tar_target(
       large_clone_simplifications_per_sample,
-      large_clone_simplifications[stringr::str_extract(numbat_rds_files, "SRX[0-9]+")],
+      {
+        sample_id <- stringr::str_extract(numbat_rds_files, "SRX[0-9]+")
+        computed <- compute_clone_simplifications(numbat_rds_files)
+        manual <- large_clone_simplifications[[sample_id]]
+        if (is.null(manual) || length(manual) == 0) computed else modifyList(computed, manual)
+      },
       pattern = map(numbat_rds_files),
       iteration = "list"
     ),
@@ -175,6 +197,13 @@ pipeline_targets_inputs <- c(
 
     tarchetypes::tar_file(cluster_dictionary_file, "data/cluster_dictionary.tsv"),
     tar_target(cluster_dictionary, read_cluster_dictionary(cluster_dictionary_file)),
+
+    # Per-sample hypoxia threshold overrides (default 0.4).
+    # Add entries to the named vector below to override for specific samples.
+    # Changing one entry only invalidates that sample's downstream targets.
+    tar_target(hypoxia_thresholds, c(
+      SRX10831287 = 0.3
+    )),
     tar_target(
       cluster_dictionary_per_sample,
       cluster_dictionary[stringr::str_extract(numbat_rds_files, "SRX[0-9]+")],
