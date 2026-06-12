@@ -11,14 +11,14 @@ pipeline_targets_diffex <- list(
   # --- all locations ---
 
   tar_target(all_diffex_clones,
-    find_diffex_clones(debranched_seus, numbat_rds_files, large_clone_comparisons, location = "all"),
-    pattern = map(debranched_seus),
+    find_diffex_clones(seus_low_hypoxia, numbat_rds_files, large_clone_comparisons, location = "all"),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
   tar_target(all_diffex_clones_for_each_cluster,
-    find_diffex_bw_clones_for_each_cluster(debranched_seus, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "all"),
-    pattern = map(debranched_seus),
+    find_diffex_bw_clones_for_each_cluster(seus_low_hypoxia, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "all"),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
@@ -52,14 +52,14 @@ pipeline_targets_diffex <- list(
   # --- cis (in-segment) ---
 
   tar_target(cis_diffex_clones,
-    find_diffex_clones(debranched_seus, numbat_rds_files, large_clone_comparisons, location = "cis"),
-    pattern = map(debranched_seus),
+    find_diffex_clones(seus_low_hypoxia, numbat_rds_files, large_clone_comparisons, location = "cis"),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
   tar_target(cis_diffex_clones_for_each_cluster,
-    find_diffex_bw_clones_for_each_cluster(debranched_seus, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "cis"),
-    pattern = map(debranched_seus),
+    find_diffex_bw_clones_for_each_cluster(seus_low_hypoxia, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "cis"),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
@@ -93,14 +93,14 @@ pipeline_targets_diffex <- list(
   # --- trans (out-of-segment) ---
 
   tar_target(trans_diffex_clones,
-    find_diffex_clones(debranched_seus, numbat_rds_files, large_clone_comparisons, location = "out_of_segment"),
-    pattern = map(debranched_seus),
+    find_diffex_clones(seus_low_hypoxia, numbat_rds_files, large_clone_comparisons, location = "out_of_segment"),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
   tar_target(trans_diffex_clones_for_each_cluster,
-    find_diffex_bw_clones_for_each_cluster(debranched_seus, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "out_of_segment"),
-    pattern = map(debranched_seus),
+    find_diffex_bw_clones_for_each_cluster(seus_low_hypoxia, numbat_rds_files, large_clone_comparisons, cluster_orders, location = "out_of_segment"),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
@@ -142,7 +142,7 @@ pipeline_targets_diffex <- list(
   ),
 
   tar_target(clustree_diffexes,
-    find_all_diffex_from_clustree(clustree_tables, debranched_seus, clone_comparisons = large_clone_comparisons),
+    find_all_diffex_from_clustree(clustree_tables, seus_low_hypoxia, clone_comparisons = large_clone_comparisons),
     pattern = map(clustree_tables),
   ),
 
@@ -180,8 +180,8 @@ pipeline_targets_diffex <- list(
   ),
 
   tar_target(fig_07b_input,  # 1q+ cluster diffex without integration
-    find_diffex_bw_clones_for_each_cluster(debranched_seus_1q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "1q+"),
-    pattern = map(debranched_seus_1q),
+    find_diffex_bw_clones_for_each_cluster(hypoxia_seus_1q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "1q+"),
+    pattern = map(hypoxia_seus_1q),
     iteration = "list"
   ),
 
@@ -204,8 +204,8 @@ pipeline_targets_diffex <- list(
   ),
 
   tar_target(fig_08b_input,  # 16q- cluster diffex without integration
-    find_diffex_bw_clones_for_each_cluster(debranched_seus_16q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "16q-"),
-    pattern = map(debranched_seus_16q),
+    find_diffex_bw_clones_for_each_cluster(hypoxia_seus_16q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "16q-"),
+    pattern = map(hypoxia_seus_16q),
     iteration = "list"
   ),
 

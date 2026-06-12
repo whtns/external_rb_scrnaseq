@@ -459,23 +459,23 @@ list(
   ),
 
   tar_target(clusters_and_markers,
-    plot_seu_clusters_and_markers(debranched_seus, cluster_orders),
-    pattern = map(debranched_seus),
+    plot_seu_clusters_and_markers(seus_low_hypoxia, cluster_orders),
+    pattern = map(seus_low_hypoxia),
     iteration = "list"
   ),
 
   # --- clone trees ---
 
   tar_target(debranched_clone_tree_files,
-    save_clone_tree_from_path(debranched_seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(debranched_seus),
+    save_clone_tree_from_path(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(seus_low_hypoxia),
     iteration = "list",
     cue = tar_cue(depend = FALSE)
   ),
 
   tar_target(debranched_clone_trees,
-    plot_clone_tree_from_path(debranched_seus, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
-    pattern = map(debranched_seus),
+    plot_clone_tree_from_path(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications, label = "_debranched_clone_tree", legend = FALSE, horizontal = FALSE),
+    pattern = map(seus_low_hypoxia),
     iteration = "list",
     cue = tar_cue(depend = FALSE)
   ),
@@ -660,7 +660,9 @@ list(
 
       unfiltered_numbat_bulk_clones,
       filtered_numbat_bulk_clones,
-      low_hypoxia_numbat_bulk_clones
+      low_hypoxia_numbat_bulk_clones,
+
+      filtering_cell_counts_table = filtering_cell_counts_table
     ),
     pattern = map(unfiltered_clone_tree_files),
     iteration = "list",

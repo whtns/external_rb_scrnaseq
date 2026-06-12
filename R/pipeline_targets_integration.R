@@ -12,10 +12,10 @@ pipeline_targets_integration <- list(
 
   tar_target(collages_2p,
     plot_seu_marker_heatmap_by_scna(
-      unlist(debranched_seus_2p), cluster_orders, numbat_rds_files, large_clone_simplifications,
+      unlist(hypoxia_seus_2p), cluster_orders, numbat_rds_files, large_clone_simplifications,
       rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "2p"
     ),
-    pattern = map(debranched_seus_2p),
+    pattern = map(hypoxia_seus_2p),
     iteration = "list"
   ),
 
@@ -26,20 +26,20 @@ pipeline_targets_integration <- list(
 
   tar_target(collages_6p,
     plot_seu_marker_heatmap_by_scna(
-      unlist(debranched_seus_6p), cluster_orders, numbat_rds_files, large_clone_simplifications,
+      unlist(hypoxia_seus_6p), cluster_orders, numbat_rds_files, large_clone_simplifications,
       rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "6p"
     ),
-    pattern = map(debranched_seus_6p),
+    pattern = map(hypoxia_seus_6p),
     iteration = "list"
   ),
 
   # Sample-specific analyses of tumors with 16q- subclones without integration.
   tar_target(collages_16q,
     plot_seu_marker_heatmap_by_scna(
-      unlist(debranched_seus_16q), cluster_orders, numbat_rds_files, large_clone_simplifications,
+      unlist(hypoxia_seus_16q), cluster_orders, numbat_rds_files, large_clone_simplifications,
       rb_scna_samples = rb_scna_samples, large_clone_comparisons = large_clone_comparisons, scna_of_interest = "16q"
     ),
-    pattern = map(debranched_seus_16q),
+    pattern = map(hypoxia_seus_16q),
     iteration = "list"
   ),
 
@@ -229,11 +229,11 @@ pipeline_targets_integration <- list(
   # --- clone cell-cycle plots ---
 
   tar_target(clone_cc_plots_by_scna_1q,
-    clone_cc_plots_by_scna(debranched_seus_1q, scna_of_interest = "1q", large_clone_comparisons = large_clone_comparisons)
+    clone_cc_plots_by_scna(hypoxia_seus_1q, scna_of_interest = "1q", large_clone_comparisons = large_clone_comparisons)
   ),
 
   tar_target(clone_cc_plots_by_scna_16q,
-    clone_cc_plots_by_scna(debranched_seus_16q, scna_of_interest = "16q", large_clone_comparisons = large_clone_comparisons)
+    clone_cc_plots_by_scna(hypoxia_seus_16q, scna_of_interest = "16q", large_clone_comparisons = large_clone_comparisons)
   ),
 
   # --- phase-stratified diffex (2p g1, 6p g1) ---
@@ -249,8 +249,8 @@ pipeline_targets_integration <- list(
   ),
 
   tar_target(diffex_6p_g1,
-    find_diffex_clones_in_phase(debranched_seus_6p, phase = "g1", scna_of_interest = "6p", numbat_rds_files, large_clone_comparisons, location = "all"),
-    pattern = map(debranched_seus_6p),
+    find_diffex_clones_in_phase(hypoxia_seus_6p, phase = "g1", scna_of_interest = "6p", numbat_rds_files, large_clone_comparisons, location = "all"),
+    pattern = map(hypoxia_seus_6p),
     iteration = "list"
   ),
 

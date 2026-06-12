@@ -12,13 +12,13 @@ output_plot_extensions <- c(
 # Values tibble for tarchetypes::tar_map() over the 4 SCNA types.
 # Columns:
 #   scna      - SCNA label used in target names and as list index key
-#   seus_sym  - symbol of the corresponding debranched Seurat path target
+#   seus_sym  - symbol of the corresponding low-hypoxia Seurat path target
 #   var_y     - y-axis grouping for clone_pearls plots
 scna_map_values <- tibble::tibble(
   scna     = c("1q",         "2p",       "6p",       "16q"),
   seus_sym = rlang::syms(c(
-    "debranched_seus_1q", "debranched_seus_2p",
-    "debranched_seus_6p", "debranched_seus_16q"
+    "hypoxia_seus_1q", "hypoxia_seus_2p",
+    "hypoxia_seus_6p", "hypoxia_seus_16q"
   )),
   var_y    = c("phase_level", "clusters", "clusters", "phase_level")
 )

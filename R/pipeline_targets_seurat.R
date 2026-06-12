@@ -18,7 +18,8 @@ pipeline_targets_seurat <- c(
       "SRX10264526" = "output/seurat/SRX10264526_filtered_seu_1q.rds",
       "SRX11133594" = "output/seurat/SRX11133594_filtered_seu_1q.rds",
       "SRX11133593" = "output/seurat/SRX11133593_filtered_seu_1q.rds",
-      "SRX11133592" = "output/seurat/SRX11133592_filtered_seu_1q.rds"
+      "SRX11133592" = "output/seurat/SRX11133592_filtered_seu_1q.rds",
+      "SRX10831287" = "output/seurat/SRX10831287_filtered_seu_1q.rds"
     )
   ),
 
@@ -57,7 +58,8 @@ pipeline_targets_seurat <- c(
       "SRX10264526_filtered_seu.rds" = "output/seurat/integrated_1q/SRX10264526_integrated_1q_filtered_seu.rds",
       "SRX11133594_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133594_integrated_1q_filtered_seu.rds",
       "SRX11133593_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133593_integrated_1q_filtered_seu.rds",
-      "SRX11133592_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133592_integrated_1q_filtered_seu.rds"
+      "SRX11133592_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133592_integrated_1q_filtered_seu.rds",
+      "SRX10831287_filtered_seu.rds" = "output/seurat/integrated_1q/SRX10831287_integrated_1q_filtered_seu.rds"
     )
   ),
 
@@ -234,7 +236,7 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(overall_seus,
-      merge_orders(debranched_seus, final_seus)
+      merge_orders(seus_low_hypoxia, final_seus)
     ),
 
     # --- scna-stratified seu collections ---
@@ -242,10 +244,10 @@ pipeline_targets_seurat <- c(
     tar_target(scna_seus,
       # Canonical union of SCNA-stratified Seurat paths used by DB extraction.
       unlist(list(
-        "1q"  = debranched_seus_1q,
-        "2p"  = debranched_seus_2p,
-        "6p"  = debranched_seus_6p,
-        "16q" = debranched_seus_16q
+        "1q"  = hypoxia_seus_1q,
+        "2p"  = hypoxia_seus_2p,
+        "6p"  = hypoxia_seus_6p,
+        "16q" = hypoxia_seus_16q
       ))
     ),
 
@@ -498,20 +500,20 @@ pipeline_targets_seurat <- c(
     # --- heatmap collages ---
 
     tar_target(heatmap_collages,
-      plot_seu_marker_heatmap_all_resolutions(debranched_seus, numbat_rds_files, large_clone_simplifications),
-      pattern = map(debranched_seus),
+      plot_seu_marker_heatmap_all_resolutions(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications),
+      pattern = map(seus_low_hypoxia),
       iteration = "list"
     ),
 
     tar_target(heatmap_collages_6p,
-      plot_seu_marker_heatmap_all_resolutions(debranched_seus_6p, numbat_rds_files, large_clone_simplifications),
-      pattern = map(debranched_seus_6p),
+      plot_seu_marker_heatmap_all_resolutions(hypoxia_seus_6p, numbat_rds_files, large_clone_simplifications),
+      pattern = map(hypoxia_seus_6p),
       iteration = "list"
     ),
 
     tar_target(annotated_heatmap_collages,
-      plot_seu_marker_heatmap(debranched_seus, cluster_orders, numbat_rds_files, large_clone_simplifications),
-      pattern = map(debranched_seus),
+      plot_seu_marker_heatmap(seus_low_hypoxia, cluster_orders, numbat_rds_files, large_clone_simplifications),
+      pattern = map(seus_low_hypoxia),
       iteration = "list"
     ),
 
@@ -634,8 +636,8 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(silhouette_plots,
-      calc_silhouette(debranched_seus),
-      pattern = map(debranched_seus),
+      calc_silhouette(seus_low_hypoxia),
+      pattern = map(seus_low_hypoxia),
       iteration = "list"
     ),
 
