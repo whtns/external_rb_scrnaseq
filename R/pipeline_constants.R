@@ -23,6 +23,10 @@ scna_map_values <- tibble::tibble(
   var_y    = c("phase_level", "clusters", "clusters", "phase_level")
 )
 
+# rclone destination for figures_and_tables sync.
+# Configure with: module load rclone && rclone config
+gdrive_destination <- "gdrive:rb_scrnaseq/figures_and_tables"
+
 # Document-order mapping: semantic target name → display label.
 # Edit this vector to renumber figures without touching target definitions.
 figure_order <- c(

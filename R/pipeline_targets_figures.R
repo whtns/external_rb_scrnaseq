@@ -704,6 +704,28 @@ list(
         FALSE
       })
     }
-  )
+  ),
+
+  # Sync all files from figures_and_tables to Google Drive via rclone.
+  # Requires: module load rclone && rclone config (set gdrive_destination in pipeline_constants.R)
+  tar_target(figures_and_tables_gdrive, {
+    paths <- unlist(figures_and_tables)
+    paths <- paths[nchar(paths) > 0 & !is.na(paths) & file.exists(paths)]
+
+    files_txt <- tempfile()
+    writeLines(paths, files_txt)
+    on.exit(unlink(files_txt))
+
+    ret <- system2(
+      "rclone",
+      c("copy", "--files-from", files_txt, ".", gdrive_destination, "--progress"),
+      stdout = TRUE, stderr = TRUE
+    )
+    if (!is.null(attr(ret, "status")) && attr(ret, "status") != 0)
+      stop("rclone failed:\n", paste(ret, collapse = "\n"))
+
+    message("Synced ", length(paths), " files to ", gdrive_destination)
+    paths
+  })
 
 )) # end list + end c()
