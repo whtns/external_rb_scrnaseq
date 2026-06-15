@@ -19,9 +19,9 @@ pipeline_targets_integration <- list(
     iteration = "list"
   ),
 
-  # Sample-specific analyses of tumors with 2p+ subclones without integration (Fig. S4.9)
-  tar_target(fig_s04_09,
-    qpdf::pdf_combine(collages_2p, "results/fig_s04_09.pdf")
+  # Sample-specific analyses of tumors with 2p+ subclones without integration
+  tar_target(fig_2p_sample_specific_unintegrated,
+    qpdf::pdf_combine(collages_2p, "results/fig_2p_sample_specific_unintegrated.pdf")
   ),
 
   tar_target(collages_6p,
@@ -361,14 +361,14 @@ pipeline_targets_integration <- list(
     iteration = "list"
   ),
 
-  tar_target(table_06,
+  tar_target(table_rod_rich_samples,
     rod_rich_samples
   ),
 
-  tar_target(table_06_csv,
+  tar_target(table_rod_rich_samples_csv,
     {
-      out <- "results/table_06.csv"
-      readr::write_csv(table_06, out)
+      out <- "results/table_rod_rich_samples.csv"
+      readr::write_csv(table_rod_rich_samples, out)
       out
     },
     format = "file"
@@ -404,23 +404,23 @@ pipeline_targets_integration <- list(
     derive_pseudobulk_subtype_scores(final_seus)
   ),
 
-  # --- figures 09 / 10 ---
+  # --- corresponding-cluster figures: 2p and 6p ---
 
-  tar_target(fig_09,
+  tar_target(fig_2p_corresponding_clusters,
     plot_fig_09_10(
       corresponding_seus_2p, corresponding_seus,
       corresponding_clusters_diffex, corresponding_clusters_enrichments,
-      recurrence_threshold = 3, plot_path = "results/fig_09.pdf",
+      recurrence_threshold = 3, plot_path = "results/fig_2p_corresponding_clusters.pdf",
       widths = rep(4, 3), heights = rep(8, 3),
       common_seus = c("SRX10264525_filtered_seu_2p.rds", "SRX14116944_filtered_seu_2p.rds")
     )
   ),
 
-  tar_target(fig_10,
+  tar_target(fig_6p_corresponding_clusters,
     plot_fig_09_10(
       corresponding_seus_6p, corresponding_seus,
       corresponding_clusters_diffex, corresponding_clusters_enrichments,
-      recurrence_threshold = 2, plot_path = "results/fig_10.pdf",
+      recurrence_threshold = 2, plot_path = "results/fig_6p_corresponding_clusters.pdf",
       widths = rep(4, 3), heights = c(12, 4, 12),
       common_seus = c("SRX10264524_filtered_seu_6p.rds", "SRX14116944_filtered_seu_6p.rds")
     )

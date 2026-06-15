@@ -144,7 +144,7 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(rod_low_sample_ids,
-      dplyr::bind_rows(table_06) |>
+      dplyr::bind_rows(table_rod_rich_samples) |>
         dplyr::filter(rod_rich == 0) |>
         dplyr::pull(sample_id)
     ),
@@ -164,7 +164,7 @@ pipeline_targets_seurat <- c(
     ),
 
     tar_target(diploid_seu,
-      "output/seurat/filtered_diploid_seu_01.rds",
+      "output/seurat/diploid_subsets/diploid_seu.rds",
       format = "file"
     ),
 
@@ -420,10 +420,10 @@ pipeline_targets_seurat <- c(
     ),
 
     # regression diagnostics
-    tar_target(fig_03_05, {
+    tar_target(fig_regression_diagnostics, {
       plot_paths <- na.omit(unlist(regression_effect_plots))
       plot_paths <- plot_paths[nzchar(plot_paths)]
-      out_path <- "results/fig_03_05.pdf"
+      out_path <- "results/fig_regression_diagnostics.pdf"
       if (length(plot_paths) == 0) {
         pdf(out_path)
         plot.new()
@@ -449,7 +449,7 @@ pipeline_targets_seurat <- c(
 
     # --- QC / numbat heatmaps ---
 
-    tar_target(fig_s03a_unfiltered_plots,
+    tar_target(numbat_heatmap_plots_unfiltered,
       make_numbat_heatmaps(
         unfiltered_seus, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_unfiltered",
@@ -459,7 +459,7 @@ pipeline_targets_seurat <- c(
       iteration = "list"
     ),
 
-    tar_target(fig_s03a_subset_plots,
+    tar_target(numbat_heatmap_plots_subset,
       make_numbat_heatmaps(
         filtered_seus, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_subset",
@@ -469,13 +469,13 @@ pipeline_targets_seurat <- c(
       iteration = "list"
     ),
 
-    tar_target(fig_s03a_unfiltered, {
-      paths <- unlist(fig_s03a_unfiltered_plots)
+    tar_target(numbat_heatmaps_unfiltered_pdf, {
+      paths <- unlist(numbat_heatmap_plots_unfiltered)
       paths <- paths[!is.na(paths)]
       qpdf::pdf_combine(paths, "results/unfiltered_heatmaps.pdf")
     }),
 
-    tar_target(fig_s03a_low_hypoxia_plots,
+    tar_target(numbat_heatmap_plots_low_hypoxia,
       make_numbat_heatmaps(
         seus_low_hypoxia, numbat_rds_files,
         p_min = 0.9, line_width = 0.1, extension = "_low_hypoxia",
@@ -487,13 +487,13 @@ pipeline_targets_seurat <- c(
       iteration = "list"
     ),
 
-    tar_target(fig_s03a, {
-      paths <- unlist(fig_s03a_low_hypoxia_plots)
+    tar_target(fig_numbat_heatmaps, {
+      paths <- unlist(numbat_heatmap_plots_low_hypoxia)
       paths <- paths[!is.na(paths)]
       qpdf::pdf_combine(paths, "results/low_hypoxia_heatmaps.pdf")
     }),
 
-    tar_target(fig_s13,
+    tar_target(fig_numbat_heatmaps_permissive,
       # Always re-render: output layout can depend on graphics device/session state.
       make_numbat_heatmaps(
         seus_low_hypoxia, numbat_rds_files,
@@ -506,10 +506,10 @@ pipeline_targets_seurat <- c(
                                 # session graphics device state, not captured by hash
     ),
 
-    tar_target(filtered_numbat_heatmaps_file, qpdf::pdf_combine(map_chr(fig_s13, 1), "results/filtered_heatmaps.pdf")),
+    tar_target(filtered_numbat_heatmaps_file, qpdf::pdf_combine(map_chr(fig_numbat_heatmaps_permissive, 1), "results/filtered_heatmaps.pdf")),
 
     tar_target(filtered_large_scna_prob_file, {
-      scna_var_paths <- na.omit(map_chr(fig_s13, 2))
+      scna_var_paths <- na.omit(map_chr(fig_numbat_heatmaps_permissive, 2))
       qpdf::pdf_combine(scna_var_paths, "results/filtered_scna_probabilities.pdf")
     }),
 
@@ -559,14 +559,16 @@ pipeline_targets_seurat <- c(
     tar_target(
       hypoxia_threshold_per_sample,
       {
+        if (is.null(hypoxia_seus) || is.na(hypoxia_seus)) return(NULL)
         sample_id <- stringr::str_extract(hypoxia_seus, "SR[RX][0-9]+")
-        if (!is.null(hypoxia_thresholds) && sample_id %in% names(hypoxia_thresholds))
+        if (!is.null(hypoxia_thresholds) && length(sample_id) == 1 && !is.na(sample_id) && sample_id %in% names(hypoxia_thresholds))
           as.numeric(hypoxia_thresholds[[sample_id]])
         else
           0.4
       },
       pattern = map(hypoxia_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(
