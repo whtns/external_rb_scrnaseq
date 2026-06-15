@@ -12,8 +12,8 @@ pipeline_targets_figures <- c(
 list(
   # --- aggregate output tracking ---
 
-  tar_target(figures_and_tables,
-    list(
+  tar_target(figures_and_tables, {
+    items <- list(
       cluster_comparisons_by_phase_for_disctinct_clones = cluster_comparisons_by_phase_for_disctinct_clones,
       clustree_compilation = clustree_compilation,
       collage_compilation = collage_compilation,
@@ -65,7 +65,28 @@ list(
       sample_summaries = sample_summaries,
       cell_counts_table = filtering_cell_counts_table
     )
-  ),
+
+    # Build manifest: one row per file, annotated with document label from figure_order.
+    # Items not in figure_order get NA in document_label.
+    manifest_df <- purrr::imap(items, function(val, name) {
+      label <- figure_order[name]
+      paths <- unlist(val)
+      paths <- paths[!is.na(paths) & nchar(paths) > 0]
+      data.frame(
+        document_label = if (length(label) == 0 || is.na(label)) NA_character_ else unname(label),
+        semantic_name  = name,
+        file_path      = if (length(paths) == 0) NA_character_ else paths,
+        stringsAsFactors = FALSE
+      )
+    }) |>
+      dplyr::bind_rows() |>
+      dplyr::arrange(document_label)
+
+    manifest_path <- "results/figures_and_tables_manifest.csv"
+    readr::write_csv(manifest_df, manifest_path)
+
+    c(items, list(manifest = manifest_path))
+  }),
 
   # --- study metadata and overview figures ---
 
