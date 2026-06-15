@@ -54,7 +54,7 @@ list(
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
       oncoprint_plots = oncoprint_plots,
-      table_rod_rich_samples  = table_rod_rich_samples,
+      table_rod_rich_samples  = table_rod_rich_samples_csv,
       table_all_diffex_clones = table_all_diffex_clones,
       table_qc_stats          = table_qc_stats,
       table_sample_metadata   = table_sample_metadata,
@@ -577,9 +577,12 @@ list(
     { force(cluster_orders_sqlite); sample_specific_analyses_of_tumors_with_scna_subclones_after_integration(integrated_seus_6p, cluster_orders, "results/fig_6p_sample_specific_integrated.pdf") }
   ),
 
-  tar_target(fig_subtype_markers,
+  tar_target(fig_subtype_markers, {
+    # plot_fig_s25 saves to results/fig_s25.pdf but returns browseURL() result;
+    # call it for the side effect and return the path explicitly.
     plot_fig_s25(subtype_markers = subtype_markers)
-  ),
+    "results/fig_s25.pdf"
+  }),
 
   # Alternative resolutions for integrated 16q- analysis
   tar_target(fig_16q_alternative_resolutions,
