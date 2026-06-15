@@ -19,7 +19,7 @@ pipeline_targets_seurat <- c(
       "SRX11133594" = "output/seurat/SRX11133594_filtered_seu_1q.rds",
       "SRX11133593" = "output/seurat/SRX11133593_filtered_seu_1q.rds",
       "SRX11133592" = "output/seurat/SRX11133592_filtered_seu_1q.rds",
-      "SRX10831287" = "output/seurat/SRX10831287_filtered_seu_1q.rds"
+      # "SRX10831287" = "output/seurat/SRX10831287_filtered_seu_1q.rds"
     )
   ),
 
@@ -58,8 +58,8 @@ pipeline_targets_seurat <- c(
       "SRX10264526_filtered_seu.rds" = "output/seurat/integrated_1q/SRX10264526_integrated_1q_filtered_seu.rds",
       "SRX11133594_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133594_integrated_1q_filtered_seu.rds",
       "SRX11133593_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133593_integrated_1q_filtered_seu.rds",
-      "SRX11133592_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133592_integrated_1q_filtered_seu.rds",
-      "SRX10831287_filtered_seu.rds" = "output/seurat/integrated_1q/SRX10831287_integrated_1q_filtered_seu.rds"
+      "SRX11133592_filtered_seu.rds" = "output/seurat/integrated_1q/SRX11133592_integrated_1q_filtered_seu.rds"
+      # SRX10831287 excluded: integrated seu not yet produced
     )
   ),
 
