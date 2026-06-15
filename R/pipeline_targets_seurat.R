@@ -267,11 +267,27 @@ pipeline_targets_seurat <- c(
       deployment = "main"  # DB writes must run on the main process, not a worker
     ),
 
-    tar_target(resolution_dictionary,
-      # Read/write from sqlite on main process to avoid DB worker contention.
-      read_resolution_dictionary(sqlite_path = "batch_hashes.sqlite"),
-      deployment = "main"
-    ),
+    # Derive _hypoxia_low_seu.rds aliases from existing _filtered_seu_*.rds entries
+    # so that assign_designated_phase_clusters finds resolutions for hypoxia paths.
+    tar_target(hypoxia_resolution_aliases, {
+      existing <- read_resolution_dictionary(sqlite_path = "batch_hashes.sqlite")
+      if (length(existing) == 0) return(invisible(0L))
+      tumor_ids <- stringr::str_extract(names(existing), "SR[RX][0-9]+")
+      hypoxia_keys <- paste0(tumor_ids, "_hypoxia_low_seu.rds")
+      alias_df <- data.frame(
+        file_id     = hypoxia_keys,
+        resolution  = unlist(existing),
+        stringsAsFactors = FALSE
+      )
+      alias_df <- alias_df[!alias_df$file_id %in% names(existing), , drop = FALSE]
+      if (nrow(alias_df) > 0) upsert_resolution_dictionary(alias_df)
+      invisible(nrow(alias_df))
+    }, deployment = "main", cue = tar_cue("always")),
+
+    tar_target(resolution_dictionary, {
+      hypoxia_resolution_aliases
+      read_resolution_dictionary(sqlite_path = "batch_hashes.sqlite")
+    }, deployment = "main"),
 
     tar_target(chosen_resolution_seus,
       # Attach designated phase cluster resolutions pulled from sqlite metadata.
