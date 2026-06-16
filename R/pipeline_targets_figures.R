@@ -21,7 +21,7 @@ list(
       fig_single_sample_panels_with_diploid = fig_single_sample_panels_with_diploid,
       fig_1q_integrated                     = fig_1q_integrated,
       fig_1q_integrated_v2                  = fig_1q_integrated_v2,
-      fig_16q_alternative_resolutions       = fig_16q_alternative_resolutions,
+      fig_16q_integrated                    = fig_16q_integrated,
       fig_2p_integrated                     = fig_2p_integrated,
       fig_1q_16q_combined                   = fig_1q_16q_combined,
       fig_6p_integrated                     = fig_6p_integrated,
@@ -51,6 +51,8 @@ list(
       fig_6p_sample_specific_integrated     = fig_6p_sample_specific_integrated,
       fig_subtype_markers                   = fig_subtype_markers,
       clone_trees_segments = filtered_clone_trees_segments_files,
+      clone_tree_collage = clone_tree_collage,
+      clone_tree_collage_of_merged_replicates = clone_tree_collage_of_merged_replicates,
       # oncoprint_enrich_clones_plots_gobp,
       # oncoprint_enrich_clusters_plots_gobp,
       oncoprint_plots = oncoprint_plots,
@@ -96,6 +98,19 @@ list(
 
   # Cell cycle space and clone distribution plots for figure 01.
   tar_target(fig_01, plot_fig_01(unlist(seus_low_hypoxia)[grepl("SRX11133594", unlist(seus_low_hypoxia))])),
+
+  # Static external figures tracked as file targets.
+  # clone_tree_collage.png is cited as both Fig. 1b (main text) and Fig. S24 (supplement).
+  tar_target(clone_tree_collage,
+    "doc/external_figures_and_tables/clone_tree_collage.png",
+    format = "file"
+  ),
+
+  # clone_tree_collage_of_merged_replicates.png must be created before this target can run.
+  tar_target(clone_tree_collage_of_merged_replicates,
+    "doc/external_figures_and_tables/clone_tree_collage_of_merged_replicates.png",
+    format = "file"
+  ),
 
   tar_target(single_sample_panel_ids,
     c("SRX22868105", "SRX22868103", "SRX22868102", "SRX10264522",
@@ -175,7 +190,10 @@ list(
     plot_study_metadata(readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE))
   }),
 
-  tar_target(table_qc_stats,       make_table_s01(study_cell_stats)),
+  tar_target(table_qc_stats, {
+    study_cell_stats
+    make_table_s01(readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE))
+  }),
   tar_target(table_sample_metadata, make_table_s02()),
   tar_target(table_removed_clusters, make_table_s03(cluster_dictionary)),
 
@@ -605,9 +623,10 @@ list(
     "results/fig_s25.pdf"
   }),
 
-  # Alternative resolutions for integrated 16q- analysis
-  tar_target(fig_16q_alternative_resolutions,
-    plot_fig_03(cluster_orders)
+  # 16q- subclones in multi-sample integration (Fig. 5): marker heatmap, CC scores,
+  # faceted CC scores, clone distribution, proportion per cluster vs antecedent clones.
+  tar_target(fig_16q_integrated,
+    plot_fig_03(cluster_orders, plot_path = "results/fig_16q_integrated.pdf")
   ),
 
   tar_target(fig_1q_16q_combined,

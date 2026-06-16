@@ -1,0 +1,126 @@
+Figures and Tables
+
+
+Figure S1: RB SCNA frequency in TCGA by cancer type.  (Taylor et al. 2018). 
+
+
+Figure 2: Analysis of Numbat inference, cell state identity and subclone state distribution in a single tumor.
+(A) SCNAs inferred with Numbat. (B) Clone inheritance trees. (C) UMAP plots colored by cluster, inferred cell cycle phase (Seurat), and SCNA subclone. (D) Cell cycle score plots colored by cluster, phase, and SCNA. (E) Faceted cell cycle score plots colored by SCNA. (F) Clone distribution plot colored by SCNA. Asterisks indicate significant differences from the tumor as a whole. *, p<0.05 **, p<0.01 ***, p<0.001, two-tailed binomial test. 
+
+
+
+Figure 3: Analysis of cluster marker genes and cell state in a single tumor. 
+(A) Heatmap with tumor clusters and top 5 marker genes by log2FC. Annotated cluster identities on right and top of heatmap. (B) Tumor phylogeny by subclone inferred with Numbat. (C) Cells scored by gene signatures for S and G2M scores colored by cluster in cell-cycle space. (D) Cells plotted in cell cycle space faceted by cluster identity and colored by SCNA subclone. Cluster centroid labeled with colored diamonds. 
+
+
+Figure 4: 1q+ subclones in a multi-sample integration show redistribution to states G2/M and formation of novel G2/M state. 
+(A) Heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) Cell cycle score plots colored by cluster. (C) Faceted cell cycle score plots colored by SCNA subclone. (D) Clone distribution plot colored by SCNA subclone. *, p<0.05; **, p<0.01; ***, p<0.001; binomial test (E) Cell cycle distributions of subclones with 1q+ compared to antecedent clones in the integrated dataset (left) and individual tumors. Centroids indicate relative cluster sizes and positions. Tumor-specific phylogenies and karyograms are above and proportions of cells of each subclone in each cluster are below cell cycle plots, centroid and cluster colors as in panel A. 
+
+
+Figure 5: 16q- subclones in a multi-sample integration show depletion in post-mitotic states and increased hypoxia. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster. (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone. (E) Proportion of cluster present in in subclones with 16q- compared to antecedent clones.
+
+
+Figure 6: RB SCNA candidate driver genes from prior studies. 
+Reproduced with modifications from Kooi et al. Red indicates clonal or subclonal gain. Blue indicates clonal or subclonal loss. Gray indicates proposed candidate drivers from prior studies. Yellow indicates significantly differentially expressed genes between clones with or without the relevant SCNA with concordant gene dosage changes. Average normalized expression across scRNA-seq samples displayed in green on bottom row. 
+List of Tables
+Table S1: RB SCNA frequencies in TCGA by cancer types. Data extracted from Table S2 of Taylor et al. 2018.  
+
+Table S2. Characteristics of retinoblastoma scRNA-seq datasets.
+
+Table X2: Percent of clone in sample clusters. (A) 1q+ (B) 16q- (C) 2p+. Significance of clone enrichment calculated by binomial test with respect to individual tumor and integrated analyses.
+
+Table S3: Rod cell proportions in tumor samples
+
+Table S4: Tumor Quality Control. Sequence read archive (SRA) ID, presence of subclonal heterogeneity, Number of UMIs, Number of genes detected, percent mitochondrial reads
+
+Table S5: Tumor metadata compiled from sequence read archive. Includes sample ids, technical sequencing details, experimental metadata, and designation of all samples as untreated retinoblastoma.
+
+Table S6: SCNA segmentation from all Numbat analyses. Chromosome boundaries and SCNA state (gain=amp, balanced gain=bamp, loss=del, loss of heterozygosity=loh) 
+
+Table S7: Differentially expressed genes in in affected samples. (A) within affected SCNA segments in cis (B) outside of affected segments in trans
+
+Table S8: Tally of removed clusters with marker genes. Indicates removed diploid cell cluster sizes, marker genes, and cell type assignments for each tumor
+
+Table S9: Tally of candidate driver genes by differential expression of affected clone to antecedent clone.
+
+ 
+Supplemental Methods 
+
+Supplemental Data 
+Supplementary Figure S1: Frequency of RB SCNAs in the TCGA dataset of 33 human cancers . Data extracted from TCGA dataset (provide link).
+
+Supplementary Figure S2: Enrichment of RB SCNA segments in the TCGA dataset of 33 human cancers.  GISTIC plots of 33 human cancers with grey highlight of 1q, 2p, 6p, and 16q arms with significantly enriched copy number gain (red) or loss (blue) regions (q-values <??).
+
+Supplementary Figure S1: Quality control of scRNA-seq samples. 
+Histograms display the number of UMIs and genes detected per cell and the percent of reads assigned to mitochondrial genes for all cells, color coded according to study. We retained 14 samples (including one technical replicate) from three studies and excluded 10 samples based on poor QC and seven samples (including two technical replicates) due to a lack of informative SCNAs. Technical replicates noted in brackets.
+
+Supplementary Figure S2: Expression-based SCNA profiles and hierarchical clustering of 11 retinoblastomas inferred by Numbat. 
+Each row is an individual cell. Increased expression (relative to inferred diploid? cell) in red, decreased expression in blue. Gray horizontal lines indicate initial clone number parameter during Numbat execution.
+
+Supplementary Figure S3: Numbat SCNA inference heatmaps. 
+SCNA subclones arranged vertically. Gains in red, losses in blue. Copy-neutral loss of heterozygosity (LOH) in green. Numbat inferred tumor clone phylogenies. Tumor samples arranged by presence of ‘RB SCNA’. Size of node indicates proportional cell number in subclone. Clone order inferred with Numbat. Karyograms with Numbat inferred RB SCNAs. Numbat inferred SCNA probability.
+
+Supplementary Figure S4: Removed non-tumor cell clusters identified by marker genes concordant with single cell Eye in a Disk database  and the clustifyr R package.
+(A) Plots of cluster marker genes Rod cluster 5 (arrows) excluded in filtered dataset. (B) Paired UMAPS colored by cluster and clone assignment, with removed clusters identified (arrow).
+
+Supplementary Figure S5: Sample-specific analyses of tumors with 1q+ subclones after integration. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone.
+
+Supplementary Figure S6: Sample-specific analyses of tumors with 1q+ subclones without integration. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) faceted cell cycle score plots colored by SCNA subclone (C) UMAP plots colored by SCNA subclone (D) UMAP plots colored by cluster identity (E) clone distribution plot colored by SCNA subclone. (F) subclone phylogeny (G) cell cycle score plots colored by cluster.
+
+Supplementary Figure S7: Alternative resolutions for integrated 1q+ analysis. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone. The correspondence between cluster identity and cell cycle state varied with clustering resolution. At lower resolution, post-mitotic and G1 states occupied a common cluster while at higher resolution, many additional G1 states were distinguished. We observed no significant variation in distribution of 1q+ clones at either alternative resolution apart from enrichment of S/G2 and G2/M phases.
+
+Supplementary Figure S8: Differential expression of 1q+ clusters. 
+(A) Candidate drivers found by differential expression between clones with 1q+ within clusters. (B) Enrichment analysis (over-representation) after differential expression comparisons between integrated 1q clusters of interest: G1 v. G1; S v. S*; S/G2 v. G2/M
+
+Supplementary Figure S9: Enriched terms after differential expression comparison of G1 cell states in integrated 1q+: G1 MT v. G1 DIFF and  G1 MT v. G1 SUB2
+(A) msigdb hallmark terms. (B) msigdb oncogenic signatures.
+
+Supplementary Figure S10: 16q- candidate drivers found by differential expression between clones within clusters.
+
+Supplementary Figure S11: Alternative resolutions for integrated 16q- analysis. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone.
+
+Supplementary Figure S12: Sample-specific analyses of tumors with 16q- subclones after integration. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone. (E) Cluster similarity by distance of centroid in PCA.
+
+Supplementary Figure S13: Sample-specific analyses of tumors with 16q- subclones without integration. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) faceted cell cycle score plots colored by SCNA subclone (C) UMAP plots colored by SCNA subclone (D) UMAP plots colored by cluster identity (E) clone distribution plot colored by SCNA subclone. (F) subclone phylogeny (G) cell cycle score plots colored by cluster.
+
+Supplementary Figure S14: 2p+ subclones in a multi-sample integration show depletion in a G1 cell state. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster. (C) clone distribution plot colored by SCNA subclone (D) faceted cell cycle score plots colored by SCNA subclone (E) Proportion of cluster present in in subclones with 2p+ compared to antecedent clones.
+
+Supplementary Figure S15: Alternative resolutions for integrated 2p+ analysis. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone. 
+
+Supplementary Figure S16: Sample-specific analyses of tumors with 2p+ subclones after integration. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) cell cycle score plots colored by cluster (C) faceted cell cycle score plots colored by SCNA subclone (D) clone distribution plot colored by SCNA subclone. (E) Cluster similarity by distance of centroid in PCA.
+
+Supplementary Figure S17: Differential expression and enriched hallmark terms between 2p+ enriched g1 cluster versus 2p+ depleted clusters.
+(A-B) g1 a1 v. g1 a2 (C-D) g1 b v. g1 a2 (E-F) g1 b v. g1 a1
+
+Supplementary Figure S18: Candidate driver genes in 2p+ in cell states.
+
+Supplementary Figure S19: 6p+ SCNA boundaries in affected samples.
+
+Supplementary Figure S20: Sample-specific analyses of tumors with 6p+ subclones without integration.
+
+Supplementary Figure S21: Enriched terms in comparisons between 6p+ enriched and 6p+ depleted clusters.
+In tumor SRX14116944 (with gain of all of 6p superimposed over 1q+), 6p+ and non-6p+ clones occupied distinct G1 states with CRABP2 (a factor that mediates RXRg signaling) and subtype 2 retinoblastoma marker gene CD24 characterizing 6p+ enriched clusters and cone differentiation markers PDE6H and PDC characterizing 6p+ depleted clusters (Fig. S20). Direct comparison of clusters within the same G1 cell cycle phase with and without enrichment of 6p+ clones showed activation of HALLMARK MYC TARGETS and suppression of TNFA SIGNALING VIA NFKB in G1 states in the 6p+-enriched cluster (Fig. S21). 
+In tumor SRX10264524 (with concurrent gain of 6p sequences from ~5 MB to ~ 38 MB (Chr6:5-38 MB) and 11p loss superimposed over diploid), 6p+ clones also occupied distinct G1 states with enrichment in clusters characterized by expression of neurogenic marker GAP43 and depletion in clusters characterized by stemness marker CD24 and mature cone markers including GUCA1A and ARR3 (Fig. S20) Direct comparison of clusters within the same G1 cell cycle phase 
+with and without enrichment of the 6p+ in clones showed activation of E2F targets and suppression of TGF BETA SIGNALING in G1 states (Fig. S21). The very existence of variation in 6p+ clone distribution across cell states suggests an impact of the 6p region from 5-38 MB on the transcriptome, although transcriptomic changes could also relate to the concurrent 11p loss or undetected co-occurring mutations. 
+
+Supplementary Figure S22: Differentially expressed genes in cis after comparisons between 6p+ subclones and antecedent clones across all clusters in tumor. 
+Genes differentially expressed between initial 6p+ clones and antecedent non-6p+ clones in two retinoblastoma tumors and all genes positioned within the 6p-gain segment Chr6:0-69 MB (SRX14116944) and the Chr6:5-38 MB (SRX10264524). 
+
+
+
+
+
+
+
+Supplemental Figure S20: Sample-specific analyses of tumors with 6p+ subclones without integration. 
+(A) heatmap of cluster marker genes defined by Wilcoxon rank-sum test. (B) faceted cell cycle score plots colored by SCNA subclone (C) UMAP plots colored by SCNA subclone (D) UMAP plots colored by cluster identity (E) clone distribution plot colored by SCNA subclone. (F) subclone phylogeny (G) cell cycle score plots colored by cluster.
