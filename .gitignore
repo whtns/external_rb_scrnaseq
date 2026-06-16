@@ -29,6 +29,8 @@ ARMOR/*
 work
 *.rds
 batch_hashes.sqlite
+batch_hashes.sqlite-shm
+batch_hashes.sqlite-wal
 doc/table_s01.csv
 doc/kstachelek_rb_scna_tx_effects_2025-10-09.docx
 doc/paper.md
@@ -49,6 +51,15 @@ ncbi/
 logs/
 pipeline/containers/
 pipeline/logs/
+# Sample-specific one-off Numbat run scripts
+pipeline/numbat_SRX*.sbatch
+pipeline/numbat_sridhar_*.sbatch
+# Diagnostic and exploratory scripts
+pipeline/diagnose_*.sbatch
+pipeline/scripts/diagnose_*.R
+pipeline/test_*.sbatch
+pipeline/plot_exp_roll_nsample_test.sbatch
+pipeline/scripts/plot_exp_roll_nsample_test.R
 src/logs/
 .R_libs_backup*/
 lockfile
