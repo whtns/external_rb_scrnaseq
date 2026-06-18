@@ -93,7 +93,8 @@ pipeline_targets_seurat <- c(
       # Build filtered large-format Numbat plot bundles per sample.
       make_numbat_plot_files(seus_interesting, numbat_rds_files, cluster_dictionary, large_filter_expressions, large_clone_simplifications, extension = "_filtered"),
       pattern = map(seus_interesting, numbat_rds_files),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(unfiltered_seus,
@@ -115,7 +116,8 @@ pipeline_targets_seurat <- c(
         large_clone_simplifications_per_sample
       ),
       pattern = map(unfiltered_seus, cluster_dictionary_per_sample, large_clone_simplifications_per_sample),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(filtered_seus,
@@ -207,27 +209,20 @@ pipeline_targets_seurat <- c(
       c(
         "SRX10264519"          = "output/seurat/SRX10264519_filtered_seu.rds",
         "SRX10264520"          = "output/seurat/SRX10264520_filtered_seu.rds",
-        "SRX10264523_branch_5" = "output/seurat/SRX10264523_branch_5_filtered_seu.rds",
-        "SRX10264523_branch_6" = "output/seurat/SRX10264523_branch_6_filtered_seu.rds",
-        "SRX10264524_branch_6" = "output/seurat/SRX10264524_branch_6_filtered_seu.rds",
-        "SRX10264524_branch_4" = "output/seurat/SRX10264524_branch_4_filtered_seu.rds",
-        "SRX10264524_branch_5" = "output/seurat/SRX10264524_branch_5_filtered_seu.rds",
+        "SRX10264523"          = "output/seurat/SRX10264523_filtered_seu.rds",
+        "SRX10264524"          = "output/seurat/SRX10264524_filtered_seu.rds",
         "SRX10264525"          = "output/seurat/SRX10264525_filtered_seu.rds",
         "SRX10264526"          = "output/seurat/SRX10264526_filtered_seu.rds",
         "SRX11133594"          = "output/seurat/SRX11133594_filtered_seu.rds",
         "SRX11133593"          = "output/seurat/SRX11133593_filtered_seu.rds",
         "SRX11133592"          = "output/seurat/SRX11133592_filtered_seu.rds",
-        "SRX11133588_branch_2" = "output/seurat/SRX11133588_branch_2_filtered_seu.rds",
-        "SRX11133588_branch_3" = "output/seurat/SRX11133588_branch_3_filtered_seu.rds",
-        "SRX11133587_branch_4" = "output/seurat/SRX11133587_branch_4_filtered_seu.rds",
-        "SRX11133587_branch_7" = "output/seurat/SRX11133587_branch_7_filtered_seu.rds",
-        "SRX11133585_branch_3" = "output/seurat/SRX11133585_branch_3_filtered_seu.rds",
-        "SRX11133585_branch_4" = "output/seurat/SRX11133585_branch_4_filtered_seu.rds",
+        "SRX11133588"          = "output/seurat/SRX11133588_filtered_seu.rds",
+        "SRX11133587"          = "output/seurat/SRX11133587_filtered_seu.rds",
+        "SRX11133585"          = "output/seurat/SRX11133585_filtered_seu.rds",
         "SRX14116947"          = "output/seurat/SRX14116947_filtered_seu.rds",
         "SRX14116944"          = "output/seurat/SRX14116944_filtered_seu.rds",
         "SRX22868105"          = "output/seurat/SRX22868105_filtered_seu.rds",
-        "SRX22868102_branch_3" = "output/seurat/SRX22868102_branch_3_filtered_seu.rds",
-        "SRX22868102_branch_4" = "output/seurat/SRX22868102_branch_4_filtered_seu.rds"
+        "SRX22868102"          = "output/seurat/SRX22868102_filtered_seu.rds"
       )
     ),
 
@@ -293,7 +288,8 @@ pipeline_targets_seurat <- c(
       # Attach designated phase cluster resolutions pulled from sqlite metadata.
       assign_designated_phase_clusters(scna_seus, cluster_orders, resolution_dictionary),
       pattern = map(scna_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     # --- clustrees ---
@@ -316,7 +312,8 @@ pipeline_targets_seurat <- c(
         col_arrangement = c("SCT_snn_res.0.2", "Phase", "scna")
       ),
       pattern = map(final_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(
@@ -338,38 +335,10 @@ pipeline_targets_seurat <- c(
       )
     ),
 
-    tar_target(
-      regressed_recurrent_genes,
-      pull_common_markers(regressed_seus, mps[["Cancer"]])
-    ),
-
-    tar_target(regressed_recurrent_heatmaps,
-      heatmap_marker_genes(
-        regressed_seus,
-        regressed_recurrent_genes,
-        subtype_markers,
-        "regressed_",
-        marker_col = "SCT_snn_res.0.2",
-        group.by = c("SCT_snn_res.0.2", "Phase", "scna"),
-        col_arrangement = c("SCT_snn_res.0.2", "scna")
-      ),
-      pattern = map(regressed_seus),
-      iteration = "list"
-    ),
-
-    tar_target(regressed_recurrent_heatmap_file,
-      qpdf::pdf_combine(regressed_recurrent_heatmaps, "results/regressed_recurrent_heatmaps.pdf")
-    ),
-
-    # --- regression ---
-
-    tar_target(regressed_seus,
-      regress_filtered_seu(final_seus),
-      pattern = map(final_seus),
-      iteration = "list",
-      error = "null",
-      cue = tar_cue(command = FALSE)
-    ),
+    # --- regression (disabled: too memory-intensive) ---
+    # regressed_seus, regressed_recurrent_genes, regressed_recurrent_heatmaps,
+    # regressed_recurrent_heatmap_file, regression_effect_plots, regression_ora_plots
+    # are all omitted. fig_regression_diagnostics writes a placeholder PDF.
 
     tar_target(effect_of_filtering,
       {
@@ -413,38 +382,21 @@ pipeline_targets_seurat <- c(
       format = "file"
     ),
 
-    tar_target(regression_effect_plots,
-      plot_effect_of_regression(final_seus, regressed_seus, width = 18, height = 12),
-      pattern = map(final_seus, regressed_seus),
-      iteration = "list"
-    ),
-
-    # regression diagnostics
+    # Placeholder: regression diagnostics disabled (regressed_seus not run).
     tar_target(fig_regression_diagnostics, {
-      plot_paths <- na.omit(unlist(regression_effect_plots))
-      plot_paths <- plot_paths[nzchar(plot_paths)]
       out_path <- "results/fig_regression_diagnostics.pdf"
-      if (length(plot_paths) == 0) {
-        pdf(out_path)
-        plot.new()
-        text(0.5, 0.5, "No valid regression effect plots")
-        dev.off()
-        out_path
-      } else {
-        qpdf::pdf_combine(plot_paths, out_path)
-      }
+      pdf(out_path)
+      plot.new()
+      text(0.5, 0.5, "Regression diagnostics not run")
+      dev.off()
+      out_path
     }),
-
-    tar_target(regression_ora_plots,
-      ora_effect_of_regression(final_seus, regressed_seus),
-      pattern = map(final_seus, regressed_seus),
-      iteration = "list"
-    ),
 
     tar_target(cin_score_plots,
       score_chrom_instability(unfiltered_seus),
       pattern = map(unfiltered_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     # --- QC / numbat heatmaps ---
@@ -456,7 +408,8 @@ pipeline_targets_seurat <- c(
         show_segment_names_on_x = TRUE, filter_midline = FALSE
       ),
       pattern = map(unfiltered_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(numbat_heatmap_plots_subset,
@@ -466,7 +419,8 @@ pipeline_targets_seurat <- c(
         show_segment_names_on_x = TRUE, filter_midline = FALSE
       ),
       pattern = map(filtered_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(numbat_heatmaps_unfiltered_pdf, {
@@ -484,7 +438,8 @@ pipeline_targets_seurat <- c(
         filter_midline = FALSE
       ),
       pattern = map(seus_low_hypoxia),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(fig_numbat_heatmaps, {
@@ -502,6 +457,7 @@ pipeline_targets_seurat <- c(
       ),
       pattern = map(seus_low_hypoxia),
       iteration = "list",
+      error = "null",
       cue = tar_cue("always")  # force re-render each run: heatmap layout depends on
                                 # session graphics device state, not captured by hash
     ),
@@ -518,19 +474,22 @@ pipeline_targets_seurat <- c(
     tar_target(heatmap_collages,
       plot_seu_marker_heatmap_all_resolutions(seus_low_hypoxia, numbat_rds_files, large_clone_simplifications),
       pattern = map(seus_low_hypoxia),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(heatmap_collages_6p,
       plot_seu_marker_heatmap_all_resolutions(hypoxia_seus_6p, numbat_rds_files, large_clone_simplifications),
       pattern = map(hypoxia_seus_6p),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(annotated_heatmap_collages,
       plot_seu_marker_heatmap(seus_low_hypoxia, cluster_orders, numbat_rds_files, large_clone_simplifications),
       pattern = map(seus_low_hypoxia),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(
@@ -575,7 +534,8 @@ pipeline_targets_seurat <- c(
       hypoxia_score_plots,
       plot_hypoxia_score(hypoxia_seus, threshold = hypoxia_threshold_per_sample),
       pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(seus_low_hypoxia,
@@ -604,10 +564,57 @@ pipeline_targets_seurat <- c(
       cue = tar_cue(command = FALSE)
     ),
 
+    # --- hypoxia threshold x clustering resolution grid search ---
+    # Samples of interest for the grid assessment (deduplicated).
+    tar_target(hypoxia_grid_samples, c(
+      "SRX10264523", "SRX10264524", "SRX10264525", "SRX10264526",
+      "SRX10831287", "SRX11133592", "SRX11133593", "SRX11133594",
+      "SRX14116944", "SRX22868105"
+    )),
+
+    # Per-sample grid over hypoxia thresholds (0.5/0.4/0.3) x resolutions (0.2/0.4),
+    # assessing low- and high-hypoxia subsets. Branches for samples not in the
+    # list of interest short-circuit to NULL.
+    tar_target(hypoxia_clustering_grid,
+      {
+        if (is.null(hypoxia_seus) || length(hypoxia_seus) == 0 || is.na(hypoxia_seus)) return(NULL)
+        sid <- stringr::str_extract(hypoxia_seus, "SR[RX][0-9]+")
+        if (is.na(sid) || !sid %in% hypoxia_grid_samples) return(NULL)
+        assess_hypoxia_clustering_grid(
+          hypoxia_seus,
+          thresholds = c(0.5, 0.4, 0.3),
+          resolutions = c(0.2, 0.4),
+          assay = "gene"
+        )
+      },
+      pattern = map(hypoxia_seus),
+      iteration = "list",
+      error = "null"
+    ),
+
+    # Combine per-sample grid PDFs and stack the cell-count summaries into one CSV.
+    tar_target(hypoxia_clustering_grid_collated,
+      {
+        items <- purrr::compact(hypoxia_clustering_grid)
+        pdfs <- purrr::map_chr(items, "plot")
+        pdfs <- pdfs[!is.na(pdfs) & file.exists(pdfs)]
+        csvs <- purrr::map_chr(items, "summary")
+        csvs <- csvs[!is.na(csvs) & file.exists(csvs)]
+        out_pdf <- "results/hypoxia_clustering_grid/hypoxia_clustering_grid_all.pdf"
+        out_csv <- "results/hypoxia_clustering_grid/hypoxia_clustering_grid_summary.csv"
+        if (length(pdfs) > 0) qpdf::pdf_combine(pdfs, out_pdf)
+        if (length(csvs) > 0) {
+          readr::write_csv(dplyr::bind_rows(lapply(csvs, readr::read_csv, show_col_types = FALSE)), out_csv)
+        }
+        c(plot = out_pdf, summary = out_csv)
+      }
+    ),
+
     tar_target(heatmap_collages_hypoxia,
       plot_seu_marker_heatmap(hypoxia_seus, nb_paths = numbat_rds_files, clone_simplifications = large_clone_simplifications, tmp_plot_path = TRUE),
       pattern = map(hypoxia_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(heatmap_collages_low_hypoxia,
@@ -618,7 +625,8 @@ pipeline_targets_seurat <- c(
         tmp_plot_path = TRUE
       ),
       pattern = map(seus_low_hypoxia),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(hypoxia_gene_heatmap_low_hypoxia,
@@ -636,7 +644,8 @@ pipeline_targets_seurat <- c(
         tmp_plot_path = TRUE
       ),
       pattern = map(seus_high_hypoxia),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     tar_target(hypoxia_effect_plots,
@@ -656,7 +665,8 @@ pipeline_targets_seurat <- c(
     tar_target(silhouette_plots,
       calc_silhouette(seus_low_hypoxia),
       pattern = map(seus_low_hypoxia),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     ),
 
     # --- integrated seus ---
@@ -677,7 +687,8 @@ pipeline_targets_seurat <- c(
     tar_target(annotated_integrated_heatmap_collages,
       plot_seu_marker_heatmap_integrated(integrated_seus),
       pattern = map(integrated_seus),
-      iteration = "list"
+      iteration = "list",
+      error = "null"
     )
 
   ),
