@@ -643,7 +643,8 @@ list(
       cluster_order = cluster_orders,
       large_clone_comparisons = large_clone_comparisons,
       scna_of_interest = "2p", width = 14, height = 10
-    )
+    ),
+    error = "null"
   ),
 
   tar_target(fig_6p_integrated,
