@@ -1,3 +1,5 @@
+use epyc-64 instead of main partition in sbatch
+
 always write markdown files to the docs directory
 seuratTools is present at /project2/cobrinik_1090/rpkgs/seuratTools
 
@@ -72,9 +74,46 @@ Rscript -e "devtools::load_all('/project2/cobrinik_1090/rpkgs/numbat_helpers')" 
   Re-download from CRAN directly: `wget https://cran.r-project.org/src/contrib/PKG_VER.tar.gz`
 
 ## Running the Pipeline
+
+**Always submit pipeline runs as SLURM jobs — never run directly from the login node.**
+The main `tar_make()` process loads R + Seurat + numbatHelpers (~2-4 GB) and accumulates memory as branches complete. Login nodes have strict per-user memory caps that cause SIGKILL (exit status -9) within minutes when heavy targets (e.g. `large_numbat_pdfs`, `filtered_numbat_pdfs`) are in the dependency chain.
+
+Use the existing sbatch scripts:
+- `sbatch build_figures_and_tables.sbatch` — builds `figures_and_tables` (64 GB, 24 h)
+- `sbatch rebuild_sample_summaries.sbatch` — builds `sample_summaries` (64 GB, 6 h)
+
+Monitor progress: `tail -f logs/figures_and_tables_<JOBID>.log` or `tail -f logs/rebuild_sample_summaries_<JOBID>.log`
+
 - Script: `Rscript /project2/cobrinik_1090/external_rb_scrnaseq_proj/run_targets_bg.R`
 - targets store: `_targets_r431`; default target: `figures_and_tables`
 - Set LD_LIBRARY_PATH before running (see R Environment above)
+
+### NEVER run two pipeline jobs against the same store at once
+
+**Only one `tar_make()` may run against `_targets_r431` at a time.** Running two
+concurrently (e.g. `sample_summaries` + `effect_of_filtering` together) makes
+their crew workers — which sit on different physical nodes — hammer
+`batch_hashes.sqlite` over NFS simultaneously. That triggers SQLite
+`SQLITE_PROTOCOL` errors (surfaced in R as **"locking protocol"**). With
+`error = "null"` those branches get cached as silent NULLs, producing missing
+panels, blank clone/segment trees, and broken dependency chains that are
+painful to trace.
+
+Before submitting a pipeline job, check nothing else is already building the store:
+```bash
+squeue -u $USER -o "%.10i %.22j %.8T %.10M %R"   # look for run_targets_bg.R / crew-worker jobs
+```
+If a `tar_make()` job (or its `crew-worker-*` jobs) is running, **wait for it to
+finish** before submitting another. If you must prioritise a different target,
+`scancel` the running job first (completed branches stay cached, so no finished
+work is lost), then submit the new one.
+
+The DB-side mitigations (TRUNCATE journal instead of WAL, 60 s busy_timeout on
+every connection, and bounded backoff retry) live in
+`numbat_helpers/R/db_connection.R` via `connect_hash_db()` / `db_retry()` — use
+those helpers for any new SQLite access, never a raw
+`DBI::dbConnect(RSQLite::SQLite(), ...)`. They reduce contention but do **not**
+make concurrent `tar_make()` runs safe; the one-job rule above still stands.
 
 ## Debugging Targets Pipeline Issues
 
