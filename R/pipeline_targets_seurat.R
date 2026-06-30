@@ -538,31 +538,59 @@ pipeline_targets_seurat <- c(
       error = "null"
     ),
 
-    tar_target(seus_low_hypoxia,
-      # Low-hypoxia partition is later remapped into SCNA-specific subsets.
-      subset_seu_by_expression(
-        hypoxia_seus, run_hypoxia_clustering = TRUE,
-        hypoxia_expr = glue::glue("hypoxia_score <= {hypoxia_threshold_per_sample}"),
-        slug = "hypoxia_low",
-        assay = "gene"
+    # Cluster-based hypoxia split (single round, outlier mean-score rule).
+    # Clusters at resolutions 0.2/0.4/0.6 in ONE round and moves clusters whose
+    # mean hypoxia_score is a high-side outlier (robust z: median+3*MAD of the
+    # per-cluster means) into the high subset, unioning hits across resolutions.
+    # Flagging is independent of hypoxia marker-gene presence. Writes the same
+    # *_hypoxia_low_seu.rds / *_hypoxia_high_seu.rds outputs so downstream targets
+    # and hypoxia_resolution_aliases are unchanged.
+    tar_target(hypoxia_partition_paths,
+      split_hypoxia_by_clusters(
+        hypoxia_seus,
+        resolutions = c(0.2, 0.4, 0.6),
+        n_iter = 1,
+        split_assay = "gene", low_assay = "gene", high_assay = "SCT"
       ),
-      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
+      pattern = map(hypoxia_seus),
       iteration = "list",
       error = "null",
       cue = tar_cue(command = FALSE)
     ),
 
-    tar_target(seus_high_hypoxia,
-      subset_seu_by_expression(
-        hypoxia_seus, run_hypoxia_clustering = TRUE,
-        hypoxia_expr = glue::glue("hypoxia_score > {hypoxia_threshold_per_sample}"),
-        slug = "hypoxia_high"
-      ),
-      pattern = map(hypoxia_seus, hypoxia_threshold_per_sample),
+    tar_target(seus_low_hypoxia,
+      # Low-hypoxia partition is later remapped into SCNA-specific subsets.
+      if (is.null(hypoxia_partition_paths) || all(is.na(hypoxia_partition_paths)))
+        NA_character_ else unname(hypoxia_partition_paths[["low"]]),
+      pattern = map(hypoxia_partition_paths),
       iteration = "list",
-      error = "null",
-      cue = tar_cue(command = FALSE)
+      error = "null"
     ),
+
+    tar_target(seus_high_hypoxia,
+      if (is.null(hypoxia_partition_paths) || all(is.na(hypoxia_partition_paths)))
+        NA_character_ else unname(hypoxia_partition_paths[["high"]]),
+      pattern = map(hypoxia_partition_paths),
+      iteration = "list",
+      error = "null"
+    ),
+
+    # Collate the per-sample cluster-split decision logs (round x resolution x
+    # cluster: top-5 markers, mean hypoxia_score, robust-z (median+3*MAD)
+    # outlier_fence, is_outlier flag) into one CSV. Depends on the whole split
+    # target so it runs after all branches.
+    tar_target(hypoxia_split_log_collated, {
+      hypoxia_partition_paths
+      dir <- "results/hypoxia_cluster_split"
+      csvs <- list.files(dir, pattern = "_hypoxia_split_log\\.csv$", full.names = TRUE)
+      out_csv <- file.path(dir, "hypoxia_split_log_all.csv")
+      if (length(csvs) > 0) {
+        readr::write_csv(
+          dplyr::bind_rows(lapply(csvs, readr::read_csv, show_col_types = FALSE)),
+          out_csv)
+      }
+      out_csv
+    }, deployment = "main"),
 
     # --- hypoxia threshold x clustering resolution grid search ---
     # Samples of interest for the grid assessment (deduplicated).
