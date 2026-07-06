@@ -767,6 +767,47 @@ list(
 
     message("Synced ", length(paths), " files to ", gdrive_destination)
     paths
-  })
+  }),
+
+  # Sync the rebuilt hypoxia downstream deliverables to Google Drive via rclone.
+  # Mirrors figures_and_tables_gdrive but targets the scope-b hypoxia rebuild
+  # outputs: per-sample hypoxia summaries, low-hypoxia clone/segment trees,
+  # low-hypoxia numbat + hypoxia-gene heatmaps, and annotated marker collages.
+  # These are pattern targets returning lists of file-path strings (or NA for
+  # degenerate samples), so unlist + existence-filter before copying.
+  # Requires: module load rclone && rclone config
+  #           (set hypoxia_gdrive_destination in pipeline_constants.R)
+  tar_target(hypoxia_rebuilt_gdrive, {
+    paths <- unlist(list(
+      hypoxia_summaries,
+      low_hypoxia_clone_tree_files,
+      low_hypoxia_clone_trees_segments_files,
+      numbat_heatmap_plots_low_hypoxia,
+      hypoxia_gene_heatmap_low_hypoxia,
+      annotated_heatmap_collages
+    ))
+    paths <- paths[nchar(paths) > 0 & !is.na(paths) & file.exists(paths)]
+    paths <- unique(paths)
+
+    files_txt <- tempfile()
+    writeLines(paths, files_txt)
+    on.exit(unlink(files_txt))
+
+    ret <- system2(
+      "rclone",
+      c("copy", "--files-from", files_txt, ".", hypoxia_gdrive_destination, "--progress"),
+      stdout = TRUE, stderr = TRUE
+    )
+    if (!is.null(attr(ret, "status")) && attr(ret, "status") != 0)
+      stop("rclone failed:\n", paste(ret, collapse = "\n"))
+
+    message("Synced ", length(paths), " files to ", hypoxia_gdrive_destination)
+    paths
+  },
+  # Run on the main process, not a crew worker: this target shells out to the
+  # `rclone` module binary, which is not on the crew workers' PATH
+  # (.slurm_script_lines loads r/curl/... but not rclone). deployment = "main"
+  # runs it in the launching process, which loads rclone via the sbatch script.
+  deployment = "main")
 
 )) # end list + end c()

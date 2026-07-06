@@ -27,6 +27,11 @@ scna_map_values <- tibble::tibble(
 # Configure with: module load rclone && rclone config
 gdrive_destination <- "gdrive:rb_scrnaseq/figures_and_tables"
 
+# rclone destination for the rebuilt hypoxia downstream deliverables
+# (per-sample hypoxia summaries, low-hypoxia clone trees, numbat/hypoxia-gene
+# heatmaps, annotated collages). See hypoxia_rebuilt_gdrive target.
+hypoxia_gdrive_destination <- "gdrive:rb_scrnaseq/hypoxia_rebuilt"
+
 # Document-order mapping: semantic target name → display label.
 # Edit this vector to renumber figures without touching target definitions.
 figure_order <- c(
