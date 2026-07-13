@@ -167,27 +167,48 @@ pipeline_targets_diffex <- list(
   ),
 
   # --- integration cluster diffex: 1q ---
+  #
+  # error = "null" on the per-cluster diffex targets below.
+  # find_diffex_bw_clones_for_each_cluster() throws "`x` must be a vector" on
+  # degenerate clusters / clone_opt in a freshly-built low-hypoxia subset. With
+  # error = "stop" a single bad sample branch halts the ENTIRE pipeline: that is
+  # what killed the figures_and_tables run and, later, the hypoxia rebuild (job
+  # 10207002 died on fig_16q_cluster_diffex_unintegrated_input after 1h10m, with
+  # everything else already built). These are paper figures (Fig. 7b / 8b), so the
+  # targets stay; they now degrade to NULL for the offending branch instead of
+  # taking the whole run down with them.
+  #
+  # This is a WORKAROUND, not a fix. The root cause is in
+  # find_diffex_bw_clones_for_each_cluster() (numbatHelpers plot_functions_26.R) —
+  # the same bug that already forced {all,cis,trans}_diffex_clones_for_each_cluster
+  # to be excluded from rebuild_hypoxia_downstream.sbatch. Until it is fixed these
+  # figures may be missing or incomplete; a NULL branch is silent, so check the
+  # output rather than trusting a green pipeline.
 
   tar_target(fig_1q_cluster_diffex_integrated_input,  # 1q+ cluster diffex after integration
     find_diffex_bw_clones_for_each_cluster(integrated_seus_1q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "1q+"),
     pattern = map(integrated_seus_1q),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(fig_1q_cluster_diffex_integrated,
     plot_fig_07_08(fig_1q_cluster_diffex_integrated_input, plot_path = "results/fig_1q_cluster_diffex_integrated.pdf", plot_title = "1q+ cluster diffex after integration", height = 5, width = 4),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(fig_1q_cluster_diffex_unintegrated_input,  # 1q+ cluster diffex without integration
     find_diffex_bw_clones_for_each_cluster(hypoxia_seus_1q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "1q+"),
     pattern = map(hypoxia_seus_1q),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(fig_1q_cluster_diffex_unintegrated,
     plot_fig_07_08(fig_1q_cluster_diffex_unintegrated_input, plot_path = "results/fig_1q_cluster_diffex_unintegrated.pdf", plot_title = "1q+ cluster diffex without integration", height = 5, width = 4),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   # --- integration cluster diffex: 16q ---
@@ -195,23 +216,27 @@ pipeline_targets_diffex <- list(
   tar_target(fig_16q_cluster_diffex_integrated_input,  # 16q- cluster diffex after integration
     find_diffex_bw_clones_for_each_cluster(integrated_seus_16q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "16q-"),
     pattern = map(integrated_seus_16q),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(fig_16q_cluster_diffex_integrated,
     plot_fig_07_08(fig_16q_cluster_diffex_integrated_input, plot_title = "16q- cluster diffex after integration", plot_path = "results/fig_16q_cluster_diffex_integrated.pdf", height = 5, width = 6),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(fig_16q_cluster_diffex_unintegrated_input,  # 16q- cluster diffex without integration
     find_diffex_bw_clones_for_each_cluster(hypoxia_seus_16q, numbat_rds_files, large_clone_comparisons, cluster_dictionary, location = "all", scna_of_interest = "16q-"),
     pattern = map(hypoxia_seus_16q),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(fig_16q_cluster_diffex_unintegrated,
     plot_fig_07_08(fig_16q_cluster_diffex_unintegrated_input, plot_title = "16q- cluster diffex without integration", plot_path = "results/fig_16q_cluster_diffex_unintegrated.pdf", p_adj_threshold = 0.05, height = 5, width = 6),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   )
 
 )

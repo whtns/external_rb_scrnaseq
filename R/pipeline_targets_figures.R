@@ -58,7 +58,8 @@ list(
       oncoprint_plots = oncoprint_plots,
       table_rod_rich_samples  = table_rod_rich_samples_csv,
       table_all_diffex_clones = table_all_diffex_clones,
-      table_qc_stats          = table_qc_stats,
+      table_qc_stats             = table_qc_stats,
+      table_sample_exclusion     = table_sample_exclusion,
       table_sample_metadata   = table_sample_metadata,
       table_removed_clusters  = table_removed_clusters,
       table_1q_clone_per_cluster  = table_1q_clone_per_cluster,
@@ -187,13 +188,27 @@ list(
   # Plot study-level metadata summary.
   tar_target(fig_study_cell_stats, {
     study_cell_stats
-    plot_study_metadata(readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE))
+    plot_study_metadata(readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE), normal_ctrl_samples)
   }),
 
   tar_target(table_qc_stats, {
     study_cell_stats
     make_table_s01(readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE))
   }),
+
+  # Per-sample table: exclusion reason + suitability for each SCNA analysis.
+  tar_target(table_sample_exclusion, {
+    study_cell_stats
+    make_sample_exclusion_table(
+      readr::read_csv("results/study_cell_stats.csv", show_col_types = FALSE),
+      excluded_samples,
+      normal_ctrl_samples,
+      rb_scna_samples
+    )
+  },
+    format = "file"
+  ),
+
   tar_target(table_sample_metadata, make_table_s02()),
   tar_target(table_removed_clusters, make_table_s03(cluster_dictionary)),
 
@@ -772,42 +787,96 @@ list(
   # Sync the rebuilt hypoxia downstream deliverables to Google Drive via rclone.
   # Mirrors figures_and_tables_gdrive but targets the scope-b hypoxia rebuild
   # outputs: per-sample hypoxia summaries, low-hypoxia clone/segment trees,
-  # low-hypoxia numbat + hypoxia-gene heatmaps, and annotated marker collages.
-  # These are pattern targets returning lists of file-path strings (or NA for
-  # degenerate samples), so unlist + existence-filter before copying.
+  # low-hypoxia numbat + hypoxia-gene heatmaps, annotated marker collages, plus
+  # the per-sample summaries and effect-of-filtering panels.
+  #
+  # Destination layout: one subdirectory per plot type, each split into
+  # paper_retained/ (samples in paper_retained_samples) and other/:
+  #   hypoxia_rebuilt/<plot_type>/<paper_retained|other>/<file>.pdf
+  # We stage the files as a symlink tree mirroring that layout, then a single
+  # `rclone copy --copy-links` uploads it (rclone resolves the symlinks). This
+  # avoids one rclone call per file while still reorganising a flat set of
+  # source paths into the grouped structure.
   # Requires: module load rclone && rclone config
   #           (set hypoxia_gdrive_destination in pipeline_constants.R)
   tar_target(hypoxia_rebuilt_gdrive, {
-    paths <- unlist(list(
-      hypoxia_summaries,
-      low_hypoxia_clone_tree_files,
-      low_hypoxia_clone_trees_segments_files,
-      numbat_heatmap_plots_low_hypoxia,
-      hypoxia_gene_heatmap_low_hypoxia,
-      annotated_heatmap_collages
-    ))
-    paths <- paths[nchar(paths) > 0 & !is.na(paths) & file.exists(paths)]
-    paths <- unique(paths)
+    # Named list: plot-type subdir -> the target holding that type's file paths.
+    # The split's stage collages (*_hypoxia_rflag<R>_{before,after}_seu.rds__... and
+    # *_hypoxia_recluster<R>_seu.rds__...) are written as a SIDE EFFECT of
+    # split_hypoxia_by_clusters(), not returned by any target, so they have to be
+    # globbed. Referencing hypoxia_partition_paths makes the split an explicit
+    # upstream dependency, so the glob cannot run before the files exist.
+    hypoxia_partition_paths
+    stage_collages <- c(
+      Sys.glob("results/*_hypoxia_rflag*_heatmap_phase_scatter_patchwork.pdf"),
+      Sys.glob("results/*_hypoxia_recluster*_heatmap_phase_scatter_patchwork.pdf")
+    )
 
-    files_txt <- tempfile()
-    writeLines(paths, files_txt)
-    on.exit(unlink(files_txt))
+    plot_type_files <- list(
+      hypoxia_summary          = hypoxia_summaries,
+      low_hypoxia_clone_tree   = low_hypoxia_clone_tree_files,
+      low_hypoxia_segment_tree = low_hypoxia_clone_trees_segments_files,
+      numbat_heatmap           = numbat_heatmap_plots_low_hypoxia,
+      hypoxia_gene_heatmap     = hypoxia_gene_heatmap_low_hypoxia,
+      annotated_collage        = annotated_heatmap_collages,
+      # the low object clustered at the split's anchor resolution and anchor + 0.4
+      # (both POST-exclusion), vs annotated_collage/low collage which are pinned to
+      # SCT_snn_res.0.6 for every sample
+      low_hypoxia_by_res       = heatmap_collages_low_hypoxia_by_res,
+      # before/after the drop at the anchor resolution, plus the confirmatory
+      # reclustering -- the only view showing the excluded cluster still present
+      hypoxia_split_stage      = stage_collages,
+      sample_summary           = sample_summaries,
+      effect_of_filtering      = effect_of_filtering,
+      hypoxia_split_log        = hypoxia_split_log_collated,
+      mean_score_boxplot       = "results/hypoxia_cluster_split/hypoxia_mean_score_boxplots.pdf",
+      strategy_doc             = c("doc/hypoxia_splitting_strategy.md",
+                                   "doc/hypoxia_split_outlier_rule.md")
+    )
+    retained <- paper_retained_samples
+
+    stage <- file.path(tempdir(), "hypoxia_rebuilt_stage")
+    unlink(stage, recursive = TRUE)
+    dir.create(stage)
+    on.exit(unlink(stage, recursive = TRUE))
+
+    n_staged <- 0L
+    for (ptype in names(plot_type_files)) {
+      paths <- unlist(plot_type_files[[ptype]])
+      paths <- paths[nchar(paths) > 0 & !is.na(paths) & file.exists(paths)]
+      paths <- unique(paths)
+      for (p in paths) {
+        sid <- stringr::str_extract(basename(p), "SR[RX][0-9]+")
+        grp <- if (!is.na(sid) && sid %in% retained) "paper_retained" else "other"
+        dest_dir <- file.path(stage, ptype, grp)
+        dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+        # Symlink so a single --copy-links rclone run resolves + uploads them.
+        file.symlink(normalizePath(p), file.path(dest_dir, basename(p)))
+        n_staged <- n_staged + 1L
+      }
+    }
 
     ret <- system2(
       "rclone",
-      c("copy", "--files-from", files_txt, ".", hypoxia_gdrive_destination, "--progress"),
+      c("copy", "--copy-links", shQuote(stage), hypoxia_gdrive_destination, "--progress"),
       stdout = TRUE, stderr = TRUE
     )
     if (!is.null(attr(ret, "status")) && attr(ret, "status") != 0)
       stop("rclone failed:\n", paste(ret, collapse = "\n"))
 
-    message("Synced ", length(paths), " files to ", hypoxia_gdrive_destination)
-    paths
+    message("Synced ", n_staged, " files (by plot type x retained/other) to ",
+            hypoxia_gdrive_destination)
+    n_staged
   },
   # Run on the main process, not a crew worker: this target shells out to the
   # `rclone` module binary, which is not on the crew workers' PATH
   # (.slurm_script_lines loads r/curl/... but not rclone). deployment = "main"
   # runs it in the launching process, which loads rclone via the sbatch script.
-  deployment = "main")
+  deployment = "main",
+  # Always re-sync: the upstream deliverables return deterministic results/*.pdf
+  # path STRINGS, so their hashes don't change when only file CONTENT changes.
+  # Without this the target skips after its first build and Drive goes stale.
+  # rclone copy only re-uploads files that actually changed, so this is cheap.
+  cue = tar_cue("always"))
 
 )) # end list + end c()

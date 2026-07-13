@@ -2,6 +2,14 @@
 # All R scripts in ./R/ are sourced below, including packages.R and functions.R if present.
 ## Load your packages, e.g. library(targets).
 suppressPackageStartupMessages(source("./packages.R"))
+
+# --- Pipeline config flags (read by pipeline_targets_*.R files on source) ---
+# Set to TRUE to stop tracking numbat RDS file content; prevents downstream
+# rebuilds when numbat reruns update file timestamps/hashes without changing
+# the sample set. Flip back to FALSE when you want the pipeline to detect
+# genuinely new numbat outputs.
+freeze_rds_files <- FALSE
+
 ## Load pipeline definition and constant files (functions are loaded via library(numbatHelpers))
 lapply(list.files("./R", pattern = "^(pipeline_|constants)", full.names = TRUE), source)
 
@@ -28,7 +36,7 @@ options(future.globals.maxSize = Inf)
   workers                     = 8,
   seconds_idle                = 120,
   seconds_timeout             = 600,
-  slurm_partition             = "main",
+  slurm_partition             = "epyc-64",
   slurm_cpus_per_task         = 2,
   slurm_memory_gigabytes_per_cpu = 4,
   slurm_time_minutes          = 240,
@@ -43,7 +51,7 @@ options(future.globals.maxSize = Inf)
   workers                     = 4,
   seconds_idle                = 300,
   seconds_timeout             = 600,
-  slurm_partition             = "main",
+  slurm_partition             = "epyc-64",
   slurm_cpus_per_task         = 4,
   slurm_memory_gigabytes_per_cpu = 16,
   slurm_time_minutes          = 720,
@@ -58,6 +66,7 @@ tar_option_set(
   error              = "continue",
   workspace_on_error = TRUE,
   trust_timestamps   = TRUE,
+  storage            = "main",
   library            = .user_lib,
   controller         = crew_controller_group(.worker_heavy, .worker_light),
   # Default to heavy; workers are persistent so lightweight targets on a heavy worker

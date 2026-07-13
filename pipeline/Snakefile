@@ -101,8 +101,8 @@ Rbin = config["Rbin"]
 
 ## Singularity container — used for all R rules
 _sif = "/project2/cobrinik_1090/external_rb_scrnaseq_proj/pipeline/containers/numbat-pipeline.sif"
-container_R      = "apptainer exec --bind /project2 " + _sif + " /usr/bin/R"
-container_Rscript = "apptainer exec --bind /project2 " + _sif + " /usr/bin/Rscript"
+container_R      = "/apps/generic/apptainer/1.5.0/bin/apptainer exec --bind /project2 " + _sif + " /usr/bin/R"
+container_Rscript = "/apps/generic/apptainer/1.5.0/bin/apptainer exec --bind /project2 " + _sif + " /usr/bin/Rscript"
 
 ## Optional project-local R library path
 RlibsUser = config.get("R_LIBS_USER", None)
@@ -367,7 +367,7 @@ rule numbat_sridhar:
         mem_kb                = lambda wildcards, resources: resources.mem_mb * 1024 * 2
     shell:
         '''
-        ulimit -v {params.mem_kb};
+        ulimit -v {params.mem_kb} || true;
         {container_R} CMD BATCH --no-restore --no-save \
         "--args seu_path='{input.seu_path}' ref_path='{params.ref_path}' \
         t='{params.numbat_t}' alpha='{params.alpha}' gamma='{params.gamma}' tau='{params.tau}' \

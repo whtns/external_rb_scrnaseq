@@ -86,7 +86,9 @@ sridhar_ref_path: /project2/cobrinik_1090/Homo_sapiens/numbat/sridhar_ref.rds
 numbat_t: 1e-2
 
 ## Prior probability of CNV state transitions in allele HMM (higher = more permissive calls)
-alpha: 1e-3
+# alpha: 1e-3
+# more permissive
+alpha: 1e-4
 
 ## Gamma parameter controlling clone tree prior
 gamma: 20

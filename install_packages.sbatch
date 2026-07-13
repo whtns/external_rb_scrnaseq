@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=r_pak_restore
-#SBATCH --partition=main
+#SBATCH --partition=epyc-64
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4

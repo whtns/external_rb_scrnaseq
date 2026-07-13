@@ -538,18 +538,45 @@ pipeline_targets_seurat <- c(
       error = "null"
     ),
 
-    # Cluster-based hypoxia split (single round, outlier mean-score rule).
-    # Clusters at resolutions 0.2/0.4/0.6 in ONE round and moves clusters whose
-    # mean hypoxia_score is a high-side outlier (robust z: median+3*MAD of the
-    # per-cluster means) into the high subset, unioning hits across resolutions.
-    # Flagging is independent of hypoxia marker-gene presence. Writes the same
+    # Cluster-based hypoxia split (lowest-resolution-first drop + confirmatory
+    # clean-up). Sweeps resolutions 0.2 -> 1.2 (all logged) and moves clusters
+    # whose mean hypoxia_score is a high-side outlier (robust z: median+3*MAD of
+    # the per-cluster means) into the high subset. The drop is anchored at r_flag,
+    # the lowest STABLE resolution — the coarsest scale at which the hypoxic
+    # population is actually resolved (flagged-cell count within stability_tol of
+    # the next resolution's), NOT merely the first that detects it. A too-coarse
+    # resolution can flag the population while capturing only part of it
+    # (SRX10264518: 507 cells at 0.2 vs a stable ~660 from 0.4 up). The survivors
+    # are then
+    # re-clustered at r_flag + 0.4 and any cluster still flagging there is dropped
+    # too. That confirmatory clean-up ITERATES (r_flag + k*0.4) until a pass flags
+    # nothing, so residual hypoxia that only separates at a much finer scale is
+    # still caught (logged as round = 2, 3, ...). This replaces the earlier
+    # union-across-resolutions rule, which over-dropped and was hard to reason
+    # about.
+    # Flagging is gated by TWO filters so pure cell-cycle-phase clusters are not
+    # swept into "high": (1) hypoxia marker presence (min_hyp_markers = 2) drops
+    # clusters that score high on snoRNA-host genes without real hypoxia markers
+    # (histone/PLK2 S-phase, CENPF/MKI67 G2M); (2) a direct phase gate
+    # (max_dom_frac = 0.70) additionally requires the cluster be phase-MIXED
+    # (dominant cell-cycle-phase fraction < 0.70), catching marker-positive but
+    # single-phase clusters the marker gate cannot (see
+    # src/eval_hypoxia_cluster_phase.R). Writes the same
     # *_hypoxia_low_seu.rds / *_hypoxia_high_seu.rds outputs so downstream targets
     # and hypoxia_resolution_aliases are unchanged.
     tar_target(hypoxia_partition_paths,
       split_hypoxia_by_clusters(
         hypoxia_seus,
-        resolutions = c(0.2, 0.4, 0.6),
-        n_iter = 1,
+        resolutions = seq(0.2, 1.2, by = 0.2),
+        stability_tol = 0.05,
+        stability_window = 2,
+        recluster_step = 0.4,
+        confirmatory_drop = TRUE,
+        max_confirmatory_rounds = 5,
+        max_recluster_res = 1.2,   # = max(resolutions): never search past the swept range
+        write_diagnostics = TRUE,
+        min_hyp_markers = 2,
+        max_dom_frac = 0.70,
         split_assay = "gene", low_assay = "gene", high_assay = "SCT"
       ),
       pattern = map(hypoxia_seus),
@@ -652,6 +679,29 @@ pipeline_targets_seurat <- c(
         clone_simplifications = large_clone_simplifications,
         tmp_plot_path = TRUE
       ),
+      pattern = map(seus_low_hypoxia),
+      iteration = "list",
+      error = "null"
+    ),
+
+    # Low-hypoxia collages at the TWO resolutions the split actually turned on:
+    # the anchor (r_flag, whose clusters were dropped) and r_flag + 0.4; or a fixed
+    # 0.6 / 1.0 pair when the sample flagged nothing. heatmap_collages_low_hypoxia
+    # above is pinned to SCT_snn_res.0.6 for every sample (dummy_cluster_order
+    # hardcodes it), so it never shows the clustering the drop was made on.
+    # The anchor is read from the split log's anchor_resolution column rather than
+    # re-derived, so it cannot drift from the split's stability rule.
+    # Depends on hypoxia_split_log_collated to guarantee the per-sample logs exist.
+    tar_target(heatmap_collages_low_hypoxia_by_res, {
+      hypoxia_split_log_collated
+      plot_hypoxia_low_res_collages(
+        seus_low_hypoxia,
+        nb_paths = numbat_rds_files,
+        clone_simplifications = large_clone_simplifications,
+        step = 0.4,
+        fallback = c(0.6, 1.0)
+      )
+    },
       pattern = map(seus_low_hypoxia),
       iteration = "list",
       error = "null"

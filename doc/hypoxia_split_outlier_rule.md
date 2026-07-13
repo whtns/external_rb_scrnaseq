@@ -1,5 +1,12 @@
 # Hypoxia low/high split — outlier mean-score rule
 
+> **Partially superseded.** For the current end-to-end strategy — including the
+> two gates (marker + direct phase) and resolutions `0.2/0.6/1.0` — see
+> [`hypoxia_splitting_strategy.md`](hypoxia_splitting_strategy.md). This doc is
+> retained for its deep dive on the robust-z (median + k·MAD) vs Tukey-fence
+> choice; its resolution list and "marker gate removed" paragraph below are out
+> of date.
+
 ## Summary
 
 The hypoxia cluster split partitions each sample's cells into a **low-hypoxia**

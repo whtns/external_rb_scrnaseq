@@ -5,14 +5,38 @@
 .light_resources <- tar_resources(crew = tar_resources_crew(controller = "light"))
 .heavy_resources <- tar_resources(crew = tar_resources_crew(controller = "heavy"))
 
+# _targets.R defines freeze_rds_files in its local env; sourced pipeline files
+# run in globalenv and may not see it.
+if (!exists("freeze_rds_files")) freeze_rds_files <- FALSE
+
 pipeline_targets_inputs <- c(
 
   # --- numbat / seurat file tracking ---
+  # freeze_rds_files (set in _targets.R): when TRUE, numbat RDS targets use
+  # cue = "never" so reruns of numbat don't cascade rebuilds downstream.
+  # Set to FALSE to resume normal file-hash tracking.
 
-  tarchetypes::tar_files(numbat_rds_all, retrieve_numbat_rds_files("output/numbat_sridhar/"), format = "file"),
+  if (freeze_rds_files) {
+    list(
+      tar_target(numbat_rds_all,
+        retrieve_numbat_rds_files("output/numbat_sridhar/"),
+        iteration = "vector", cue = tar_cue(mode = "never")),
+      tar_target(numbat_rds_files,
+        retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples),
+        iteration = "vector", cue = tar_cue(mode = "never")),
+      tar_target(numbat_rds_filtered_files,
+        retrieve_numbat_rds_files("output/numbat_sridhar_filtered/", interesting_samples),
+        iteration = "vector", cue = tar_cue(mode = "never"))
+    )
+  } else {
+    list(
+      tarchetypes::tar_files(numbat_rds_all, retrieve_numbat_rds_files("output/numbat_sridhar/"), format = "file"),
+      tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples), format = "file"),
+      tarchetypes::tar_files(numbat_rds_filtered_files, retrieve_numbat_rds_files("output/numbat_sridhar_filtered/", interesting_samples), format = "file")
+    )
+  },
+
   tarchetypes::tar_files(seus_all, retrieve_seus("output/seurat/"), format = "file"),
-  tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples), format = "file"),
-  tarchetypes::tar_files(numbat_rds_filtered_files, retrieve_numbat_rds_files("output/numbat_sridhar_filtered/", interesting_samples), format = "file"),
   # Subset of Seurat files for interesting_samples; entries are named by SRX ID.
   tarchetypes::tar_files(seus_interesting, retrieve_seus("output/seurat/", interesting_samples), format = "file"),
 
@@ -33,17 +57,6 @@ pipeline_targets_inputs <- c(
         "SRX10831280", "SRX10831281", "SRX10831282", "SRX10831283", "SRX10831286", "SRX10831287"
       )
     ),
-
-    # tar_target(interesting_samples,
-    #   c(
-    #     "SRX10264519", "SRX10264520", "SRX10264521", "SRX10264522",
-    #     "SRX10264523", "SRX10264524", "SRX10264525", "SRX10264526",
-    #     "SRX11133594", "SRX11133593", "SRX11133592",
-    #     "SRX11133588", "SRX11133587", "SRX11133585",
-    #     "SRX14116947", "SRX14116944",
-    #     "SRX22868105", "SRX22868104", "SRX22868103", "SRX22868102"
-    #   )
-    # ),
 
     tar_target(original_seus,
       c(
@@ -69,6 +82,28 @@ pipeline_targets_inputs <- c(
     # Samples excluded from analysis (lack a diploid ancestral clone).
     tar_target(excluded_samples,
       c("SRX11133587")  # no diploid ancestral clone; only diploid are B2M and APOE
+    ),
+
+    # Samples retained for the paper.
+    tar_target(paper_retained_samples,
+      c(
+        "SRX10264523",
+        "SRX10264526",
+        "SRX11133592",
+        "SRX11133593",
+        "SRX11133594",
+        "SRX22868103",
+        "SRX10831287"
+      )
+    ),
+
+    # Normal (non-tumor) control samples, keyed by study.
+    # SRX10031193 failed initial Seurat processing (no seurat object on disk) but
+    # is documented here so downstream tables include it with the correct label.
+    tar_target(normal_ctrl_samples,
+      list(
+        "collin" = c("SRX10031193", "SRX10031194")
+      )
     ),
 
     # IDs for per-branch debranched Seurat objects.
@@ -99,7 +134,7 @@ pipeline_targets_inputs <- c(
     # New samples without confirmed SCNA status are omitted until analyzed.
     tar_target(rb_scna_samples,
       list(
-        "1q"  = c("SRX10264523", "SRX10264526", "SRX11133594", "SRX11133593", "SRX11133592"),
+        "1q"  = c("SRX10264523", "SRX10264526", "SRX11133594", "SRX11133593", "SRX11133592", "SRX10831287"),
         "2p"  = c("SRX10264523", "SRX10264524", "SRX10264525", "SRX10264526", "SRX14116947", "SRX14116944"),
         "6p"  = c("SRX10264524", "SRX10264525", "SRX14116944"),
         "16q" = c("SRX11133594", "SRX11133593", "SRX11133592")
@@ -195,8 +230,27 @@ pipeline_targets_inputs <- c(
 
     # --- cluster annotation configs ---
 
-    tarchetypes::tar_file(cluster_dictionary_file, "data/cluster_dictionary.tsv"),
-    tar_target(cluster_dictionary, read_cluster_dictionary(cluster_dictionary_file)),
+    # Cluster abbreviations are derived automatically from each cluster's real
+    # gene_snn_res.0.2 marker genes (cluster_markers table in batch_hashes.sqlite,
+    # populated by seu_metadata_db; computed from the seu when a sample is
+    # missing from the DB) instead of a hand-curated TSV. See
+    # numbatHelpers::build_cluster_dictionary / classify_cluster_abbreviation.
+    # `.db_ready = seu_metadata_db` forces DB population to run first.
+    # An audit TSV + discrepancy report (vs the old hand dictionary) are written
+    # to results/cluster_dictionary/ on each build.
+    tar_target(cluster_dictionary,
+      build_cluster_dictionary(
+        all_seu_files,
+        sqlite_path     = "batch_hashes.sqlite",
+        malat1_rank_max = 5L,
+        top_n           = 10L,
+        remove_programs = c("rod", "cone", "APOE", "low_qual", "MALAT1"),
+        write_audit_dir = "results/cluster_dictionary",
+        compare_to      = "data/cluster_dictionary.tsv",
+        .db_ready       = seu_metadata_db
+      ),
+      deployment = "main"
+    ),
 
     # Per-sample hypoxia threshold overrides (default 0.4).
     # Add entries to the named vector below to override for specific samples.

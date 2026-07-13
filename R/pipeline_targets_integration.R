@@ -201,13 +201,15 @@ pipeline_targets_integration <- list(
       large_clone_comparisons, numbat_rds_files = numbat_rds_files, location = "all"
     ),
     pattern = map(corresponding_seus, corresponding_states_dictionary),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(corresponding_clusters_volcanos,
     plot_corresponding_clusters_diffex_volcanos(corresponding_clusters_diffex, unlist(corresponding_seus)),
     pattern = map(corresponding_clusters_diffex, corresponding_seus),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(corresponding_clusters_heatmaps,
@@ -217,13 +219,15 @@ pipeline_targets_integration <- list(
       numbat_rds_files = numbat_rds_files, location = "all"
     ),
     pattern = map(corresponding_clusters_diffex, corresponding_seus, corresponding_states_dictionary),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   tar_target(corresponding_clusters_enrichments,
     plot_corresponding_enrichment(corresponding_clusters_diffex, unlist(corresponding_seus)),
     pattern = map(corresponding_clusters_diffex, corresponding_seus),
-    iteration = "list"
+    iteration = "list",
+    error = "null"
   ),
 
   # --- clone cell-cycle plots ---
@@ -368,7 +372,9 @@ pipeline_targets_integration <- list(
   tar_target(table_rod_rich_samples_csv,
     {
       out <- "results/table_rod_rich_samples.csv"
-      readr::write_csv(table_rod_rich_samples, out)
+      # table_rod_rich_samples is a list of per-sample named lists (iteration = "list");
+      # row-bind into a single data.frame before writing.
+      readr::write_csv(dplyr::bind_rows(table_rod_rich_samples), out)
       out
     },
     format = "file"
@@ -416,6 +422,17 @@ pipeline_targets_integration <- list(
     )
   ),
 
+  # error = "null": plot_fig_09_10() dies in map_depth() when its upstream
+  # corresponding_clusters_diffex branches have nulled out (they carry
+  # error = "null" and every branch errored in the Jul 13 run). With error = "stop"
+  # this one leaf figure halted the whole figures_and_tables build. It is a paper
+  # figure (Fig. 10), so the target stays — but it now yields NULL instead of
+  # taking the pipeline down.
+  #
+  # WORKAROUND, not a fix: the real problem is upstream, in whatever is making
+  # every corresponding_clusters_diffex branch error. A NULL here is silent, so
+  # verify results/fig_6p_corresponding_clusters.pdf actually exists rather than
+  # trusting a green run.
   tar_target(fig_6p_corresponding_clusters,
     plot_fig_09_10(
       corresponding_seus_6p, corresponding_seus,
@@ -423,7 +440,8 @@ pipeline_targets_integration <- list(
       recurrence_threshold = 2, plot_path = "results/fig_6p_corresponding_clusters.pdf",
       widths = rep(4, 3), heights = c(12, 4, 12),
       common_seus = c("SRX10264524_filtered_seu_6p.rds", "SRX14116944_filtered_seu_6p.rds")
-    )
+    ),
+    error = "null"
   )
 
 )
