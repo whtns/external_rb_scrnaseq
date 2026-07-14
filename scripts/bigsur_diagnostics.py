@@ -103,10 +103,19 @@ def panel_hvg_overlap(ax, adata, var, n_top):
 def panel_mcpcc_dist(ax, mc, pv):
     tril = np.tril_indices_from(mc, k=-1)
     vals, pvals = mc[tril], pv[tril]
-    sig = pvals < 0.05
-    ax.hist(vals, bins=100, color="0.8", label=f"all pairs (n={vals.size:,})")
-    ax.hist(vals[sig], bins=100, color="#c2410c",
-            label=f"BH < 0.05 (n={sig.sum():,})")
+    # Degenerate samples (few cells, few HVGs) leave NaNs in the mcPCC matrix,
+    # which makes hist() blow up on a non-finite range.
+    ok = np.isfinite(vals)
+    vals, pvals = vals[ok], pvals[ok]
+    sig = np.isfinite(pvals) & (pvals < 0.05)
+    if vals.size:
+        ax.hist(vals, bins=100, color="0.8", label=f"all pairs (n={vals.size:,})")
+    if sig.any():
+        ax.hist(vals[sig], bins=100, color="#c2410c",
+                label=f"BH < 0.05 (n={sig.sum():,})")
+    else:
+        ax.text(0.5, 0.5, "no significant pairs", transform=ax.transAxes,
+                ha="center", fontsize=8, color="#c2410c")
     ax.set_yscale("log")
     ax.set_xlabel("mcPCC"); ax.set_ylabel("gene pairs")
     ax.set_title("E. Correlation strength\n(significant pairs are the tails)",
@@ -115,11 +124,14 @@ def panel_mcpcc_dist(ax, mc, pv):
 
 
 def panel_corr_heatmap(ax, mc, pv, names, n=60):
-    sig = (pv < 0.05) & (pv > 0)
+    sig = np.isfinite(pv) & (pv < 0.05) & (pv > 0)
     full_sig = sig + sig.T
     degree = full_sig.sum(0)
+    n = min(n, len(names))
     top = np.argsort(-degree)[:n]
-    full_mc = mc + mc.T
+    # NaN entries would propagate through linkage(); treat an unfittable pair as
+    # uncorrelated rather than dropping the panel.
+    full_mc = np.nan_to_num(mc) + np.nan_to_num(mc).T
     np.fill_diagonal(full_mc, 1.0)
     sub = full_mc[np.ix_(top, top)]
     order = leaves_list(linkage(sub, method="average"))
@@ -144,10 +156,14 @@ def panel_degree(ax, degree):
 
 def umap_from_genes(adata, genes, key):
     a = adata[:, list(genes)].copy()
+    # sc.tl.pca silently restricts to var["highly_variable"] when that column is
+    # present. The subset inherits BigSur's column, which would reduce the scanpy
+    # panel to the BigSur-scanpy intersection instead of the genes we asked for.
+    a.var.drop(columns=["highly_variable"], errors="ignore", inplace=True)
     sc.pp.normalize_total(a, target_sum=1e4)
     sc.pp.log1p(a)
     sc.pp.scale(a, max_value=10)
-    sc.tl.pca(a, n_comps=30)
+    sc.tl.pca(a, n_comps=min(30, min(a.shape) - 1))
     sc.pp.neighbors(a, n_neighbors=15)
     sc.tl.umap(a)
     sc.tl.leiden(a, key_added=key, resolution=1.0, flavor="igraph", n_iterations=2,
