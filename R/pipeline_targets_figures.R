@@ -608,8 +608,19 @@ list(
     { force(cluster_orders_sqlite); plot_integrated_1q_fig(cluster_orders) }
   ),
 
+  # error = "null": plot_fig_04_afterall() reads
+  #   output/seurat/integrated_1q_16q/integrated_seu_1q_afterall.rds
+  # which is a BROKEN SYMLINK (dated Jun 17) -> "cannot open the connection". Its
+  # target, output/seurat/integrated_seu_1q_afterall.rds, does not exist anywhere on
+  # disk and NO pipeline target produces it -- it was a manually-built batch-corrected
+  # integration that has since been deleted. With error = "stop" this one leaf figure
+  # halted the entire figures_and_tables build.
+  #
+  # This figure CANNOT be rebuilt until that object is regenerated; the NULL here is
+  # silent, so treat its absence as expected rather than as a passing build.
   tar_target(fig_1q_integrated_v2,
-    { force(cluster_orders_sqlite); plot_fig_04_afterall(cluster_orders) }
+    { force(cluster_orders_sqlite); plot_fig_04_afterall(cluster_orders) },
+    error = "null"
   ),
 
   # Sample-specific analyses of tumors with 1q+ subclones after integration.
