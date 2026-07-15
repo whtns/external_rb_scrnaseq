@@ -264,9 +264,21 @@ pipeline_targets_integration <- list(
 
   # --- oncoprint targets ---
 
+  # Sample ids that name the cis/trans/all diffex-clone lists in the oncoprint
+  # builders. Those lists map over seus_low_hypoxia (one branch per sample), so the
+  # names MUST come from seus_low_hypoxia, in branch order. The oncoprint calls used
+  # `debranched_ids` here -- a hardcoded 34-entry BRANCH-level list (incl. _branch_N)
+  # -- which is both the wrong length (34 vs 33 samples) and the wrong granularity,
+  # giving "'names' attribute [34] must be the same length as the vector [33]" and
+  # halting the oncoprint targets. Derive the correct vector from the same source the
+  # diffex lists branch over.
+  tar_target(low_hypoxia_sample_ids,
+    stringr::str_extract(unlist(seus_low_hypoxia, use.names = FALSE), "SR[RX][0-9]+")
+  ),
+
   tar_target(
     unfiltered_oncoprint_input_by_scna,
-    make_oncoprint_diffex(large_filter_expressions, cluster_dictionary, debranched_ids, cis_diffex_clones, trans_diffex_clones, all_diffex_clones, large_clone_comparisons, rb_scna_samples, n_slice = 20)
+    make_oncoprint_diffex(large_filter_expressions, cluster_dictionary, low_hypoxia_sample_ids, cis_diffex_clones, trans_diffex_clones, all_diffex_clones, large_clone_comparisons, rb_scna_samples, n_slice = 20)
   ),
 
   tar_target(
@@ -276,7 +288,7 @@ pipeline_targets_integration <- list(
 
   tar_target(
     unfiltered_oncoprint_input_by_scna_for_each_cluster,
-    make_oncoprint_diffex(large_filter_expressions, cluster_dictionary, debranched_ids, cis_diffex_clones_for_each_cluster, trans_diffex_clones_for_each_cluster, all_diffex_clones_for_each_cluster, large_clone_comparisons, rb_scna_samples, by_cluster = TRUE, n_slice = 20)
+    make_oncoprint_diffex(large_filter_expressions, cluster_dictionary, low_hypoxia_sample_ids, cis_diffex_clones_for_each_cluster, trans_diffex_clones_for_each_cluster, all_diffex_clones_for_each_cluster, large_clone_comparisons, rb_scna_samples, by_cluster = TRUE, n_slice = 20)
   ),
 
   tar_target(
@@ -302,7 +314,7 @@ pipeline_targets_integration <- list(
   tar_target(
     oncoprint_enrich_clones_gobp,
     enrich_oncoprints(large_filter_expressions,
-      cluster_dictionary, debranched_ids,
+      cluster_dictionary, low_hypoxia_sample_ids,
       cis_diffex_clones, trans_diffex_clones, all_diffex_clones,
       large_clone_comparisons, gene_set = "gobp"
     )
@@ -311,7 +323,7 @@ pipeline_targets_integration <- list(
   tar_target(
     oncoprint_enrich_clones_hallmark,
     enrich_oncoprints(large_filter_expressions,
-      cluster_dictionary, debranched_ids,
+      cluster_dictionary, low_hypoxia_sample_ids,
       cis_diffex_clones, trans_diffex_clones, all_diffex_clones,
       large_clone_comparisons, gene_set = "hallmark"
     )
@@ -320,7 +332,7 @@ pipeline_targets_integration <- list(
   tar_target(
     oncoprint_enrich_clusters_hallmark,
     enrich_oncoprints_clusters(large_filter_expressions,
-      cluster_dictionary, debranched_ids,
+      cluster_dictionary, low_hypoxia_sample_ids,
       cis_diffex_clones_for_each_cluster, trans_diffex_clones_for_each_cluster,
       large_clone_comparisons, gene_set = "hallmark"
     )
