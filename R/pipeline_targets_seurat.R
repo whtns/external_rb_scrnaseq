@@ -684,22 +684,29 @@ pipeline_targets_seurat <- c(
       error = "null"
     ),
 
-    # Low-hypoxia collages at the TWO resolutions the split actually turned on:
-    # the anchor (r_flag, whose clusters were dropped) and r_flag + 0.4; or a fixed
-    # 0.6 / 1.0 pair when the sample flagged nothing. heatmap_collages_low_hypoxia
-    # above is pinned to SCT_snn_res.0.6 for every sample (dummy_cluster_order
-    # hardcodes it), so it never shows the clustering the drop was made on.
-    # The anchor is read from the split log's anchor_resolution column rather than
-    # re-derived, so it cannot drift from the split's stability rule.
-    # Depends on hypoxia_split_log_collated to guarantee the per-sample logs exist.
+    # Low-hypoxia marker-heatmap collages across the clustering-resolution sweep
+    # 0.2 .. 0.8 (by 0.2), one collage per resolution per sample, on the persisted
+    # *_hypoxia_low_seu.rds. heatmap_collages_low_hypoxia above is pinned to
+    # SCT_snn_res.0.6 for every sample (dummy_cluster_order hardcodes it), so it
+    # never shows the finer/coarser clusterings.
+    # nb_paths = NULL: heatmap + phase scatters only, no clone-tree panel (the
+    # expensive part) -- the sweep is about the clustering, not the clones.
+    # Two small-cluster mitigations (see doc/hypoxia_splitting_strategy.md):
+    #   (1) the sweep is CAPPED at 0.8 -- res >= 1.0 is where the few <20-cell
+    #       clusters appear, and 0.2..0.6 are essentially artifact-free;
+    #   (2) the PCA is now recomputed UPSTREAM, on the low object itself, in
+    #       subset_seu_by_expression() (recompute_pca) -- so the persisted
+    #       SCT_snn_res.* columns read here are already clustered on the
+    #       low-hypoxia population's own embedding, not the inherited pre-split
+    #       PCA. The collage therefore just reads them (recompute_pca = FALSE).
+    # Depends on hypoxia_split_log_collated only to sequence after the split.
     tar_target(heatmap_collages_low_hypoxia_by_res, {
       hypoxia_split_log_collated
       plot_hypoxia_low_res_collages(
         seus_low_hypoxia,
-        nb_paths = numbat_rds_files,
-        clone_simplifications = large_clone_simplifications,
-        step = 0.4,
-        fallback = c(0.6, 1.0)
+        nb_paths = NULL,
+        resolutions = seq(0.2, 0.8, by = 0.2),
+        recompute_pca = FALSE
       )
     },
       pattern = map(seus_low_hypoxia),

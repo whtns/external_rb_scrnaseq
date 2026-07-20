@@ -49,6 +49,50 @@ pipeline_targets_integration <- list(
       "results/fig_s17.pdf")
   ),
 
+  # --- two-clone SCNA collages across the full resolution sweep (paper_retained) ---
+  # For each SCNA of interest, restrict the low-hypoxia object to the two clones of
+  # the <N>_v_<M>_<scna> comparison (the clone that ACQUIRED the SCNA and its
+  # immediately preceding clone) and emit one marker-heatmap + phase-scatter collage
+  # per resolution 0.2..1.2. Reuses plot_seu_marker_heatmap (robust to degenerate
+  # subsets) rather than the fragile plot_seu_marker_heatmap_by_scna. Branches per
+  # sample and keeps only paper_retained samples; non-retained / SCNA-less branches
+  # return NA. 6p is omitted -- no paper_retained sample carries a 6p+ subclone.
+  tarchetypes::tar_map(
+    values = tibble::tibble(
+      scna        = c("1q", "2p", "16q"),
+      hypoxia_sym = rlang::syms(c("hypoxia_seus_1q", "hypoxia_seus_2p",
+                                  "hypoxia_seus_16q"))
+    ),
+    names = "scna",
+    tar_target(two_clone_res_collages,
+      {
+        p   <- unlist(hypoxia_sym)
+        sid <- stringr::str_extract(p, "SR[RX][0-9]+")
+        if (length(p) == 0 || is.na(sid) || !sid %in% paper_retained_samples)
+          return(NA_character_)
+        # PCA + clusters are computed UPSTREAM on the low object
+        # (subset_seu_by_expression recompute_pca=TRUE) and persisted as
+        # SCT_snn_res.0.2..1.0. This function reads those columns as-is and hands
+        # the FULL object to plot_seu_marker_heatmap(display_cells=<the two clones>):
+        # cluster order, phase, and marker rows are derived on the full object and
+        # the panels are restricted to the two clones only at the end -- so each
+        # two-clone panel is a true ZOOM of its full-population twin (same clusters,
+        # rows, order). Capped at 0.8 to mirror the low-hypoxia sweep exactly, so
+        # every two-clone panel has a same-resolution full-population counterpart.
+        plot_scna_two_clone_res_collages(
+          p,
+          scna_of_interest        = scna,
+          large_clone_comparisons = large_clone_comparisons,
+          resolutions             = seq(0.2, 0.8, by = 0.2),
+          nb_paths                = NULL
+        )
+      },
+      pattern   = map(hypoxia_sym),
+      iteration = "list",
+      error     = "null"
+    )
+  ),
+
   # --- corresponding states: shared seu paths ---
 
   tar_target(corresponding_seus_2p,

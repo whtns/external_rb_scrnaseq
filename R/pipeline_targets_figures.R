@@ -830,10 +830,15 @@ list(
       numbat_heatmap           = numbat_heatmap_plots_low_hypoxia,
       hypoxia_gene_heatmap     = hypoxia_gene_heatmap_low_hypoxia,
       annotated_collage        = annotated_heatmap_collages,
-      # the low object clustered at the split's anchor resolution and anchor + 0.4
-      # (both POST-exclusion), vs annotated_collage/low collage which are pinned to
+      # the low object clustered across the resolution sweep 0.2 .. 0.8
+      # (POST-exclusion), vs annotated_collage/low collage which are pinned to
       # SCT_snn_res.0.6 for every sample
       low_hypoxia_by_res       = heatmap_collages_low_hypoxia_by_res,
+      # two-clone (acquiring vs immediately-preceding) SCNA collages across the
+      # 0.2 .. 0.8 sweep, restricted to paper_retained samples (1q/2p/16q)
+      two_clone_scna_collage   = c(two_clone_res_collages_1q,
+                                   two_clone_res_collages_2p,
+                                   two_clone_res_collages_16q),
       # before/after the drop at the anchor resolution, plus the confirmatory
       # reclustering -- the only view showing the excluded cluster still present
       hypoxia_split_stage      = stage_collages,
