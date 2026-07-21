@@ -39,6 +39,12 @@ out <- plot_scna_two_clone_res_collages(
 cat("\nreturned:", paste(out, collapse = ", "), "\n")
 expected <- "results/SRX10264523_hypoxia_low_seu.rds__1q_res0.4_heatmap_phase_scatter_patchwork.pdf"
 cat("pdf exists:", file.exists(expected), "\n")
-if (file.exists(expected))
+if (file.exists(expected)) {
   cat("pdf size (KB):", round(file.info(expected)$size / 1024, 1), "\n")
+  # Confirm the stacked-bar panel is labeled by SCNA-of-interest status, not raw
+  # clone ids: the rendered text should contain "1q+" and "preceding".
+  txt <- paste(pdftools::pdf_text(expected), collapse = " ")
+  cat("bar label '1q+' present     :", grepl("1q\\+", txt), "\n")
+  cat("bar label 'preceding' present:", grepl("preceding", txt), "\n")
+}
 cat("\nSMOKE DONE\n")
