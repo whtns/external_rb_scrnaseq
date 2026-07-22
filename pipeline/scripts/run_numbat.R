@@ -33,6 +33,25 @@ if(!exists("retry_without_nni")){
 	retry_without_nni <- TRUE
 }
 
+# Default TRUE, matching numbat's own default. This was previously hardcoded
+# FALSE at the run_numbat() call site, which disabled test_multi_allelic() and so
+# prevented any segment resolving to a multi-allelic state (bamp/bdel) -- the
+# wrong direction for detecting high-level gains such as 6p. See issue #31 /
+# doc/hla_masking_6p.md for the 6p sensitivity review that surfaced it.
+if(!exists("multi_allelic")){
+	multi_allelic <- TRUE
+}
+
+# Default FALSE to preserve the behaviour every existing run used; pass TRUE
+# explicitly to opt in. With FALSE, max_iter is a blind budget -- numbat runs
+# exactly that many iterations and stops, with no test that the segment set has
+# settled. With TRUE it calls segs_equal() each round and breaks on convergence.
+# Note convergence is EXACT segment equality, so a sample whose calls oscillate
+# around min_LLR may never converge and will simply exhaust max_iter.
+if(!exists("check_convergence")){
+	check_convergence <- FALSE
+}
+
 parse_bool <- function(x, default = TRUE) {
 	if (is.logical(x)) return(x)
 	if (is.numeric(x)) return(x != 0)
@@ -53,6 +72,8 @@ parse_num <- function(x, default) {
 
 subset_bad_cell_types <- parse_bool(subset_bad_cell_types, TRUE)
 retry_without_nni <- parse_bool(retry_without_nni, TRUE)
+multi_allelic <- parse_bool(multi_allelic, TRUE)
+check_convergence <- parse_bool(check_convergence, FALSE)
 min_allele_depth <- parse_num(min_allele_depth, 5)
 min_snps_per_cell <- parse_num(min_snps_per_cell, 50)
 max_nni <- as.integer(parse_num(max_nni, 100))
@@ -238,7 +259,8 @@ run_numbat_once <- function(max_nni_local) {
 		init_k = init_k,
 		ncores = as.integer(ncores),
 		plot = TRUE,
-		multi_allelic = FALSE,
+		multi_allelic = multi_allelic,
+		check_convergence = check_convergence,
 		common_diploid = TRUE,
 		out_dir = out_dir,
 		tau = as.numeric(tau),
