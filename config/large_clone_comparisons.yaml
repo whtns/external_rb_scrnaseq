@@ -115,4 +115,15 @@ SRX22868102_branch_4:
   - 2b
   4_v_2_16q-: 16a
 SRX10831287:
-  2_v_1_11a+: 11a
+  # Only two clones (1: 206 cells, 2: 8912), so a single 2_v_1 transition carries
+  # every event. segs_consensus_4 calls 1h/1i/1k/1m amp across 156.8-248.9 Mb --
+  # i.e. most of 1q -- at LLR 63-91, phi_mle 1.27-2.05, far stronger evidence than
+  # the 11a bdel (LLR 7.1, 12 genes) this entry was originally named for. The 1q
+  # gain was real and unannotated; naming it here puts the sample in the 1q
+  # two-clone collages. See issue #29.
+  2_v_1_1q+_11a+:
+  - 1h
+  - 1i
+  - 1k
+  - 1m
+  - 11a
