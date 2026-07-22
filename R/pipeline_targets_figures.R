@@ -839,6 +839,11 @@ list(
       two_clone_scna_collage   = c(two_clone_res_collages_1q,
                                    two_clone_res_collages_2p,
                                    two_clone_res_collages_16q),
+      # the same two-clone collages built on the STANDARD FILTERED objects
+      # (pre hypoxia-cluster removal), so each SCNA has a before/after pair (#36)
+      two_clone_scna_collage_filtered = c(two_clone_res_collages_filtered_1q,
+                                          two_clone_res_collages_filtered_2p,
+                                          two_clone_res_collages_filtered_16q),
       # before/after the drop at the anchor resolution, plus the confirmatory
       # reclustering -- the only view showing the excluded cluster still present
       hypoxia_split_stage      = stage_collages,

@@ -823,6 +823,17 @@ pipeline_targets_seurat <- c(
     )
   ),
 
+  # filtered_seus_1q/2p/6p/16q — same per-SCNA subset on the STANDARD filtered
+  # objects (before hypoxia-cluster removal), so the two-clone collages can be
+  # built pre-filtering as well as on the low-hypoxia set (issue #36).
+  tarchetypes::tar_map(
+    values = scna_map_values[, "scna", drop = FALSE],
+    names  = "scna",
+    tar_target(filtered_scna_seus,
+      str_subset(unlist(filtered_seus), str_c(rb_scna_samples[[scna]], collapse = "|"))
+    )
+  ),
+
   # integrated_seu_low_hypoxia_1q/2p/6p/16q — integration within each SCNA at low hypoxia
   tarchetypes::tar_map(
     # Integrate low-hypoxia Seurat objects separately for each SCNA stratum.

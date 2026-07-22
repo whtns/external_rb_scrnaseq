@@ -79,15 +79,54 @@ pipeline_targets_integration <- list(
         # two-clone panel is a true ZOOM of its full-population twin (same clusters,
         # rows, order). Capped at 0.8 to mirror the low-hypoxia sweep exactly, so
         # every two-clone panel has a same-resolution full-population counterpart.
+        # nb_paths is supplied so the collage carries the clone-tree and
+        # segment-tree panels: restricted to two clones the tree is a single edge,
+        # and with the raw numbat segment labels that edge names exactly the
+        # segments the acquiring clone gained -- which is the comparison itself.
         plot_scna_two_clone_res_collages(
           p,
           scna_of_interest        = scna,
           large_clone_comparisons = large_clone_comparisons,
           resolutions             = seq(0.2, 0.8, by = 0.2),
-          nb_paths                = NULL
+          nb_paths                = numbat_rds_files,
+          clone_simplifications   = large_clone_simplifications
         )
       },
       pattern   = map(hypoxia_sym),
+      iteration = "list",
+      error     = "null"
+    )
+  ),
+
+  # --- two-clone SCNA collages on the STANDARD FILTERED objects (issue #36) ---
+  # Same builder, same sweep, but on filtered_scna_seus_<scna> (pre hypoxia-cluster
+  # removal) instead of the low-hypoxia set, so each SCNA's two-clone comparison
+  # can be read before AND after hypoxia filtering. Output basename carries
+  # "_filtered_seu.rds" rather than "_hypoxia_low_seu.rds", so the two sets never
+  # collide on disk. Collected into fig_two_clone_scna_collages_filtered below.
+  tarchetypes::tar_map(
+    values = tibble::tibble(
+      scna         = c("1q", "2p", "16q"),
+      filtered_sym = rlang::syms(c("filtered_scna_seus_1q", "filtered_scna_seus_2p",
+                                   "filtered_scna_seus_16q"))
+    ),
+    names = "scna",
+    tar_target(two_clone_res_collages_filtered,
+      {
+        p   <- unlist(filtered_sym)
+        sid <- stringr::str_extract(p, "SR[RX][0-9]+")
+        if (length(p) == 0 || is.na(sid) || !sid %in% paper_retained_samples)
+          return(NA_character_)
+        plot_scna_two_clone_res_collages(
+          p,
+          scna_of_interest        = scna,
+          large_clone_comparisons = large_clone_comparisons,
+          resolutions             = seq(0.2, 0.8, by = 0.2),
+          nb_paths                = numbat_rds_files,
+          clone_simplifications   = large_clone_simplifications
+        )
+      },
+      pattern   = map(filtered_sym),
       iteration = "list",
       error     = "null"
     )
