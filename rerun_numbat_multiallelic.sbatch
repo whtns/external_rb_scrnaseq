@@ -26,19 +26,20 @@
 #   multi_allelic     FALSE -> TRUE   numbat's own default; enables bamp/bdel
 #   check_convergence FALSE -> TRUE   the originals never tested convergence at
 #                                     all, so max_iter was a blind budget
-#   max_iter          4     -> 8      room for convergence to be reached
 #
-# The iteration changes do not cost a separate arm: numbat writes
-# segs_consensus_N.tsv for EVERY iteration, so segs_consensus_4.tsv from this run
-# is directly comparable to the original round 4 (multi_allelic being the only
-# difference at that round), while later rounds show where the run actually
-# settles. One job answers both questions.
+# max_iter stays at 4, matching the original runs, so segs_consensus_4.tsv here is
+# directly comparable to the original round 4 with multi_allelic as the only
+# difference. Iteration k does not depend on max_iter, so this is the same round 4
+# an 8-iteration run would write.
 #
-# Justification for touching iterations at all: SRX10264524's original run went
-# 19 -> 12 -> 10 -> 11 non-neutral segments genome-wide -- still moving at the
-# last round -- and its two round-3 chr6p amps sat at LLR 8.2 / 8.4 against
-# min_LLR 5, i.e. marginal calls flickering across the threshold. Reproducing an
-# unstable answer would not tell us much.
+# It was 8 for the first pass (job 10496424), to give convergence room to be
+# reached. It never was: check_convergence never fired in 8 iterations, and rounds
+# 5-8 added nothing but wander (non-neutral segs 23, 22, 25, 24, 26 for
+# SRX10264524; 28, 28, 28, 30 for SRX14116944, with chr6p flickering 2,2,1,2).
+# Freezing the diploid baseline did not help either -- see
+# doc/diploid_baseline_pin_6p.md -- so the instability is in the segmentation, not
+# in the iteration budget, and the extra four rounds cost ~3.5 h/sample to buy an
+# equally unsettled answer. Round 4 is not convergence; it is a stated choice.
 #
 # Writes to output/numbat_multiallelic/<sample>/ -- the existing
 # output/numbat_sridhar/ results are inputs to the targets pipeline and are NOT
@@ -75,7 +76,7 @@ Rscript pipeline/scripts/run_numbat.R \
   "gamma=20" \
   "max_entropy=0.7" \
   "min_LLR=5" \
-  "max_iter=8" \
+  "max_iter=4" \
   "tau='0.3'" \
   "read_prop=1" \
   "multi_allelic=TRUE" \

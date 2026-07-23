@@ -52,6 +52,27 @@ if(!exists("check_convergence")){
 	check_convergence <- FALSE
 }
 
+# NULL keeps numbat's default behaviour: analyze_bulk falls through to
+# find_common_diploid(), which RE-DERIVES the diploid baseline every iteration --
+# the reference that gains are measured against then drifts between rounds.
+# Supplying diploid_chroms takes an earlier branch of that if/else chain
+# (analyze_bulk body line 14) and never reaches find_common_diploid(), so the
+# baseline is a fixed chromosome-membership test. Accepts a vector or a
+# comma-separated string, since sbatch passes arguments as text.
+if(!exists("diploid_chroms")){
+	diploid_chroms <- NULL
+}
+if(!is.null(diploid_chroms)){
+	if(is.character(diploid_chroms) && length(diploid_chroms) == 1){
+		diploid_chroms <- trimws(strsplit(diploid_chroms, ",")[[1]])
+	}
+	# bulk$CHROM is a factor of integers by this point, and %in% coerces the
+	# factor to character, so character levels are what must match.
+	diploid_chroms <- as.character(diploid_chroms)
+	diploid_chroms <- diploid_chroms[nzchar(diploid_chroms)]
+	if(length(diploid_chroms) == 0) diploid_chroms <- NULL
+}
+
 parse_bool <- function(x, default = TRUE) {
 	if (is.logical(x)) return(x)
 	if (is.numeric(x)) return(x != 0)
@@ -261,6 +282,7 @@ run_numbat_once <- function(max_nni_local) {
 		plot = TRUE,
 		multi_allelic = multi_allelic,
 		check_convergence = check_convergence,
+		diploid_chroms = diploid_chroms,
 		common_diploid = TRUE,
 		out_dir = out_dir,
 		tau = as.numeric(tau),

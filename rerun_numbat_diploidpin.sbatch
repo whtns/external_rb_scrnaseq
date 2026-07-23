@@ -21,9 +21,16 @@
 # find_common_diploid(), making the baseline fixed and deterministic.
 #
 # Differs from rerun_numbat_multiallelic.sbatch (job 10496424) ONLY by
-# diploid_chroms, so the two are directly comparable: both use
-# multi_allelic=TRUE, check_convergence=TRUE, max_iter=8, and otherwise the
-# original per-sample parameters.
+# diploid_chroms and max_iter, so the two remain directly comparable: both use
+# multi_allelic=TRUE, check_convergence=TRUE, and otherwise the original
+# per-sample parameters.
+#
+# max_iter = 4 to allow evaluation sooner, and it costs nothing in comparability:
+# iteration k does not depend on max_iter, so segs_consensus_4.tsv here is
+# identical to what an 8-iteration run would have written at round 4. It also
+# matches the ORIGINAL runs' max_iter, so the three-way comparison below is at
+# equal iteration count rather than converged-vs-unconverged. If
+# check_convergence fires before round 4, the run stops earlier still.
 #
 # Writes to output/numbat_diploidpin/<sample>/ -- neither output/numbat_sridhar/
 # (the targets pipeline's input) nor output/numbat_multiallelic/ is touched.
@@ -70,6 +77,10 @@ cd $PROJ
 echo "=== $S : diploid_chroms = $DIP -> $OUTDIR ==="
 echo "start: $(date)"
 
+# Deliberately not fatal: under `set -e` a numbat failure would abort the script
+# before the verification block below, so a multi-hour run could die and leave no
+# diagnostics. Capture the status, always run the checks, exit with it at the end.
+set +e
 Rscript pipeline/scripts/run_numbat.R \
   "matrix_file='$PROJ/output/cellranger/$S/outs/filtered_feature_bc_matrix/matrix.mtx.gz'" \
   "seu_path='$PROJ/output/seurat/${S}_seu.rds'" \
@@ -82,15 +93,16 @@ Rscript pipeline/scripts/run_numbat.R \
   "gamma=20" \
   "max_entropy=0.7" \
   "min_LLR=5" \
-  "max_iter=8" \
+  "max_iter=4" \
   "tau='0.3'" \
   "read_prop=1" \
   "multi_allelic=TRUE" \
   "check_convergence=TRUE" \
   "diploid_chroms='$DIP'" \
   "ncores=8"
+RC=$?
 
-echo "exit: $? ; end: $(date)"
+echo "numbat exit: $RC ; end: $(date)"
 
 # Did the pin actually take effect, and did the baseline survive?
 echo "=== baseline sanity ==="
@@ -121,3 +133,5 @@ for D in "$PROJ/output/numbat_sridhar/$S" "$PROJ/output/numbat_multiallelic/$S" 
       } END{printf "  %-22s non-neutral=%3d  chr6p=%d  chr1q=%d\n", FN, n+0, p6+0, q1+0}' "$f"
   done
 done
+
+exit $RC
