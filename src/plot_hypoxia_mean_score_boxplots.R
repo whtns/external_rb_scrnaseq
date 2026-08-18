@@ -24,6 +24,11 @@ out_pdf <- "results/hypoxia_cluster_split/hypoxia_mean_score_boxplots.pdf"
 
 d <- read_csv(in_csv, show_col_types = FALSE) %>%
   mutate(
+    # Confirmatory-round resolutions are computed as r_flag + k*recluster_step, so a
+    # 0.6 from 0.2 + 0.4 differs from a swept 0.6 at the binary level -- both print
+    # "0.6", but factor() then sees a duplicated level and errors. Round first so the
+    # floating-point twins collapse to one level.
+    resolution = round(as.numeric(resolution), 3),
     resolution = factor(resolution, levels = sort(unique(resolution))),
     res_lab    = paste0("res ", as.character(resolution)),
     is_outlier = as.logical(is_outlier),
