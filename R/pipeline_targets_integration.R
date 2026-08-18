@@ -77,8 +77,10 @@ pipeline_targets_integration <- list(
         # cluster order, phase, and marker rows are derived on the full object and
         # the panels are restricted to the two clones only at the end -- so each
         # two-clone panel is a true ZOOM of its full-population twin (same clusters,
-        # rows, order). Capped at 0.8 to mirror the low-hypoxia sweep exactly, so
-        # every two-clone panel has a same-resolution full-population counterpart.
+        # rows, order). Swept to 1.4 (issue: finer two-clone resolution); the
+        # builder re-clusters the two-clone graph at every requested resolution, so
+        # 1.0/1.2/1.4 are clustered fresh rather than read from the persisted
+        # (<=1.0) columns.
         # nb_paths is supplied so the collage carries the clone-tree and
         # segment-tree panels: restricted to two clones the tree is a single edge,
         # and with the raw numbat segment labels that edge names exactly the
@@ -87,7 +89,7 @@ pipeline_targets_integration <- list(
           p,
           scna_of_interest        = scna,
           large_clone_comparisons = large_clone_comparisons,
-          resolutions             = seq(0.2, 0.8, by = 0.2),
+          resolutions             = seq(0.2, 1.4, by = 0.2),
           nb_paths                = numbat_rds_files,
           clone_simplifications   = large_clone_simplifications
         )
@@ -121,9 +123,60 @@ pipeline_targets_integration <- list(
           p,
           scna_of_interest        = scna,
           large_clone_comparisons = large_clone_comparisons,
-          resolutions             = seq(0.2, 0.8, by = 0.2),
+          resolutions             = seq(0.2, 1.4, by = 0.2),
           nb_paths                = numbat_rds_files,
-          clone_simplifications   = large_clone_simplifications
+          clone_simplifications   = large_clone_simplifications,
+          # Continuous hypoxia + mitochondrial column annotations on the heatmap,
+          # each in its own colour (purple / brown, beside the cell-cycle scores).
+          # These are the pre-hypoxia-split objects, so both scores still vary
+          # across the cells shown and the two-clone comparison can be read
+          # against the hypoxia gradient it will later be filtered on. The
+          # low-hypoxia twin above deliberately keeps the cell-cycle-only
+          # annotation.
+          score_annotations       = c("hypoxia_score", "mito_score")
+        )
+      },
+      pattern   = map(filtered_sym),
+      iteration = "list",
+      error     = "null"
+    )
+  ),
+
+  # --- ALL-CLONE SCNA collages on the STANDARD FILTERED objects ---
+  # Full-population counterpart of the two-clone filtered collages above: every
+  # clone is shown (bar_var = "clone", no two-clone subset), and the cells removed
+  # during hypoxia splitting are marked -- clustree nodes coloured by the fraction
+  # of their cells that were dropped, plus a dedicated removed-cell UMAP panel.
+  # Removed set comes per-barcode from each sample's *_hypoxia_high_seu.rds
+  # (seus_high_hypoxia); the builder matches it by SRX id. Same 1q/2p/16q
+  # paper-retained objects as the two-clone filtered set, so the all-clone and
+  # two-clone filtered views pair up sample-for-sample. Collected into
+  # fig_all_clone_scna_collages_filtered below.
+  tarchetypes::tar_map(
+    values = tibble::tibble(
+      scna         = c("1q", "2p", "16q"),
+      filtered_sym = rlang::syms(c("filtered_scna_seus_1q", "filtered_scna_seus_2p",
+                                   "filtered_scna_seus_16q"))
+    ),
+    names = "scna",
+    tar_target(all_clone_res_collages_filtered,
+      {
+        p   <- unlist(filtered_sym)
+        sid <- stringr::str_extract(p, "SR[RX][0-9]+")
+        if (length(p) == 0 || is.na(sid) || !sid %in% paper_retained_samples)
+          return(NA_character_)
+        plot_scna_all_clone_res_collages(
+          p,
+          scna_of_interest        = scna,
+          resolutions             = seq(0.2, 1.4, by = 0.2),
+          high_hypoxia_paths      = seus_high_hypoxia,
+          nb_paths                = numbat_rds_files,
+          clone_simplifications   = large_clone_simplifications,
+          # Same continuous hypoxia + mito column annotations as the two-clone
+          # filtered collages. Same source object, so the scores come from the
+          # cell_scores cache one of the two builders already populated -- both
+          # views of a sample are annotated on one shared 0..1 rescaling.
+          score_annotations       = c("hypoxia_score", "mito_score")
         )
       },
       pattern   = map(filtered_sym),
