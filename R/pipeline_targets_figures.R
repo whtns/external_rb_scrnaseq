@@ -795,6 +795,32 @@ list(
     paths
   }),
 
+  # Per-cluster mean HYPOXIA vs MITOCHONDRIAL module score by resolution --
+  # companion to the composite-score boxplot in
+  # src/plot_hypoxia_mean_score_boxplots.R. The split thresholds the COMPOSITE
+  # hypoxia_score = rescale(mean(hypoxia, -mito)), so a cluster can clear the
+  # median + 3*MAD fence either by real hypoxia expression or by low
+  # mitochondrial content; that composite cannot be decomposed after the fact.
+  # This target plots the two ingredients side by side so the reader can tell
+  # the two cases apart.
+  #
+  # hypoxia_seus is passed for the replay fallback: logs written before
+  # identify_hypoxia_clusters() started recording mean_hypoxia / mean_mito have
+  # no other source for them, and hypoxia_partition_paths is pinned with
+  # cue(command = FALSE) so the split does not re-run on its own. Once a split
+  # rerun refreshes the log the function reads the columns directly and the
+  # objects are never opened.
+  tar_target(hypoxia_mito_score_boxplots,
+    plot_hypoxia_mito_score_boxplots(
+      split_log_csv     = hypoxia_split_log_collated,
+      hypoxia_seu_paths = unlist(hypoxia_seus),
+      out_pdf           = "results/hypoxia_cluster_split/hypoxia_mito_score_boxplots.pdf",
+      resolutions       = seq(0.2, 1.2, by = 0.2),
+      split_assay       = "gene"
+    ),
+    error = "null"
+  ),
+
   # Sync the rebuilt hypoxia downstream deliverables to Google Drive via rclone.
   # Mirrors figures_and_tables_gdrive but targets the scope-b hypoxia rebuild
   # outputs: per-sample hypoxia summaries, low-hypoxia clone/segment trees,
@@ -857,6 +883,8 @@ list(
       effect_of_filtering      = effect_of_filtering,
       hypoxia_split_log        = hypoxia_split_log_collated,
       mean_score_boxplot       = "results/hypoxia_cluster_split/hypoxia_mean_score_boxplots.pdf",
+      # the hypoxia-vs-mitochondrial decomposition of that same statistic
+      mito_score_boxplot       = hypoxia_mito_score_boxplots,
       strategy_doc             = c("doc/hypoxia_splitting_strategy.md",
                                    "doc/hypoxia_split_outlier_rule.md")
     )
