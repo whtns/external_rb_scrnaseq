@@ -1,5 +1,20 @@
 use epyc-64 instead of main partition in sbatch
 
+## Sample scope for numbat rebuilds
+
+**Rebuild only the SRX samples. Never rebuild the SRR samples.**
+
+**Never touch these three, under any circumstances:**
+
+- `SRX11133592`
+- `SRX11133593`
+- `SRX11133594`
+
+This applies to anything that writes into `output/numbat_sridhar/` — regenerating
+`*_numbat.rds`, rerunning numbat, or any arm/parameter sweep. They are held out;
+leave their existing outputs exactly as they are. The same three were excluded
+from the `rerun_numbat_arm.sbatch` pilot (see the `EXCLUDE` list in that script).
+
 always write markdown files to the docs directory
 seuratTools is present at /project2/cobrinik_1090/rpkgs/seuratTools
 
