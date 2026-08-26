@@ -5,13 +5,18 @@
 arm-coverage-thresholded definition (`RB_MIN_ARM_FRAC = 0.15`) that the reported
 QC table `numbat_rds_qc.csv` uses.
 
-**Bottom line.** Two of the three premises hold. The third does not, and it is
-the one that matters most for how the Methods section should be worded:
-**numbat does not converge within four rounds.** A fixed default of `i = 2` is
-still the right policy, but it must be defended as a *pre-specification*, not as
-a convergence point. The deviation rule turns out to be unusually clean: every
-canonical RB event that `i = 2` misses is recovered at `i = 1`, and at no other
-round.
+**Bottom line.** Two of the three premises hold. The third does not:
+**numbat does not converge within four rounds** (§3), so no round can be
+defended as the converged answer.
+
+A fixed default of `i = 2` was the initial recommendation, but §4b supersedes it:
+round 2 is itself the sole dissenter from all other rounds in 6 sample x event
+cases, and contributes only 3 unique calls of its own. **A majority-of-rounds
+criterion is preferred** -- it is count-neutral against `i = 2` (76 vs 77 events),
+selects a better-supported set, and sidesteps the convergence problem entirely,
+since "most iterations call it" is a stability claim rather than a fixed-point
+claim. Its open cost is 17 round-1-only calls it would reject, which need the
+per-cell posterior check to adjudicate (§4c).
 
 ---
 
@@ -70,11 +75,17 @@ round's segments have been dropped.
 **Implication for the manuscript.** Do not write that numbat has converged, and
 do not justify the final round on those grounds either — the final round is no
 more settled than round 2. The honest framing is that numbat's iteration does
-not reach a fixed point on this data within four rounds, so the reported round
-must be *chosen a priori and applied uniformly*. That is exactly what a fixed
-`i = 2` provides, and it is numbat's own documented default
-(`Numbat$new(..., i = 2)`), which makes it the choice that requires least
-special pleading.
+not reach a fixed point on this data within four rounds.
+
+Two conclusions follow from that, and only the first survives §4b. Either the
+reported round is *chosen a priori and applied uniformly* — which would favour
+numbat's own documented default `Numbat$new(..., i = 2)` as the choice requiring
+least special pleading — or the reporting criterion is made independent of any
+single round. §4b shows the first option fails on its own terms, because round 2
+is not a neutral reference: it is the sole dissenter in 6 cases. The second
+option, a majority-of-rounds criterion, is what §4c recommends, and it turns the
+absence of convergence from a weakness into a non-issue: reporting an event when
+most iterations call it is a stability statement that never needs a fixed point.
 
 → `results/round_convergence_stability.csv`
 
@@ -132,7 +143,64 @@ round 2 calls the arm, but fragmented below the 15% coverage floor.
 
 → `results/round_policy_missed_events.csv`, `results/round_policy_i2_vs_union.csv`
 
+## 4b. Round 2 is itself sometimes the outlier
+
+Sections 1–4 all use round 2 as the reference for every contrast, which by
+construction cannot reveal round 2 being the round in error. Reading across
+rounds instead shows that it sometimes is.
+
+**Round 2 alone dissents from all other rounds in 6 sample × event cases:**
+
+| sample | event | rounds calling | mean arm coverage where called |
+|---|---|---|---|
+| SRX10264522 | 16q_loss | 1,3,4 | 0.718 |
+| SRX10264526 | 16q_loss | 1,3,4 | 0.265 |
+| SRX10831282 | 16q_loss | 1,3,4 | 0.458 |
+| SRX14116946 | 6p_gain | 1,3,4 | 0.653 |
+| SRX22868103 | 6p_gain | 1,3,4 | 0.471 |
+| SRX22868105 | 6p_gain | 1,3,4 | 0.495 |
+
+Ten cases in total have ≥2 other rounds calling an event round 2 misses.
+SRX10264526 is the clearest: rounds 1, 3 and 4 all call essentially the same
+chr16 interval (~69.8–81.1 Mb, ~11 Mb, ~40 genes, del, LLR 7.8–8.5), and at
+round 2 there is **no del/loh segment anywhere on 16q** — coverage 0.000, not a
+sub-threshold fragment.
+
+Conversely, round 2 uniquely adds only **3** events (SRX11133585 13q, SRX14116947
+16q, SRX22868103 13q), two of them at weak arm coverage (0.16, 0.41) — the
+profile of a round-specific artefact rather than a recovered event.
+
+→ `results/rb_event_by_round_matrix.csv`
+
+## 4c. Policy comparison
+
+| policy | canonical RB events |
+|---|---|
+| fixed `i = 2` | 77 |
+| **majority of available rounds** | **76** |
+| called by ≥2 rounds | 84 |
+| union (any round) | 104 |
+
+A majority-of-rounds rule is count-neutral against `i = 2` (76 vs 77) but selects
+a better-supported set: it drops the 7 `i = 2` calls that no majority of rounds
+supports and adds the 6 above that every other round supports.
+
+Its cost is that it rejects 17 events called at round 1 only, several at
+near-whole-arm coverage (SRX10264520 1q at 1.00, SRX10831286 6p at 0.99,
+SRX10831287 6p at 0.96, SRX10831280 2p at 0.94). Round agreement alone cannot
+say whether those are genuine events the later rounds lost or round-1 artefacts.
+Resolving them requires an orthogonal criterion — per-cell posterior support,
+already computed in `results/rb_scna_probability_summary.csv` — and that check
+has not yet been applied to these 17.
+
 ## 5. Recommended policy
+
+**Superseded by §4b/§4c — retained for the reasoning, not the conclusion.** The
+recommendation below assumed round 2 could serve as a fixed reference. It cannot:
+round 2 is the sole dissenter in 6 cases and contributes only 3 unique calls. A
+majority-of-rounds criterion is preferred, and has the further advantage of not
+requiring a convergence claim at all — an event is reported when most iterations
+call it, which is a stability statement rather than a fixed-point statement.
 
 > numbat was run for four consensus iterations per sample. Because the segment
 > sets do not reach a fixed point within four iterations (mean pairwise Jaccard
@@ -179,6 +247,7 @@ round 2 calls the arm, but fragmented below the 15% coverage floor.
 | `results/round_policy_missed_events.csv` | the 27 missed events with arm coverage and LLR at r2 and r1 |
 | `results/round_policy_summary.csv` | the above joined to the current per-sample selection |
 | `results/round_vs_r2_event_delta.csv` | per sample: events gained and lost at rounds 1, 3, 4 relative to round 2 |
+| `results/rb_event_by_round_matrix.csv` | per sample x event: which rounds call it, and whether round 2 does |
 
 Generated by `src/round_convergence_report.R`, `src/round_policy_missed_events.R`,
 `src/round_convergence_stability.R`, `src/round_policy_figure.R`.
