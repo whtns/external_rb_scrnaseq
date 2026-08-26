@@ -32,4 +32,14 @@ cd /project2/cobrinik_1090/external_rb_scrnaseq_proj
 # in the controller is not enough, so install before running.
 Rscript -e "devtools::install_local('/project2/cobrinik_1090/rpkgs/numbat_helpers', force = TRUE, upgrade = 'never')"
 
+# targets hashes each target's COMMAND, not the internals of the packages that
+# command calls. numbatHelpers::qc_numbat_rds() changing (e.g. the arm-coverage
+# floor in numbat_rb_events) therefore leaves these targets looking up to date
+# and they get skipped. Invalidate explicitly so a rerun really re-inspects.
+# Cheap to do unconditionally -- the whole pattern is ~12 minutes.
+Rscript -e "suppressPackageStartupMessages(library(targets)); \
+  targets::tar_config_set(store = '_targets_r431'); \
+  targets::tar_invalidate(targets::any_of(c('numbat_rds_qc','numbat_rds_qc_table','numbat_rds_qc_report'))); \
+  cat('invalidated QC targets\n')"
+
 Rscript run_targets_bg.R numbat_rds_srx numbat_rds_qc numbat_rds_qc_table numbat_rds_qc_report
