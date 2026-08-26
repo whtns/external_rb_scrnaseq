@@ -72,3 +72,7 @@ batch_hashes.sqlite.bak.20260604
 
 # transient SQLite journals (batch_hashes.sqlite is written by running crew workers)
 *.sqlite-journal
+
+# Python bytecode from src/mosaic helpers
+__pycache__/
+*.pyc
