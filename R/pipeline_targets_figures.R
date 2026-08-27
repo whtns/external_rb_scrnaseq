@@ -406,8 +406,13 @@ list(
     }
   ),
 
-  tar_target(nb_paths_s06a,
-    dir_ls("output/numbat_sridhar/", regexp = ".*SRX[0-9]+_numbat.rds", recurse = TRUE) |> sort()
+  # tar_files, not tar_target: a plain character vector of filenames hashes
+  # identically whenever the RDS content changes but the paths do not, so the
+  # ideograms silently kept pre-migration results through the majority-round
+  # numbat rebuild. format = "file" tracks content, matching numbat_rds_files.
+  tarchetypes::tar_files(nb_paths_s06a,
+    dir_ls("output/numbat_sridhar/", regexp = ".*SRX[0-9]+_numbat.rds", recurse = TRUE) |> sort(),
+    format = "file"
   ),
 
   # Single pass per sample: one RDS load + 22 plotIdeogram calls generates all 3 suffix variants.
@@ -426,10 +431,6 @@ list(
   tar_target(ideogram_res_s06a_filtered,
     ideogram_res_s06a_multi[["filtered"]],
     pattern = map(ideogram_res_s06a_multi)
-  ),
-
-  tar_target(nb_paths_s06a_filtered,
-    dir_ls("output/numbat_sridhar_filtered/", regexp = ".*SRX[0-9]+_numbat.rds", recurse = TRUE) |> sort()
   ),
 
   tar_target(ideogram_res_s06a_low_hypoxia,

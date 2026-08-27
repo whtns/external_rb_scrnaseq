@@ -175,23 +175,6 @@ pipeline_targets_seurat <- c(
       format = "file"
     ),
 
-    tar_target(filtered_seus_nb_filtered,
-      # Seurat objects annotated with clone/SCNA metadata from numbat_sridhar_filtered RDS files.
-      filter_cluster_save_seu(
-        numbat_rds_filtered_files, unfiltered_seus,
-        cluster_dictionary, large_clone_simplifications,
-        filter_expressions = NULL, cells_to_remove,
-        extension = "_nb_filtered",
-        leiden_cluster_file = "results/adata_filtered_metadata_0.25.csv"
-      ),
-      pattern = map(numbat_rds_filtered_files),
-      iteration = "list",
-      resources = .heavy_resources,
-      error = "null",
-      cue = tar_cue(command = FALSE, depend = FALSE)
-    ),
-
-
 
     tar_target(
       final_seus,
