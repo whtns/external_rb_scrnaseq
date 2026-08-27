@@ -108,16 +108,16 @@ pipeline_targets_integration <- list(
   # collide on disk. Collected into fig_two_clone_scna_collages_filtered below.
   tarchetypes::tar_map(
     values = tibble::tibble(
-      scna         = c("1q", "2p", "16q"),
-      filtered_sym = rlang::syms(c("filtered_scna_seus_1q", "filtered_scna_seus_2p",
-                                   "filtered_scna_seus_16q"))
+      scna         = c("1q", "2p", "6p", "16q"),
+      filtered_sym = rlang::syms(c("collage_scna_seus_1q", "collage_scna_seus_2p",
+                                   "collage_scna_seus_6p", "collage_scna_seus_16q"))
     ),
     names = "scna",
     tar_target(two_clone_res_collages_filtered,
       {
         p   <- unlist(filtered_sym)
         sid <- stringr::str_extract(p, "SR[RX][0-9]+")
-        if (length(p) == 0 || is.na(sid) || !sid %in% paper_retained_samples)
+        if (length(p) == 0 || is.na(sid) || !sid %in% scna_collage_samples[[scna]])
           return(NA_character_)
         plot_scna_two_clone_res_collages(
           p,
@@ -154,16 +154,16 @@ pipeline_targets_integration <- list(
   # fig_all_clone_scna_collages_filtered below.
   tarchetypes::tar_map(
     values = tibble::tibble(
-      scna         = c("1q", "2p", "16q"),
-      filtered_sym = rlang::syms(c("filtered_scna_seus_1q", "filtered_scna_seus_2p",
-                                   "filtered_scna_seus_16q"))
+      scna         = c("1q", "2p", "6p", "16q"),
+      filtered_sym = rlang::syms(c("collage_scna_seus_1q", "collage_scna_seus_2p",
+                                   "collage_scna_seus_6p", "collage_scna_seus_16q"))
     ),
     names = "scna",
     tar_target(all_clone_res_collages_filtered,
       {
         p   <- unlist(filtered_sym)
         sid <- stringr::str_extract(p, "SR[RX][0-9]+")
-        if (length(p) == 0 || is.na(sid) || !sid %in% paper_retained_samples)
+        if (length(p) == 0 || is.na(sid) || !sid %in% scna_collage_samples[[scna]])
           return(NA_character_)
         plot_scna_all_clone_res_collages(
           p,

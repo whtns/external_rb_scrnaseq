@@ -1,0 +1,129 @@
+SRX10264519:
+  2_v_1_1q+_16q-:
+  - 1b
+  - 16b
+  3_v_2_8p-_11p-:
+  - 8a
+  - 11a
+SRX10264520:
+  2_v_1_1q+_16q-:
+  - 1b
+  - 16b
+  3_v_2_8p-_11p-:
+  - 8a
+  - 11a
+SRX10264521:
+  2_v_1_1q+_16q-:
+  - 1b
+  - 16a
+SRX10264522:
+  2_v_1_1q+_16q-:
+  - 1b
+  - 16b
+SRX10264523:
+  2_v_1_1q+: 1b
+  5_v_4_2p+: 2b
+SRX10264523_branch_5:
+  2_v_1_1q+: 1b
+  5_v_4_2p+: 2b
+SRX10264523_branch_6:
+  2_v_1_1q+: 1b
+SRX10264524:
+  2_v_1_6p+: 6c
+  3_v_2_17q+: 17d
+  4_v_3_10q+: 10b
+  5_v_3_1p-: 1a
+  6_v_2_2p+: 2b
+SRX10264524_branch_6:
+  2_v_1_6p+: 6c
+  6_v_2_2p+: 2b
+SRX10264524_branch_4:
+  2_v_1_6p+: 6c
+  3_v_2_17q+: 17d
+  4_v_3_10q+: 10b
+SRX10264524_branch_5:
+  2_v_1_6p+: 6c
+  3_v_2_17q+: 17d
+  5_v_3_1p-: 1a
+  6_v_2_2p+: 2b
+SRX10264525:
+  2_v_1_6p+: 6a
+  3_v_2_2p+: 2b
+SRX10264526:
+  2_v_1_1q+: 1b
+  3_v_2_2p+: 2a
+SRX11133594:
+  2_v_1_16q-: 16c
+  3_v_2_1q+: 1b
+SRX11133593:
+  2_v_1_16q-: 16b
+  3_v_2_1q+: 1b
+SRX11133592:
+  2_v_1_16q-: 16b
+  3_v_2_1q+: 1b
+  4_v_3_15q+: 15b
+SRX11133588_branch_2:
+  2_v_1_6p+_16q-:
+  - 6b
+  - 16e
+SRX11133588_branch_3:
+  3_v_2_1q+_7q+:
+  - 1d
+  - 1e
+  - 7b
+SRX11133587_branch_4:
+  2_v_1_16q-:
+  - 1f
+  - 6a
+  3_v_2_16q-: 16d
+SRX11133587_branch_7:
+  2_v_1_16q-:
+  - 1f
+  - 6a
+SRX11133585:
+  2_v_1_13loh: 13a
+  3_v_2_1q+_16q-:
+  - 1c
+  - 16c
+SRX11133585_branch_3:
+  2_v_1_13loh: 13a
+  3_v_2_1q+_16q-:
+  - 1c
+  - 16c
+SRX11133585_branch_4:
+  2_v_1_13loh: 13a
+SRX14116947:
+  2_v_1_1q+_6p+:
+  - 1b
+  - 6a
+  - 6b
+  3_v_2_2p+: 2a
+SRX14116944:
+  2_v_1_1q+: 1c
+  3_v_2_6p+: 6a
+  4_v_3_2p+: 2a
+SRX22868105:
+  2_v_1_6p+: 6b
+  3_v_2_16q-: 16e
+SRX22868102_branch_3:
+  2_v_1_1q+_2p+:
+  - 1k
+  - 2b
+SRX22868102_branch_4:
+  2_v_1_1q+_2p+:
+  - 1k
+  - 2b
+  4_v_2_16q-: 16a
+SRX10831287:
+  # Only two clones (1: 206 cells, 2: 8912), so a single 2_v_1 transition carries
+  # every event. segs_consensus_4 calls 1h/1i/1k/1m amp across 156.8-248.9 Mb --
+  # i.e. most of 1q -- at LLR 63-91, phi_mle 1.27-2.05, far stronger evidence than
+  # the 11a bdel (LLR 7.1, 12 genes) this entry was originally named for. The 1q
+  # gain was real and unannotated; naming it here puts the sample in the 1q
+  # two-clone collages. See issue #29.
+  2_v_1_1q+_11a+:
+  - 1h
+  - 1i
+  - 1k
+  - 1m
+  - 11a

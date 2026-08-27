@@ -817,6 +817,19 @@ pipeline_targets_seurat <- c(
     )
   ),
 
+  # Same subsetting, but keyed on scna_collage_samples instead of
+  # rb_scna_samples. The two-clone / all-clone filtered collage families map
+  # over these so their sample scope can follow the numbat clone-pair evidence
+  # without widening rb_scna_samples, which several other target families
+  # (hypoxia_seus_*, collages_*, integrated_seu_*) also read.
+  tarchetypes::tar_map(
+    values = scna_map_values[, "scna", drop = FALSE],
+    names  = "scna",
+    tar_target(collage_scna_seus,
+      str_subset(unlist(filtered_seus), str_c(scna_collage_samples[[scna]], collapse = "|"))
+    )
+  ),
+
   # integrated_seu_low_hypoxia_1q/2p/6p/16q — integration within each SCNA at low hypoxia
   tarchetypes::tar_map(
     # Integrate low-hypoxia Seurat objects separately for each SCNA stratum.

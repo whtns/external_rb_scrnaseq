@@ -177,6 +177,34 @@ pipeline_targets_inputs <- c(
       format = "file"
     ),
 
+    # Samples for the two-clone / all-clone SCNA collage families.
+    #
+    # Deliberately NOT paper_retained_samples. That list is an editorial
+    # "what is in the paper" set of 7, shared with several other targets;
+    # intersected with rb_scna_samples it yields 2 samples for 2p and none for
+    # 6p, which is not the analytical question these collages answer. Widening
+    # paper_retained_samples would silently change those other targets, so the
+    # collages get their own gate here.
+    #
+    # 2p/6p: the samples with a VIABLE two-clone comparison per
+    # src/find_clean_2p_6p_clone_pairs.R -- >=20 cells in each clone, >=20 Mb
+    # focal gain, and (2p only) overlapping MYCN. See
+    # docs/rb_2p_6p_clone_pairs.md.
+    # 1q/16q: unchanged from the previous effective set
+    # (rb_scna_samples n paper_retained_samples), so those collages do not move.
+    tar_target(scna_collage_samples,
+      list(
+        "1q"  = c("SRX10264523", "SRX10264526", "SRX11133594", "SRX11133593",
+                  "SRX11133592", "SRX10831287"),
+        "2p"  = c("SRX10031193", "SRX10264517", "SRX10264518", "SRX10264519",
+                  "SRX10264520", "SRX10264523", "SRX14116946", "SRX14116947",
+                  "SRX22868102"),
+        "6p"  = c("SRX10031193", "SRX10831281", "SRX10831282", "SRX11133588",
+                  "SRX14116944", "SRX14116946", "SRX14116947", "SRX22868105"),
+        "16q" = c("SRX11133594", "SRX11133593", "SRX11133592")
+      )
+    ),
+
     # --- clone comparison configs ---
 
     tar_target(large_clone_comparisons,
