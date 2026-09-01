@@ -871,7 +871,16 @@ list(
       two_clone_scna_collage_filtered = c(two_clone_res_collages_filtered_1q,
                                           two_clone_res_collages_filtered_2p,
                                           two_clone_res_collages_filtered_6p,
-                                          two_clone_res_collages_filtered_16q),
+                                          two_clone_res_collages_filtered_16q,
+                                          # ... plus one merged multi-page PDF per
+                                          # SCNA holding every sample x resolution
+                                          # page in order. Carries no SRX id, so it
+                                          # files under other/ and sorts to the end
+                                          # of the folder, after the per-page files.
+                                          two_clone_res_collages_filtered_merged_1q,
+                                          two_clone_res_collages_filtered_merged_2p,
+                                          two_clone_res_collages_filtered_merged_6p,
+                                          two_clone_res_collages_filtered_merged_16q),
       # all-clone version of the filtered collages: every clone shown, with the
       # cells removed during hypoxia splitting marked on the clustree (node colour
       # = removed fraction) and a dedicated removed-cell UMAP panel

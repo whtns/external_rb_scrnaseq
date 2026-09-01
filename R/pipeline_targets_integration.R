@@ -139,6 +139,44 @@ pipeline_targets_integration <- list(
       pattern   = map(filtered_sym),
       iteration = "list",
       error     = "null"
+    ),
+
+    # --- one merged multi-page PDF per SCNA (all samples x all resolutions) ---
+    # The branches above emit one PDF per (sample x resolution) -- 9 samples x 7
+    # resolutions for 2p alone -- which is unreadable in bulk. This concatenates
+    # the whole SCNA into a single document ordered sample-major, then ascending
+    # resolution, so the sweep pages through in one file. Pure concatenation via
+    # qpdf (no re-render, and no poppler/libpoppler-cpp dependency the way
+    # pdftools would need): every page is byte-identical to its source, so this
+    # ADDS a view -- the per-resolution files stay on disk and keep syncing.
+    tar_target(two_clone_res_collages_filtered_merged,
+      {
+        p <- unlist(two_clone_res_collages_filtered)
+        p <- unique(p[!is.na(p) & nzchar(p)])
+        p <- p[file.exists(p)]
+        if (length(p) == 0) return(NA_character_)
+
+        sid <- stringr::str_extract(basename(p), "SR[RX][0-9]+")
+        # Sort the resolution NUMERICALLY: the filenames carry "res1", not
+        # "res1.0", so a lexical sort files res1/res1.2/res1.4 ahead of res0.2.
+        res <- as.numeric(stringr::str_match(basename(p), "_res([0-9.]+)_")[, 2])
+
+        out <- file.path("results",
+                         paste0("two_clone_scna_collage_filtered_merged_",
+                                scna, ".pdf"))
+        qpdf::pdf_combine(input = p[order(sid, res, na.last = TRUE)],
+                          output = out)
+        message("merged ", length(p), " ", scna, " two-clone collages from ",
+                length(unique(sid)), " samples -> ", out)
+        out
+      },
+      # Same reason as hypoxia_rebuilt_gdrive: the upstream branches return
+      # deterministic results/*.pdf path STRINGS, so their hashes do not move
+      # when only the page CONTENT is re-rendered. Without an always-cue the
+      # merged document would freeze at its first build while the pages it is
+      # made of kept changing underneath it. Concatenation is seconds.
+      cue   = targets::tar_cue("always"),
+      error = "null"
     )
   ),
 
