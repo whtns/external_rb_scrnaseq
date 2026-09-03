@@ -151,23 +151,65 @@ pipeline_targets_seurat <- c(
         dplyr::pull(sample_id)
     ),
 
-    tar_target(ks_diploid_seu,
-      assemble_diploid_seu(
-        seus_low_hypoxia[grepl(
-          paste(rod_low_sample_ids, collapse = "|"),
-          unlist(seus_low_hypoxia)
-        ) & !grepl(
-          "SRX10031194|SRX10264517|SRX10264518|SRX10264523|SRX14116946",
-          unlist(seus_low_hypoxia)
-        )],
-        integrate = TRUE
-      ),
+    # --- consensus diploid object (github #44, #15, #16) ---
+    #
+    # This replaces two targets that never worked together. `ks_diploid_seu`
+    # built an object at assemble_diploid_seu()'s DEFAULT out_path
+    # (output/seurat/diploid_seu.rds), while `diploid_seu` was a bare path
+    # pointing somewhere else entirely (output/seurat/diploid_subsets/) with no
+    # build command -- so the file every diploid figure used was hand-made, and
+    # nothing in the pipeline could reproduce it. `ks_diploid_seu` was also
+    # referenced nowhere and could not have succeeded anyway: its cone mask
+    # tested for "cones" while the cell-type reference assigns "Cone".
+    #
+    # Sample selection now lives in data/diploid_panel_samples.csv -- an
+    # explicit, reviewable table with a reason per sample -- rather than a
+    # grepl over rod_low_sample_ids plus a literal exclusion string with no
+    # recorded rationale. That is what #15 asks for, and it makes #16 (exclude
+    # 484 = SRR17960484 = SRX14116944) a one-row edit.
+
+    tar_target(diploid_panel_samples_file,
+      "data/diploid_panel_samples.csv",
       format = "file"
     ),
 
+    tar_target(diploid_panel_sample_ids,
+      readr::read_csv(diploid_panel_samples_file, show_col_types = FALSE) |>
+        dplyr::filter(as.logical(include)) |>
+        dplyr::pull(sample_id)
+    ),
+
     tar_target(diploid_seu,
-      "output/seurat/diploid_subsets/diploid_seu.rds",
-      format = "file"
+      {
+        paths <- unlist(seus_low_hypoxia)
+        paths <- paths[!is.na(paths)]
+        keep  <- stringr::str_extract(paths, "SR[RX][0-9]+") %in%
+                   diploid_panel_sample_ids
+        stopifnot("no samples selected for the diploid panel" = any(keep))
+        assemble_diploid_seu(
+          paths[keep],
+          out_path  = "output/seurat/diploid_subsets/diploid_seu.rds",
+          integrate = TRUE
+        )
+      },
+      format    = "file",
+      resources = .heavy_resources
+    ),
+
+    # Composition of the object, so what went in is visible without loading
+    # 1.4 GB of Seurat. This is the artefact that lets #16 be closed.
+    tar_target(diploid_seu_composition,
+      {
+        seu <- readRDS(diploid_seu)
+        tbl <- as.data.frame(table(seu$sample_source), stringsAsFactors = FALSE)
+        names(tbl) <- c("sample_id", "n_cells")
+        tbl <- tbl[order(-tbl$n_cells), ]
+        out <- "results/diploid_seu_composition.csv"
+        readr::write_csv(tbl, out)
+        out
+      },
+      format    = "file",
+      resources = .heavy_resources
     ),
 
     tar_target(diploid_seu_umap_plots,

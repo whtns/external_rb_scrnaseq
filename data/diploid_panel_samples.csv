@@ -1,0 +1,32 @@
+sample_id,include,percent_rod_cells,reason
+SRX10031194,FALSE,0%,excluded by the previous hard-coded list; original reason not recorded - REVIEW
+SRX10264517,FALSE,0%,excluded by the previous hard-coded list; original reason not recorded - REVIEW
+SRX10264518,FALSE,0%,excluded by the previous hard-coded list; original reason not recorded - REVIEW
+SRX10264519,TRUE,0%,rod-poor (0% rod cells)
+SRX10264520,TRUE,0%,rod-poor (0% rod cells)
+SRX10264521,TRUE,0%,rod-poor (0% rod cells)
+SRX10264522,TRUE,0%,rod-poor (0% rod cells)
+SRX10264523,FALSE,1%,excluded by the previous hard-coded list; original reason not recorded - REVIEW
+SRX10264524,TRUE,0%,rod-poor (0% rod cells)
+SRX10264525,TRUE,0%,rod-poor (0% rod cells)
+SRX10264526,TRUE,0%,rod-poor (0% rod cells)
+SRX10831280,TRUE,0%,rod-poor (0% rod cells)
+SRX10831281,TRUE,1%,rod-poor (1% rod cells)
+SRX10831282,TRUE,0%,rod-poor (0% rod cells)
+SRX10831283,TRUE,0%,rod-poor (0% rod cells)
+SRX10831286,TRUE,2%,rod-poor (2% rod cells)
+SRX10831287,TRUE,0%,rod-poor (0% rod cells)
+SRX11133585,FALSE,31%,rod-rich (31% rod cells); diploid pool must be rod-poor
+SRX11133588,FALSE,16%,rod-rich (16% rod cells); diploid pool must be rod-poor
+SRX11133589,TRUE,1%,rod-poor (1% rod cells)
+SRX11133592,TRUE,0%,"held out from numbat rebuilds (AGENTS.md), but that restriction is about writes to output/numbat_sridhar/ - REVIEW whether it should apply here"
+SRX11133593,TRUE,1%,"held out from numbat rebuilds (AGENTS.md), but that restriction is about writes to output/numbat_sridhar/ - REVIEW whether it should apply here"
+SRX11133594,TRUE,0%,"held out from numbat rebuilds (AGENTS.md), but that restriction is about writes to output/numbat_sridhar/ - REVIEW whether it should apply here"
+SRX14116944,FALSE,0%,sample 484 (SRR17960484); excluded per github #16
+SRX14116945,TRUE,0%,rod-poor (0% rod cells)
+SRX14116946,FALSE,0%,excluded by the previous hard-coded list; original reason not recorded - REVIEW
+SRX14116947,TRUE,0%,rod-poor (0% rod cells)
+SRX14116948,FALSE,8%,rod-rich (8% rod cells); diploid pool must be rod-poor
+SRX22868102,TRUE,0%,rod-poor (0% rod cells)
+SRX22868103,TRUE,1%,rod-poor (1% rod cells)
+SRX22868104,TRUE,0%,rod-poor (0% rod cells)

@@ -66,7 +66,9 @@ list(
       table_16q_clone_per_cluster = table_16q_clone_per_cluster,
       table_2p_clone_per_cluster  = table_2p_clone_per_cluster,
       sample_summaries = sample_summaries,
-      cell_counts_table = filtering_cell_counts_table
+      cell_counts_table = filtering_cell_counts_table,
+      # composition of the consensus diploid object (github #44)
+      diploid_seu_composition = diploid_seu_composition
     )
 
     # Build manifest: one row per file, annotated with document label from figure_order.
@@ -339,7 +341,21 @@ list(
     iteration = "list"
   ),
 
-  # --- unfiltered numbat plots ---
+  # --- numbat plots (one run per sample; see github #41 / #42) ---
+  #
+  # There is exactly ONE numbat run per sample. The "filtered" and
+  # "low_hypoxia" variants below deliberately reuse it: no filtered or
+  # low-hypoxia numbat run exists for any SRX sample
+  # (output/numbat_sridhar_filtered/ holds SRR samples only), and we are not
+  # rerunning numbat to make one. The heatmap and clone-tree columns DO differ
+  # per cell set -- those come from numbat_heatmap_plots_* -- so the summary
+  # keeps its three columns; only these two rows are duplicated, and they are
+  # labelled as the unfiltered run so nobody reads them as filtered.
+  #
+  # Previously large_numbat_pdfs, filtered_numbat_pdfs and
+  # low_hypoxia_numbat_pdfs were three targets with identical commands, so
+  # convert_numbat_pngs() ran three times per sample to produce identical
+  # files. One target now feeds all three.
 
   tar_target(large_numbat_pdfs,
     convert_numbat_pngs(numbat_rds_files),
@@ -347,49 +363,42 @@ list(
     iteration = "list"
   ),
 
+  # exp_roll_clust is regenerated from the RDS inside convert_numbat_pngs()
+  # (nb$plot_exp_roll()), so it already reflects the selected round.
   tar_target(unfiltered_numbat_expression,
     retrieve_numbat_plot_type(large_numbat_pdfs, "exp_roll_clust.pdf")
   ),
 
-  tar_target(unfiltered_numbat_bulk_clones,
-      retrieve_numbat_plot_type(large_numbat_pdfs, "bulk_clones_final.pdf")
+  # Bulk clones is the one that was wrong. convert_numbat_pngs() converts
+  # numbat's bulk_clones_final.png, which is its LAST round -- not the round
+  # the RDS was rebuilt at. That differs for 34/39 samples and changes the
+  # canonical event set for 20/39. Render from nb$bulk_clones instead, which is
+  # the selected round's own table, and stamp the round on the panel.
+  tar_target(numbat_bulk_clone_pdfs,
+    plot_numbat_bulk_clones(
+      numbat_rds_files,
+      out_dir  = "results/numbat_bulk_clones",
+      manifest = "results/numbat_selected_round.csv"
+    ),
+    pattern   = map(numbat_rds_files),
+    iteration = "vector",
+    error     = "null",
+    resources = .heavy_resources
   ),
+
+  tar_target(unfiltered_numbat_bulk_clones, numbat_bulk_clone_pdfs),
 
   tar_target(fig_numbat_expression_smoothed,
     qpdf::pdf_combine(unfiltered_numbat_expression, "results/numbat_expression.pdf")
   ),
 
-  # --- filtered numbat plots ---
+  # --- filtered / low hypoxia: the same numbat run, reused (see above) ---
 
-  tar_target(filtered_numbat_pdfs,
-    convert_numbat_pngs(numbat_rds_files),
-    pattern = map(numbat_rds_files),
-    iteration = "list"
-  ),
+  tar_target(filtered_numbat_expression,    unfiltered_numbat_expression),
+  tar_target(filtered_numbat_bulk_clones,   numbat_bulk_clone_pdfs),
 
-  tar_target(filtered_numbat_expression,
-    retrieve_numbat_plot_type(filtered_numbat_pdfs, "exp_roll_clust.pdf")
-  ),
-
-  tar_target(filtered_numbat_bulk_clones,
-      retrieve_numbat_plot_type(filtered_numbat_pdfs, "bulk_clones_final.pdf")
-  ),
-  
-  # --- low hypoxia numbat plots ---
-
-  tar_target(low_hypoxia_numbat_pdfs,
-    convert_numbat_pngs(numbat_rds_files),
-    pattern = map(numbat_rds_files),
-    iteration = "list"
-  ),
-
-  tar_target(low_hypoxia_numbat_expression,
-    retrieve_numbat_plot_type(low_hypoxia_numbat_pdfs, "exp_roll_clust.pdf")
-  ),
-
-  tar_target(low_hypoxia_numbat_bulk_clones,
-    retrieve_numbat_plot_type(low_hypoxia_numbat_pdfs, "bulk_clones_final.pdf")
-  ),
+  tar_target(low_hypoxia_numbat_expression, unfiltered_numbat_expression),
+  tar_target(low_hypoxia_numbat_bulk_clones, numbat_bulk_clone_pdfs),
 
   # For each sample, prefer the filtered bulk clones plot when available,
   # falling back to the unfiltered one. This ensures consistency with
