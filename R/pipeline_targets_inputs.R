@@ -192,16 +192,34 @@ pipeline_targets_inputs <- c(
     # docs/rb_2p_6p_clone_pairs.md.
     # 1q/16q: unchanged from the previous effective set
     # (rb_scna_samples n paper_retained_samples), so those collages do not move.
+    # Extended to the full tier-A set: every sample with a clone PAIR that
+    # differs by the SCNA while both clones stay aneuploid, so the contrast
+    # holds the tumor background fixed. Derived in
+    # src/audit_clone_pairs_rb_scna.R; see docs/rb_scna_clone_comparison_report.md.
+    # Eligibility requires the SCNA LABEL to be absent from the preceding clone
+    # and present in the descendant -- not merely a new seg_cons token. A clone
+    # can gain a second segment on an arm it already carries (SRX22868103 clones
+    # 2 and 4 are both 16q-;1q+), which is nested at token level but is not a
+    # with/without contrast.
+    #
+    # The previous 16q list held only SRX11133592/93/94, whose 16q- is CLONAL --
+    # those collages compare a 16q- clone against the diploid clone, not against
+    # a 16q-intact tumor clone. They are kept (that view is still wanted); the
+    # two genuine tumor-vs-tumor 16q samples (SRX11133588, SRX22868105) are
+    # added alongside.
     tar_target(scna_collage_samples,
       list(
-        "1q"  = c("SRX10264523", "SRX10264526", "SRX11133594", "SRX11133593",
-                  "SRX11133592", "SRX10831287"),
+        "1q"  = c("SRX10031193", "SRX10264523", "SRX10264526", "SRX10831282",
+                  "SRX10831287", "SRX11133588", "SRX11133592", "SRX11133593",
+                  "SRX11133594", "SRX14116947"),
         "2p"  = c("SRX10031193", "SRX10264517", "SRX10264518", "SRX10264519",
                   "SRX10264520", "SRX10264523", "SRX14116946", "SRX14116947",
                   "SRX22868102"),
         "6p"  = c("SRX10031193", "SRX10831281", "SRX10831282", "SRX11133588",
-                  "SRX14116944", "SRX14116946", "SRX14116947", "SRX22868105"),
-        "16q" = c("SRX11133594", "SRX11133593", "SRX11133592")
+                  "SRX14116944", "SRX14116946", "SRX14116947", "SRX22868103",
+                  "SRX22868105"),
+        "16q" = c("SRX11133588", "SRX11133592", "SRX11133593", "SRX11133594",
+                  "SRX22868105")
       )
     ),
 
