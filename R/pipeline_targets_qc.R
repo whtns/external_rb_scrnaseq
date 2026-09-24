@@ -27,7 +27,7 @@ pipeline_targets_qc <- list(
   tarchetypes::tar_files(
     numbat_rds_srx,
     {
-      f <- retrieve_numbat_rds_files("output/numbat_sridhar/")
+      f <- retrieve_numbat_rds_files("output/numbat_t1e5/")
       f[grepl("^SRX", basename(f))]
     },
     format = "file"

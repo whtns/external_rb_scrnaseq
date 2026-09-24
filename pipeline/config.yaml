@@ -82,8 +82,15 @@ paneldir: /project2/cobrinik_1090/Homo_sapiens/numbat/1000G_hg38
 ## Reference expression profile for normal cells
 sridhar_ref_path: /project2/cobrinik_1090/Homo_sapiens/numbat/sridhar_ref.rds
 
-## Transition probability for the HMM (lower = stricter CNV calls)
-numbat_t: 1e-2
+## Transition probability for the HMM: the per-bin prior on switching CNV state.
+## Lower = longer, more intact segments; higher = more, shorter segments.
+## Set to numbat's own default 1e-5 on 2026-09-21 after the cohort sweep
+## (job 12134445, docs/srx_vs_srr_numbat_settings.md appendix D). On 32 matched
+## samples 1e-5 raised final-round canonical RB events 82 -> 104 and collapsed the
+## cross-round instability gap from 38% to 2%, with canonical segments 2.5x longer
+## (median 18.7 -> 46.6 Mb) and 3x the LLR. Better or equal on 31 of 32 samples.
+## The previous 1e-2 was 1000x this and had never been swept.
+numbat_t: 1e-5
 
 ## Prior probability of CNV state transitions in allele HMM (higher = more permissive calls)
 # alpha: 1e-3

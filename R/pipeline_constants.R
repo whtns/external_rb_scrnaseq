@@ -114,3 +114,52 @@ debranched_map_values <- tibble::tibble(
   )
 ) |>
   dplyr::mutate(seu_path = paste0("output/seurat/", id, "_filtered_seu.rds"))
+
+## ------------------------------------------------------------------------------------ ##
+## Which numbat run the pipeline consumes.
+##
+## Switched from "output/numbat_sridhar/" (t = 1e-2) to the t = 1e-5 arm on
+## 2026-09-21. On 32 matched samples t=1e-5 raised final-round canonical RB events
+## 82 -> 104 and collapsed the cross-round instability gap from 38% to 2%, with
+## canonical segments 2.5x longer and 3x the LLR; better or equal on 31 of 32.
+## See docs/srx_vs_srr_numbat_settings.md appendices C-D and pipeline/config.yaml.
+##
+## SCOPE: this directory holds SRX samples only. The 32 SRR samples cannot be
+## rerun (their cellranger/seurat/allele inputs were never migrated from the old
+## workstation) and AGENTS.md forbids rebuilding them, so pointing here
+## deliberately narrows the cohort to SRX rather than mixing two values of t
+## across the SRR/SRX split -- which is also a study/batch split, so the confound
+## would land exactly on the comparison of interest.
+##
+## Four samples have no complete round at t=1e-5 and are absent here:
+## SRX10031191 (numbat never ran, 6 cells), SRX11133590 (no CNV above min_LLR),
+## SRX10031192 and SRX11133586 (no CNV surviving the max_entropy filter).
+##
+## THREE MIXED-PROVENANCE EXCEPTIONS (user decision 2026-09-21). SRX11133592/93/94
+## are held out of every rerun by project policy, so they have no t=1e-5 object.
+## Their existing objects were COPIED IN (sources in output/numbat_sridhar/ were
+## read only, never modified) so they stay in the cohort. They do NOT match the
+## other 31 samples, and not in the way you would guess:
+##
+##   sample        numbat   t      alpha   min_LLR  max_entropy
+##   (the other 31) 1.5.2   1e-5   1e-4    5        0.7
+##   SRX11133592    1.2.2   1e-5   1e-4    2        0.5   <- legacy workstation run
+##   SRX11133593    1.5.2   1e-2   1e-3    5        0.7   <- the only t mismatch
+##   SRX11133594    1.2.2   1e-5   1e-4    2        0.5   <- legacy workstation run
+##
+## So 92/94 match on t but are numbat 1.2.2 with looser thresholds; only 93 differs
+## on t. Per-sample parameters for every member of the cohort are in
+## results/numbat_cohort_provenance.csv -- consult it before any cross-sample
+## claim, and exclude these three from anything comparing call rates or extents.
+##
+## REVERT: set this back to "output/numbat_sridhar/" to return to the production
+## t = 1e-2, 71-sample cohort. Nothing else needs to change.
+## ------------------------------------------------------------------------------------ ##
+## NOT a variable, deliberately. It was one until 2026-09-22, and the rebuild
+## (job 12258888) died with "object 'numbat_rds_dir' not found": the path is used
+## inside tarchetypes::tar_files(), whose command is evaluated on a crew worker
+## that could not resolve the global, taking 49 targets down with it. The literal
+## string is inlined instead -- the pattern that worked before -- at:
+##     R/pipeline_targets_inputs.R  (4 call sites)
+##     R/pipeline_targets_qc.R      (1 call site)
+## To switch cohorts, change the string at all five. Keep them in sync.

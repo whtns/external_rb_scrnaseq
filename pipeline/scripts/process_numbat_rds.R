@@ -35,6 +35,51 @@ numbat_dir = fs::path_dir(done_file)
 
 DEFAULT_ITER <- 2L
 
+## round_mode: "manifest" (default, unchanged behaviour) or "final".
+##
+## "final" skips the manifest entirely and uses the highest round whose artefacts
+## are all present. Added 2026-09-21 for the t=1e-5 cohort, where round selection
+## is no longer worth its bias: src/select_numbat_round.R on output/numbat_t1e5
+## reports selection beating the final round on 1 of 34 samples and missing zero
+## union events, versus +34 canonical events at t=1e-2. Selecting the per-sample
+## maximum over rounds is selecting on the outcome, so with nothing left to gain
+## the unbiased choice is simply the last complete round.
+if (!exists("round_mode")) round_mode <- "manifest"
+stopifnot(round_mode %in% c("manifest", "final"))
+
+# The nine artefacts Numbat$new(i = k) needs for round k.
+round_artefacts <- function(k) {
+  c(sprintf("segs_consensus_%d.tsv", k), sprintf("clone_post_%d.tsv", k),
+    sprintf("joint_post_%d.tsv", k), sprintf("exp_post_%d.tsv", k),
+    sprintf("allele_post_%d.tsv", k), sprintf("geno_%d.tsv", k),
+    sprintf("treeML_%d.rds", k), sprintf("mut_graph_%d.rds", k),
+    sprintf("tree_final_%d.rds", k))
+}
+
+# Highest k whose artefacts are all on disk. Returns NA when no round is complete,
+# which is a hard error rather than a silent fall back to a round that is missing
+# files -- a half-built object is worse than a failed build.
+last_complete_round <- function(out_dir) {
+  segs <- fs::dir_ls(out_dir, regexp = "segs_consensus_[0-9]+\\.tsv$", type = "file")
+  if (length(segs) == 0) return(NA_integer_)
+  ks <- sort(as.integer(sub(".*segs_consensus_([0-9]+)\\.tsv$", "\\1", basename(segs))),
+             decreasing = TRUE)
+  for (k in ks) {
+    if (all(fs::file_exists(fs::path(out_dir, round_artefacts(k))))) return(k)
+  }
+  NA_integer_
+}
+
+resolve_final_iter <- function(out_dir) {
+  sid <- basename(out_dir)
+  k <- last_complete_round(out_dir)
+  if (is.na(k)) {
+    stop(sprintf("[round] %s has no complete consensus round; refusing to build an RDS", sid))
+  }
+  message(sprintf("[round] %s using final complete round i = %d", sid, k))
+  k
+}
+
 resolve_selected_iter <- function(out_dir) {
   sid <- basename(out_dir)
 
@@ -71,11 +116,7 @@ resolve_selected_iter <- function(out_dir) {
   k <- as.integer(hit$selected_round[1])
 
   # Only honour the manifest if the round's artefacts are actually on disk.
-  need <- c(sprintf("segs_consensus_%d.tsv", k), sprintf("clone_post_%d.tsv", k),
-            sprintf("joint_post_%d.tsv", k), sprintf("exp_post_%d.tsv", k),
-            sprintf("allele_post_%d.tsv", k), sprintf("geno_%d.tsv", k),
-            sprintf("treeML_%d.rds", k), sprintf("mut_graph_%d.rds", k),
-            sprintf("tree_final_%d.rds", k))
+  need <- round_artefacts(k)
   missing <- need[!fs::file_exists(fs::path(out_dir, need))]
   if (length(missing) > 0) {
     warning(sprintf("[round] %s selected round %d but missing %s; using default i = %d",
@@ -87,7 +128,7 @@ resolve_selected_iter <- function(out_dir) {
   k
 }
 
-target_i <- resolve_selected_iter(numbat_dir)
+target_i <- if (round_mode == "final") resolve_final_iter(numbat_dir) else resolve_selected_iter(numbat_dir)
 
 # Prefer the highest existing iteration on disk; fall back to max_iter from log.
 detect_target_iter <- function(out_dir) {

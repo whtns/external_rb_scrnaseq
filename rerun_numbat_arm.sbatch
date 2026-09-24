@@ -58,6 +58,29 @@
 #                                  wander at ~3.5 h/sample.
 #   t              -> $T_OVERRIDE  unset by default (replays the logged t).
 #
+# WHY SWEEP t (added 2026-09-17)
+#   `numbat_t: 1e-2` is 1000x numbat's own default of 1e-5 and has NEVER been swept
+#   on this cohort: every SRX run on disk is t=0.01; the only t=1e-5 runs are the 17
+#   legacy workstation SRR runs and 3 tasks of job 11959992.
+#
+#   t is the per-bin prior on switching CNV state, so a high t biases toward short
+#   segments -- pointed against RB's whole-arm drivers (1q, 2p, 6p, 13q, 16q).
+#
+#   Job 11959992 (docs/srx_vs_srr_numbat_settings.md appendix C) showed that at
+#   t=1e-5 with the other thesis-era parameters, three tumors recover contiguous
+#   whole-arm calls that production fragments or drops entirely (SRX10264524 11q,
+#   SRX10264525 2p, SRX14116947 chr9 -- none called by production in any round).
+#   Within that bundle min_LLR is ruled out empirically (lowering the floor 5 -> 2
+#   adds 13 segments out of 3099 cohort-wide, median 4.9 Mb), and max_entropy /
+#   max_iter / init_k do not govern segment length -- leaving t and alpha.
+#
+#   CAVEAT ON THE EVIDENCE: those three tumors were selected BECAUSE they disagreed
+#   with the thesis. That is selection on the outcome. This cohort-wide arm exists
+#   precisely so the decision rests on all 36 samples rather than on 3 discordant
+#   ones, and it must be scored against production on segment EXTENT and STABILITY,
+#   not canonical-event presence -- presence is what wrongly cleared the
+#   multi_allelic arm in August.
+#
 # NOT changed, all previously tested and settled:
 #   diploid_chroms     stays NULL   pinning was negative; doc/diploid_baseline_pin_6p.md
 #   check_convergence  stays FALSE  never fires; only 4/71 runs reach d_k = 0
@@ -71,6 +94,12 @@
 #   sbatch --array=0-5 --export=ALL,ARM_NAME=ma_t1e5,T_OVERRIDE=1e-5 \
 #          rerun_numbat_arm.sbatch
 #
+#   # Arm C -- t sweep ALONE (multi_allelic held at production FALSE), full cohort.
+#   # This is the single-variable test of t; see the t=1e-5 rationale below.
+#   sbatch --export=ALL,ARM_NAME=t1e5,T_OVERRIDE=1e-5,MULTI_ALLELIC=FALSE \
+#          rerun_numbat_arm.sbatch
+#   # score it:  Rscript src/diag_rb_scna_recovery.R output/numbat_t1e5 _t1e5
+#
 #   Output goes to output/numbat_<ARM_NAME>/<sample>/. output/numbat_sridhar/
 #   is the targets pipeline's input and is NEVER touched.
 
@@ -79,6 +108,15 @@ set -uo pipefail
 PROJ=/project2/cobrinik_1090/external_rb_scrnaseq_proj
 ARM_NAME=${ARM_NAME:-ma}
 T_OVERRIDE=${T_OVERRIDE:-}
+# Default TRUE preserves this script's original behaviour and every usage
+# documented above. Set MULTI_ALLELIC=FALSE to hold it at the production value,
+# which is what a clean single-variable sweep of t requires -- otherwise t is
+# confounded with the multi_allelic change and the arm answers neither question.
+MULTI_ALLELIC=${MULTI_ALLELIC:-TRUE}
+case "$MULTI_ALLELIC" in
+  TRUE|FALSE) ;;
+  *) echo "FATAL: MULTI_ALLELIC must be TRUE or FALSE, got '$MULTI_ALLELIC'" >&2; exit 1 ;;
+esac
 SRC_DIR=$PROJ/output/numbat_sridhar
 
 # Samples held out of the arm at the user's request. Kept as an explicit list so
@@ -139,7 +177,7 @@ mkdir -p "$TMPDIR"
 echo "=== $S -> $OUTDIR (arm: $ARM_NAME) ==="
 echo "replayed from log.txt: t=$T alpha=$ALPHA gamma=$GAMMA init_k=$INIT_K"
 echo "                       min_LLR=$MIN_LLR max_entropy=$MAX_ENTROPY tau=$TAU"
-echo "changed:               multi_allelic=TRUE max_iter=4${T_OVERRIDE:+ t=$T_OVERRIDE}"
+echo "changed:               multi_allelic=$MULTI_ALLELIC max_iter=4${T_OVERRIDE:+ t=$T_OVERRIDE (logged t was $(logparam t))}"
 echo "start: $(date)"
 
 Rscript pipeline/scripts/run_numbat.R \
@@ -157,7 +195,7 @@ Rscript pipeline/scripts/run_numbat.R \
   "max_iter=4" \
   "tau='$TAU'" \
   "read_prop=1" \
-  "multi_allelic=TRUE" \
+  "multi_allelic=$MULTI_ALLELIC" \
   "check_convergence=FALSE" \
   "ncores=8"
 

@@ -19,16 +19,16 @@ pipeline_targets_inputs <- c(
   if (freeze_rds_files) {
     list(
       tar_target(numbat_rds_all,
-        retrieve_numbat_rds_files("output/numbat_sridhar/"),
+        retrieve_numbat_rds_files("output/numbat_t1e5/"),
         iteration = "vector", cue = tar_cue(mode = "never")),
       tar_target(numbat_rds_files,
-        retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples),
+        retrieve_numbat_rds_files("output/numbat_t1e5/", interesting_samples),
         iteration = "vector", cue = tar_cue(mode = "never"))
     )
   } else {
     list(
-      tarchetypes::tar_files(numbat_rds_all, retrieve_numbat_rds_files("output/numbat_sridhar/"), format = "file"),
-      tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_sridhar/", interesting_samples), format = "file")
+      tarchetypes::tar_files(numbat_rds_all, retrieve_numbat_rds_files("output/numbat_t1e5/"), format = "file"),
+      tarchetypes::tar_files(numbat_rds_files, retrieve_numbat_rds_files("output/numbat_t1e5/", interesting_samples), format = "file")
     )
   },
 
