@@ -714,33 +714,37 @@ list(
   # --- per-sample summary collation ---
 
   tar_target(sample_summaries,
+    # Named arguments throughout, deliberately. This was 18 positional args, and
+    # the parameter names do not all match the target names -- fig_s03a_*_plots
+    # receive numbat_heatmap_plots_* -- so a positional edit here is exactly how
+    # the wrong target would land in the wrong slot without erroring.
+    #
+    # The low-hypoxia column was dropped 2026-09-24, so the six
+    # low_hypoxia_* / ideogram_res_s06a_low_hypoxia / numbat_heatmap_plots_low_hypoxia
+    # arguments are gone. ideogram_res_s06a_low_hypoxia, low_hypoxia_numbat_expression
+    # and low_hypoxia_numbat_bulk_clones had no other consumer, so they are no longer
+    # built for this target; the other three are still used by the hypoxia sync
+    # target below.
     collate_sample_summary(
-      ideogram_res_s06a_unfiltered,
-      ideogram_res_s06a_filtered,
-      ideogram_res_s06a_low_hypoxia,
+      ideogram_res_s06a_unfiltered           = ideogram_res_s06a_unfiltered,
+      ideogram_res_s06a_filtered             = ideogram_res_s06a_filtered,
 
-      unfiltered_clone_tree_files,
-      unfiltered_clone_trees_segments_files,
+      unfiltered_clone_tree_files            = unfiltered_clone_tree_files,
+      unfiltered_clone_trees_segments_files  = unfiltered_clone_trees_segments_files,
 
-      filtered_clone_tree_files,
-      filtered_clone_trees_segments_files,
+      filtered_clone_tree_files              = filtered_clone_tree_files,
+      filtered_clone_trees_segments_files    = filtered_clone_trees_segments_files,
 
-      low_hypoxia_clone_tree_files,
-      low_hypoxia_clone_trees_segments_files,
+      fig_s03a_unfiltered_plots              = numbat_heatmap_plots_unfiltered,
+      fig_s03a_subset_plots                  = numbat_heatmap_plots_subset,
 
-      numbat_heatmap_plots_unfiltered,
-      numbat_heatmap_plots_subset,
-      numbat_heatmap_plots_low_hypoxia,
+      unfiltered_numbat_expression           = unfiltered_numbat_expression,
+      filtered_numbat_expression             = filtered_numbat_expression,
 
-      unfiltered_numbat_expression,
-      filtered_numbat_expression,
-      low_hypoxia_numbat_expression,
+      unfiltered_numbat_bulk_clones          = unfiltered_numbat_bulk_clones,
+      filtered_numbat_bulk_clones            = filtered_numbat_bulk_clones,
 
-      unfiltered_numbat_bulk_clones,
-      filtered_numbat_bulk_clones,
-      low_hypoxia_numbat_bulk_clones,
-
-      filtering_cell_counts_table = filtering_cell_counts_table
+      filtering_cell_counts_table            = filtering_cell_counts_table
     ),
     pattern = map(unfiltered_clone_tree_files),
     iteration = "list",
