@@ -751,6 +751,46 @@ list(
     error = "null"
   ),
 
+  # --- per-iteration (consensus round) inspection ---
+
+  # The cohort's round was chosen by rule -- round_mode = "final" -- and for most
+  # samples never looked at. Since clone numbering is round-specific, a wrong
+  # round invalidates every clone key downstream, which has happened once already
+  # (SRX11133593). This lays each sample's rounds side by side so the choice can
+  # be checked rather than assumed. Scope is the 24 P1-eligible tumors, read from
+  # the triage table inside the function, so the other 9 branches return NULL.
+  #
+  # Branching on (numbat_rds_files, large_numbat_pdfs) rather than on a Seurat
+  # target is deliberate on two counts: large_numbat_pdfs is itself
+  # map(numbat_rds_files), so branch i is the same sample in both; and
+  # unfiltered_seus / filtered_seus carry cue(command = FALSE, depend = FALSE),
+  # the gate that once silently no-opped a sample_summaries rebuild. No Seurat
+  # object is needed here in any case -- plot_numbat() ignores its myseu argument
+  # and each round publishes its own clone_post_<k>.tsv.
+  tar_target(iteration_summaries,
+    collate_iteration_summary(
+      numbat_rds_file  = numbat_rds_files,
+      numbat_plot_pdfs = large_numbat_pdfs
+    ),
+    pattern   = map(numbat_rds_files, large_numbat_pdfs),
+    iteration = "list",
+    error     = "null",
+    resources = .heavy_resources
+  ),
+
+  tar_target(iteration_summaries_report, {
+    paths <- unlist(iteration_summaries)
+    paths <- paths[!is.na(paths) & file.exists(paths)]
+    out <- "results/iteration_summaries.pdf"
+    # An empty but valid PDF beats a failed target, as in numbat_rds_qc_report.
+    if (length(paths) == 0) {
+      pdf(out); plot.new(); text(0.5, 0.5, "no iteration summaries"); dev.off()
+      out
+    } else {
+      qpdf::pdf_combine(paths, out)
+    }
+  }),
+
   tar_target(hypoxia_summaries,
     collate_hypoxia_summary(
       hypoxia_seus,
