@@ -3,7 +3,7 @@
 #SBATCH --account=cobrinik_1090
 #SBATCH --partition=epyc-64
 #SBATCH --qos=normal
-#SBATCH --mem=240G
+#SBATCH --mem=160G
 #SBATCH --cpus-per-task=8
 #SBATCH --time=24:00:00
 #SBATCH --array=0-2
@@ -29,7 +29,9 @@
 #      max_entropy=0.7 tau=0.3 multi_allelic=FALSE, max_iter=4)
 # Each stage is skipped if its output already exists, so a rerun resumes.
 #
-# 240G: single captures ran in 128G at <=7.5k cells; merged tumors are 6-15k.
+# 160G: single captures ran in 128G at <=7.5k cells; merged tumors are 6-15k.
+# 240G sat unscheduled on epyc-64 (needs a near-empty 250G node); rerun only
+# an OOM task at 240G -- finished stages are skipped.
 
 set -euo pipefail
 
