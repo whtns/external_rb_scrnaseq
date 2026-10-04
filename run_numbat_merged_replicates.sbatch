@@ -53,7 +53,7 @@ echo "=== $TUMOR ($PAIR) -> $OUT  start: $(date)"
 if [ ! -f "$OUT/${PAIR##*,}_allele_counts.tsv.gz" ]; then
   module purge
   module load apptainer
-  apptainer exec --bind /project2,/scratch1 "$SIF" \
+  apptainer exec "$SIF" \
     Rscript src/phase_merged_replicates.R "${TUMOR}_merged" "$PAIR" "$OUT" 8
 fi
 

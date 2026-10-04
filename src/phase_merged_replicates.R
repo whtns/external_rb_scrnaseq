@@ -24,6 +24,7 @@ suppressPackageStartupMessages({
   library(glue)
   library(Matrix)
   library(stringr)
+  library(vcfR) # numbat:::genotype() calls write.vcf() unqualified
 })
 
 args <- commandArgs(trailingOnly = TRUE)
