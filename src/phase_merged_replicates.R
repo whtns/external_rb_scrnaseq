@@ -103,7 +103,10 @@ for (s in samples) {
     gmap = genetic_map
   ) %>%
     filter(GT %in% c("1|0", "0|1"))
-  fwrite(df, glue("{outdir}/{s}_allele_counts.tsv.gz"), sep = "\t")
+  # write-then-rename: the sbatch treats this file as "stage done"
+  out_file <- glue("{outdir}/{s}_allele_counts.tsv.gz")
+  fwrite(df, paste0(out_file, ".tmp.gz"), sep = "\t")
+  file.rename(paste0(out_file, ".tmp.gz"), out_file)
   cat(s, ": ", nrow(df), " rows, ", n_distinct(df$snp_id), " het SNPs\n", sep = "")
 }
 cat("All done!\n")

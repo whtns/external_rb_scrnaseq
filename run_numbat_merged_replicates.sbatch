@@ -28,6 +28,9 @@
 #      replicates' log.txt: t=1e-5 alpha=1e-3 gamma=20 init_k=5 min_LLR=5
 #      max_entropy=0.7 tau=0.3 multi_allelic=FALSE, max_iter=4)
 # Each stage is skipped if its output already exists, so a rerun resumes.
+# STAGES=prep runs only 1-2 (fits the 1 h debug partition), e.g.
+#   sbatch --partition=debug --time=1:00:00 --mem=64G \
+#          --export=ALL,STAGES=prep run_numbat_merged_replicates.sbatch
 #
 # 160G: single captures ran in 128G at <=7.5k cells; merged tumors are 6-15k.
 # 240G sat unscheduled on epyc-64 (needs a near-empty 250G node); rerun only
@@ -60,12 +63,17 @@ if [ ! -f "$OUT/${PAIR##*,}_allele_counts.tsv.gz" ]; then
 fi
 
 module purge
-module load r/4.4.1
+module load gcc/13.3.0 r/4.4.1  # purge drops the default gcc that r/4.4.1 requires
 export LD_LIBRARY_PATH="$HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 # 2. merged inputs
 if [ ! -f "$OUT/allele_counts.tsv.gz" ]; then
   Rscript src/build_merged_replicate_inputs.R "$PAIR" "$OUT"
+fi
+
+if [ "${STAGES:-all}" = prep ]; then
+  echo "STAGES=prep: stopping before numbat  end: $(date)"
+  exit 0
 fi
 
 # 3. numbat

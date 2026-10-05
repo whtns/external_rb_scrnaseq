@@ -70,7 +70,9 @@ allele <- rbindlist(lapply(samples, function(s) {
   a[, cell := paste0(s, "_", cell)]
 }))
 stopifnot(all(unique(allele$cell) %in% colnames(count_mat)))
-fwrite(allele, file.path(outdir, "allele_counts.tsv.gz"), sep = "\t")
+# written last and renamed into place: the sbatch treats it as "stage done"
+fwrite(allele, file.path(outdir, "allele_counts.tmp.tsv.gz"), sep = "\t")
+file.rename(file.path(outdir, "allele_counts.tmp.tsv.gz"), file.path(outdir, "allele_counts.tsv.gz"))
 
 cat(sprintf("cells: matrix=%d  seu=%d  allele=%d | het SNPs=%d\n",
             ncol(count_mat), nrow(meta), uniqueN(allele$cell), uniqueN(allele$snp_id)))
