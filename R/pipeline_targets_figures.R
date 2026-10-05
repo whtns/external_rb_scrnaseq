@@ -135,7 +135,8 @@ list(
     plot_fig_02(
       unlist(seus_high_hypoxia)[grepl(single_sample_panel_ids, unlist(seus_high_hypoxia))],
       numbat_rds_files,
-      large_clone_simplifications
+      large_clone_simplifications,
+      plot_path = glue::glue("results/fig_02_{single_sample_panel_ids}_high_hypoxia.pdf")
     ),
     pattern = map(single_sample_panel_ids),
     iteration = "list"
@@ -163,7 +164,8 @@ list(
     plot_fig_02(
       low_hypoxia_diploid_merged_seu,
       numbat_rds_files,
-      large_clone_simplifications
+      large_clone_simplifications,
+      plot_path = glue::glue("results/fig_02_{stringr::str_extract(low_hypoxia_diploid_merged_seu, 'SR[RX][0-9]+')}_with_diploid.pdf")
     ),
     pattern = map(low_hypoxia_diploid_merged_seu),
     iteration = "list"

@@ -35,63 +35,64 @@ hypoxia_gdrive_destination <- "gdrive:rb_scrnaseq/hypoxia_rebuilt"
 # Document-order mapping: semantic target name → display label.
 # Edit this vector to renumber figures without touching target definitions.
 figure_order <- c(
-  # Main figures (per figure_and_table_captions.txt)
+  # Main figures. Fig. 1 (concept + workflow schematic) is drawn by hand, no target.
   fig_single_sample_panels               = "Fig. 2",
   # Fig. 3 = cluster marker gene analysis in single pilot tumor — covered by fig_01 (partial)
   fig_1q_integrated                      = "Fig. 4",
   fig_16q_integrated                     = "Fig. 5",
-  fig_1q_cluster_diffex_integrated       = "Fig. 7a",
-  fig_1q_cluster_diffex_unintegrated     = "Fig. 7b",
-  fig_16q_cluster_diffex_integrated      = "Fig. 8a",
-  fig_16q_cluster_diffex_unintegrated    = "Fig. 8b",
-  fig_2p_corresponding_clusters          = "Fig. 9",
-  fig_6p_corresponding_clusters          = "Fig. 10",
-  # Supplemental figures (document order per figure_and_table_captions.txt)
+  # Supplemental figures, numbered by first citation in the manuscript
+  # (crosswalk: docs/figure_numbering_crosswalk.md, 2026-10-04)
   fig_tcga_scna_frequency                = "Fig. S1",
   fig_tcga_gistic                        = "Fig. S2",
-  fig_numbat_heatmaps                    = "Fig. S3",
-  fig_numbat_expression_smoothed         = "Fig. S3b",      # sub-panel of S3; no direct manuscript cite
-  fig_study_cell_stats                   = "Fig. S4",
-  fig_1q_sample_specific_integrated      = "Fig. S5",
-  fig_karyograms                         = "Fig. S6a",
-  # Fig. S6  = 1q+ sample-specific without integration — no pipeline target
-  # Fig. S7  = alt Louvain resolutions for integrated 1q+ — no pipeline target
-  fig_1q_clone_diffex_within_clusters    = "Fig. S8",
-  fig_1q_cluster_diffex_of_interest      = "Fig. S9",
-  fig_16q_clone_diffex_within_clusters   = "Fig. S10",
+  # Fig. S3  = Kooi et al. candidate drivers (former Fig. 6) — no pipeline target
+  fig_study_cell_stats                   = "Fig. S4",       # QC
+  # Fig. S5  = removed non-tumor clusters — no pipeline target
+  fig_numbat_heatmaps                    = "Fig. S6",
+  fig_karyograms                         = "Fig. S6 (karyograms)",  # no caption of its own
+  fig_numbat_expression_smoothed         = "Fig. S7",
+  clone_tree_collage_of_merged_replicates = "Fig. S8",      # static PNG (not yet created)
+  clone_tree_collage                     = "Fig. S9",       # static PNG; text also says "Fig. 1b"
+  # Fig. S10 = alt resolutions for integrated 1q+ — no pipeline target
   # Fig. S11 = alt resolutions for integrated 16q- — no pipeline target
-  fig_16q_sample_specific_integrated     = "Fig. S12",
-  # Fig. S13 = 16q- sample-specific without integration — no pipeline target
-  fig_2p_integrated                      = "Fig. S14",
-  # Fig. S15 = alt resolutions for integrated 2p+ — no pipeline target
-  fig_2p_sample_specific_integrated      = "Fig. S16",
-  # Fig. S17 = 2p+ cluster DE — no pipeline target
-  # Fig. S18 = 2p+ candidate drivers — no pipeline target
-  # Fig. S19 = 6p+ SCNA boundaries — no pipeline target
-  # Fig. S20 = 6p+ sample-specific without integration — no pipeline target
-  # Fig. S21 = 6p+ enriched terms — no pipeline target
-  # Fig. S22 = 6p+ DE in cis — no pipeline target
-  fig_subtype_markers                    = "Fig. S25",
-  # Draft / unassigned pipeline figures (document position not yet confirmed)
-  fig_6p_integrated                      = "Fig. 6p-draft",   # was Fig. 5; captions Fig. 5 = 16q-
-  fig_numbat_heatmaps_permissive         = "Fig. S-nbt-perm", # was Fig. S13; S13 = 16q- unintegrated
-  fig_2p_clone_diffex_within_clusters    = "Fig. S-2p-clde",  # was Fig. S20; S20 = 6p+ unintegrated
-  fig_6p_sample_specific_integrated      = "Fig. S-6p-si",    # no confirmed position in captions
-  clone_tree_collage                     = "Fig. 1b",   # static PNG; also cited as Fig. S24
-  clone_tree_collage_of_merged_replicates = "Fig. 1b-rep", # static PNG (not yet created)
-  fig_2p_sample_specific_unintegrated    = "Fig. S4.9",
-  fig_1q_integrated_v2                   = "Fig. 4v2",
-  fig_1q_16q_combined                    = "Fig. 4-7",
-  fig_regression_diagnostics             = "Fig. 3-5",
-  fig_single_sample_panels_with_diploid  = "Fig. 2 (diploid)",
-  # Tables (per figure_and_table_captions.txt)
+  # Fig. S12 = alt resolutions for integrated 2p+ — no pipeline target
+  fig_16q_clone_diffex_within_clusters   = "Fig. S13",
+  fig_16q_sample_specific_integrated     = "Fig. S14",
+  # Fig. S15 = 16q- sample-specific without integration — no pipeline target
+  fig_1q_sample_specific_integrated      = "Fig. S16",
+  # Fig. S17 = 1q+ sample-specific without integration — no pipeline target
+  fig_subtype_markers                    = "Fig. S18",
+  fig_1q_clone_diffex_within_clusters    = "Fig. S19",
+  fig_1q_cluster_diffex_of_interest      = "Fig. S20",
+  fig_2p_integrated                      = "Fig. S21",
+  fig_2p_sample_specific_integrated      = "Fig. S22",
+  # Fig. S23 = 2p+ g1 cluster DE — no pipeline target
+  fig_2p_clone_diffex_within_clusters    = "Fig. S24",      # 2p+ candidate drivers
+  # Fig. S25 = cNMF (mosaicMPI, outside the pipeline)
+  # Fig. S26-S29 = 6p+ boundaries, sample-specific without integration, enriched terms,
+  #   cis DE — no pipeline targets. Fig. S30 = CENPF violins — no pipeline target
+  # Not in the manuscript (labels kept distinct from manuscript numbers)
+  fig_1q_cluster_diffex_integrated       = "Draft (was Fig. 7a)",
+  fig_1q_cluster_diffex_unintegrated     = "Draft (was Fig. 7b)",
+  fig_16q_cluster_diffex_integrated      = "Draft (was Fig. 8a)",
+  fig_16q_cluster_diffex_unintegrated    = "Draft (was Fig. 8b)",
+  fig_2p_corresponding_clusters          = "Draft (was Fig. 9)",
+  fig_6p_corresponding_clusters          = "Draft (was Fig. 10)",
+  fig_6p_integrated                      = "Draft (6p integrated)",
+  fig_numbat_heatmaps_permissive         = "Draft (permissive numbat heatmaps)",
+  fig_6p_sample_specific_integrated      = "Draft (6p sample-specific integrated)",
+  fig_2p_sample_specific_unintegrated    = "Draft (was Fig. S4.9)",
+  fig_1q_integrated_v2                   = "Draft (Fig. 4 v2)",
+  fig_1q_16q_combined                    = "Draft (Fig. 4 + 5 combined)",
+  fig_regression_diagnostics             = "Draft (regression diagnostics)",
+  fig_single_sample_panels_with_diploid  = "Fig. 2 (with diploid)",
+  # Tables (per manuscript captions)
   table_sample_metadata                  = "Table S2",
   table_rod_rich_samples                 = "Table S3",          # S3 = rod cell proportions
   table_qc_stats                         = "Table S4",          # S4 = Tumor QC
   table_removed_clusters                 = "Table S8",          # S8 = tally of removed clusters
-  table_1q_clone_per_cluster             = "Table X2",          # X2 = clone per cluster (1q+ subtable A)
-  table_16q_clone_per_cluster            = "Table X2 (16q-)",   # X2 subtable B
-  table_2p_clone_per_cluster             = "Table X2 (2p+)"     # X2 subtable C
+  table_1q_clone_per_cluster             = "Table S10A",        # was Table X2 / "S4b"
+  table_16q_clone_per_cluster            = "Table S10B",
+  table_2p_clone_per_cluster             = "Table S10C"
 )
 
 # Values tibble for tarchetypes::tar_map() over debranched sample/branch IDs.
